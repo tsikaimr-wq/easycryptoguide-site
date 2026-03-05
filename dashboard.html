@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -180,7 +180,7 @@
                                 <tbody>
                                     ${markets.map(m => `
                                         <tr>
-                                            <td><div class="m-pair-cell">☆<span style="color:#0081ff">馃敆</span> ${m.symbol}</div></td>
+                                            <td><div class="m-pair-cell">*<span style="color:#0081ff">*</span> ${m.symbol}</div></td>
                                             <td><b>${m.stats.last.toLocaleString()}</b></td>
                                             <td class="${m.stats.change_pct >= 0 ? 'up' : 'down'}">${m.stats.change_pct >= 0 ? '+' : ''}${m.stats.change_pct.toFixed(2)}%</td>
                                             <td>${m.stats.quote_volume.toLocaleString()}M</td>
