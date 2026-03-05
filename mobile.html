@@ -59,6 +59,18 @@
         window.onAuthStateChanged = onAuthStateChanged;
         window.currentKycStatus = 'Not Verified';
         window.kycGateActive = false;
+        const MOBILE_SESSION_GRACE_MS = 15 * 60 * 1000;
+        function hasFreshMobileSessionGrant() {
+            const tsRaw = Number(localStorage.getItem('ec_mobile_session_grant_ts') || 0);
+            return Number.isFinite(tsRaw) && tsRaw > 0 && (Date.now() - tsRaw) <= MOBILE_SESSION_GRACE_MS;
+        }
+        function markMobileSessionGrantNow() {
+            localStorage.setItem('ec_mobile_session_grant_ts', String(Date.now()));
+        }
+        if (sessionStorage.getItem('mobile_session_active') === 'true' && !hasFreshMobileSessionGrant()) {
+            // Prevent stale sessions from auto-entering app after long idle or browser restore.
+            sessionStorage.removeItem('mobile_session_active');
+        }
         const KYC_ALLOWED_SCREENS = new Set([
             'certification-center',
             'advanced-certification',
@@ -10593,6 +10605,7 @@
 
                 // Explicitly mark this session as authenticated for mobile
                 sessionStorage.setItem('mobile_session_active', 'true');
+                markMobileSessionGrantNow();
 
                 // If onAuthStateChanged hasn't fired yet or didn't show the app screen due to the flag, manually trigger the view switch
                 document.getElementById('auth-screen').classList.add('hidden');
@@ -10805,6 +10818,7 @@
             try {
                 const { auth } = window.fb;
                 sessionStorage.removeItem('mobile_session_active');
+                localStorage.removeItem('ec_mobile_session_grant_ts');
                 await auth.signOut();
                 // View switching handled by onAuthStateChanged in the head
             } catch (error) {
