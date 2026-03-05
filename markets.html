@@ -23,6 +23,15 @@
     <meta name="twitter:title" content="EasyCrypto Exchange | Perpetual, Spot & Delivery">
     <meta name="twitter:description" content="Trade like a real exchange. Perpetual, Spot and Delivery contracts with a professional crypto interface.">
     <meta name="twitter:image" content="https://YOUR_DOMAIN/assets/brand/og-preview.png">
+    <script>
+        (function () {
+            const isSmall = window.matchMedia('(max-width: 900px)').matches;
+            const forceDesktop = /[?&]desktop=1(?:&|$)/.test(window.location.search);
+            if (isSmall && !forceDesktop) {
+                window.location.replace('mobile.html');
+            }
+        })();
+    </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link

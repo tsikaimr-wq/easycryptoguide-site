@@ -304,6 +304,8 @@
             width: 100%;
             max-width: 420px;
             height: 100vh;
+            height: 100dvh;
+            min-height: 100vh;
             background: #fff;
             position: relative;
             display: flex;
@@ -663,7 +665,7 @@
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y;
             overscroll-behavior-y: contain;
-            padding-bottom: 80px;
+            padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
         }
 
         #trade-screen .scroll-area,
@@ -899,7 +901,7 @@
             background: #1a0b2e;
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
+            padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
             border-top: 1px solid rgba(106, 53, 255, 0.1);
             z-index: 200;
         }
@@ -11044,9 +11046,10 @@
             const bottomNav = document.querySelector('.bottom-nav');
 
             const shouldHideHeaderNav = isRootLevel || target === 'support' || target === 'profile' || target === 'trade' || target === 'supportScreen' || target === 'kline';
+            const shouldHideBottomNav = target === 'kline' || target === 'supportChatScreen' || target === 'fais';
 
             if (header) header.classList.toggle('hidden', shouldHideHeaderNav);
-            if (bottomNav) bottomNav.classList.toggle('hidden', shouldHideHeaderNav);
+            if (bottomNav) bottomNav.classList.toggle('hidden', shouldHideBottomNav);
 
             const appScreen = document.getElementById('app-screen');
             const isInsideApp = !!(targetEl && appScreen && appScreen.contains(targetEl));
