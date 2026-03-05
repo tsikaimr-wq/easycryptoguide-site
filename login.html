@@ -1,0 +1,576 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Account login - EASYCRYPTO</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/brand/favicon-16x16.png">
+    <link rel="shortcut icon" href="/assets/brand/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+        <meta name="description" content="EasyCrypto Exchange - Perpetual, Spot and Delivery trading with real-time markets and secure KYC onboarding.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="EasyCrypto Exchange">
+    <meta property="og:title" content="EasyCrypto Exchange | Perpetual, Spot & Delivery">
+    <meta property="og:description" content="Trade like a real exchange. Perpetual, Spot and Delivery contracts with a professional crypto interface.">
+    <meta property="og:image" content="https://YOUR_DOMAIN/assets/brand/og-preview.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="https://YOUR_DOMAIN/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EasyCrypto Exchange | Perpetual, Spot & Delivery">
+    <meta name="twitter:description" content="Trade like a real exchange. Perpetual, Spot and Delivery contracts with a professional crypto interface.">
+    <meta name="twitter:image" content="https://YOUR_DOMAIN/assets/brand/og-preview.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #fff !important;
+            color: #111;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .auth-wrapper {
+            max-width: 480px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        .auth-header {
+            margin-bottom: 40px;
+        }
+
+        .auth-header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0 0 12px;
+            color: #111;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .auth-header p {
+            font-size: 16px;
+            color: #555;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 12px;
+        }
+
+        .auth-tab {
+            font-size: 16px;
+            color: #999;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .auth-tab.active {
+            color: #111;
+            background: #f5f5f5;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 8px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .country-prefix {
+            width: 80px;
+            height: 48px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            color: #111;
+            flex-shrink: 0;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 48px;
+            padding: 0 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 15px;
+            color: #111;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            border-color: #0081ff;
+        }
+
+        .form-input::placeholder {
+            color: #ccc;
+        }
+
+        .btn-auth-primary {
+            width: 100%;
+            height: 50px;
+            background: #0081ff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn-auth-primary:hover {
+            background: #0066cc;
+        }
+
+        .auth-footer-links {
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        .auth-footer-links a {
+            color: #0081ff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .auth-footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-google {
+            width: 100%;
+            height: 50px;
+            background: #f0f0f0;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+
+        .btn-google:hover {
+            background: #e5e5e5;
+        }
+
+        /* Nav overrides */
+        .topbar {
+            background: #111 !important;
+            border-bottom: 1px solid #333;
+        }
+
+        /* Tab Visibility */
+        .identifier-section {
+            display: none;
+        }
+
+        .identifier-section.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="cors-warning"
+        style="display: none; background: #ff4444; color: #fff; padding: 15px; text-align: center; position: sticky; top: 0; left: 0; width: 100%; z-index: 9999; font-weight: bold; border-bottom: 2px solid #fff;">
+        鈿狅笍 SECURITY BLOCKED: Login & Database Sync will NOT work if opened directly.
+        <br>Please run <code>server.bat</code> and use <code>http://localhost:8000/login.html</code>
+    </div>
+
+    <nav class="topbar">
+        <a href="index.html" class="t-logo">
+            <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+                <path d="M20 0L37.3205 10V30L20 40L2.67949 30V10L20 0Z" fill="white" fill-opacity="0.2" />
+                <path d="M20 8L30.3923 14V26L20 32L9.6077 26V14L20 8Z" fill="white" />
+            </svg>
+            EASYCRYPTO
+        </a>
+        <div class="t-links">
+            <a href="markets.html" class="t-link">Markets</a>
+            <div class="t-link arr" id="transaction-menu">
+                Transaction
+                <div class="nav-dropdown" id="transaction-dropdown">
+                    <a href="contract.html" class="dropdown-item">
+                        <i class="ri-file-list-3-line"></i>
+                        Perpetual
+                    </a>
+                    <a href="delivery_chart.html" class="dropdown-item">
+                        <i class="ri-wallet-3-line"></i>
+                        Delivery
+                    </a>
+                    <a href="trade.html" class="dropdown-item">
+                        <i class="ri-focus-3-line"></i>
+                        Spot
+                    </a>
+                </div>
+            </div>
+            <div class="t-link arr" id="finance-menu">
+                Financial business
+                <div class="nav-dropdown" id="finance-dropdown">
+                    <a href="fund.html" class="dropdown-item">
+                        <i class="ri-funds-box-line"></i>
+                        <div class="dropdown-col">
+                            <span class="dropdown-title">Fund Management</span>
+                            <span class="dropdown-desc">One-stop investment service</span>
+                        </div>
+                    </a>
+                    <a href="mine.html" class="dropdown-item">
+                        <i class="ri-hammer-line"></i>
+                        <div class="dropdown-col">
+                            <span class="dropdown-title">Mining Pool lock</span>
+                            <span class="dropdown-desc">Serve the miners and improve mining income</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <a href="mobile.html" class="t-link">Mobile</a>
+        </div>
+        <div class="t-actions">
+            <a href="login.html" class="t-link active">Login</a>
+            <a href="signup.html" class="t-link">Register</a>
+            <a href="#" class="t-link">Download APP</a>
+            <div class="t-link" style="border-left:1px solid #333; margin-left:15px; padding-left:15px;">English</div>
+        </div>
+    </nav>
+
+    <main class="auth-wrapper">
+        <header class="auth-header">
+            <h1>Account login</h1>
+            <p>Welcome back! Login with your email, phone number or QR code</p>
+        </header>
+
+        <div class="auth-tabs" id="auth-tabs">
+            <div class="auth-tab active" data-tab="email">E-mail</div>
+            <div class="auth-tab" data-tab="mobile">Mobile</div>
+            <div class="auth-tab" data-tab="account">Account</div>
+        </div>
+
+        <form id="login-form">
+            <!-- Email Section -->
+            <div class="form-group identifier-section active" id="email-section">
+                <label>Email</label>
+                <input type="email" id="email-login-input" class="form-input" placeholder="name@example.com">
+            </div>
+
+            <!-- Mobile Section (US +1) -->
+            <div class="form-group identifier-section" id="mobile-section">
+                <label>Mobile</label>
+                <div class="input-group">
+                    <div class="country-prefix">+ 1</div>
+                    <input type="tel" id="mobile-login-input" class="form-input"
+                        placeholder="Please enter a mobile phone number">
+                </div>
+            </div>
+
+            <!-- Account Section -->
+            <div class="form-group identifier-section" id="account-section">
+                <label>Account</label>
+                <input type="text" id="account-login-input" class="form-input"
+                    placeholder="Please enter account or ECxxxxxx">
+            </div>
+
+            <div class="form-group" id="password-group">
+                <label>Password</label>
+                <input type="password" id="login-password" class="form-input" placeholder="Please enter your password"
+                    required>
+            </div>
+
+            <a href="#" id="forgot-password-link"
+                style="color: #0081ff; text-decoration: none; font-size: 14px; display: block; margin-bottom: 20px;">Forgot
+                your password?</a>
+
+            <button type="submit" id="main-submit-btn" class="btn-auth-primary">Login</button>
+        </form>
+
+        <div class="auth-footer-links">
+            <a href="signup.html">Register now</a>
+        </div>
+
+        <button class="btn-google">
+            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="18" alt="Google">
+            Login with Google
+        </button>
+    </main>
+
+    <footer
+        style="background: #111; color: #666; padding: 40px 0; text-align: center; font-size: 13px; border-top: 1px solid #222; margin-top: 100px;">
+        <div class="container">
+            <div style="margin-bottom: 20px;">
+                <a href="#" style="color: #999; margin: 0 15px; text-decoration: none;">Help center</a>
+                <a href="#" style="color: #999; margin: 0 15px; text-decoration: none;">Terms of service</a>
+                <a href="#" style="color: #999; margin: 0 15px; text-decoration: none;">Privacy policy</a>
+            </div>
+            <p>漏 2026 Easy Crypto. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { auth, db, doc, getDoc, setDoc, signInWithEmailAndPassword, sendPasswordResetEmail, checkSession, collection, query, where, getDocs } from './firebase-config.js';
+
+        // Protocol check for CORS issues
+        if (window.location.protocol === 'file:') {
+            const warning = document.getElementById('cors-warning');
+            if (warning) warning.style.display = 'block';
+            console.error("Firebase won't work on file:// protocol. Use http://localhost:8000");
+        }
+
+        // Session check on page load
+        async function checkInitialSession() {
+            const user = await checkSession(false);
+            // If already logged in, go to dashboard
+            if (user) {
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    const kycStatus = userDoc.exists() ? (userDoc.data().kyc_status || 'Not Verified') : 'Not Verified';
+                    const kycCompleted = kycStatus === 'Pending' || kycStatus === 'Verified';
+                    window.location.href = kycCompleted ? 'dashboard.html' : 'mobile.html';
+                } catch (e) {
+                    window.location.href = 'mobile.html';
+                }
+            }
+        }
+        checkInitialSession();
+
+        const tabs = document.querySelectorAll('.auth-tab');
+        const sections = document.querySelectorAll('.identifier-section');
+        const passwordGroup = document.getElementById('password-group');
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        const mainSubmitBtn = document.getElementById('main-submit-btn');
+
+        let currentTab = 'email';
+
+        function buildDeterministicUserId(uid) {
+            const src = String(uid || '');
+            let hash = 0;
+            for (let i = 0; i < src.length; i++) {
+                hash = ((hash * 31) + src.charCodeAt(i)) % 900000;
+            }
+            return String(hash + 100000).padStart(6, '0');
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                sections.forEach(s => s.classList.remove('active'));
+
+                const targetId = tab.getAttribute('data-tab');
+                currentTab = targetId;
+                document.getElementById(targetId + '-section').classList.add('active');
+            });
+        });
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Determine identifier based on active tab
+            let identifier = '';
+            let accountInput = '';
+            if (currentTab === 'email') {
+                identifier = document.getElementById('email-login-input').value.trim().toLowerCase();
+            } else if (currentTab === 'mobile') {
+                identifier = document.getElementById('mobile-login-input').value.trim();
+                if (!identifier.startsWith('+')) identifier = '+1' + identifier.replace(/\D/g, '');
+                identifier = identifier + "@mobile.local";
+            } else if (currentTab === 'account') {
+                accountInput = document.getElementById('account-login-input').value.trim();
+                identifier = accountInput;
+            }
+
+            const passwordInput = document.getElementById('login-password');
+            const password = passwordInput.value;
+
+            if (!identifier || !password) {
+                alert("Please enter both credentials and password.");
+                return;
+            }
+
+            try {
+                if (currentTab === 'account') {
+                    const accountLogin = accountInput.toLowerCase();
+                    let accountSnap = await getDocs(query(collection(db, 'users'), where('account_login', '==', accountLogin)));
+                    let matchedDoc = null;
+                    if (!accountSnap.empty) {
+                        matchedDoc = accountSnap.docs[0];
+                    }
+
+                    const normalizedAccount = accountInput.toUpperCase();
+                    const accountCandidates = [normalizedAccount];
+                    if (!normalizedAccount.startsWith('EC')) accountCandidates.push('EC' + normalizedAccount);
+
+                    if (!matchedDoc) {
+                        for (const candidate of accountCandidates) {
+                            if (!candidate) continue;
+                            accountSnap = await getDocs(query(collection(db, 'users'), where('account', '==', candidate)));
+                            if (!accountSnap.empty) {
+                                matchedDoc = accountSnap.docs[0];
+                                break;
+                            }
+                        }
+                    }
+                    if (!matchedDoc) {
+                        throw new Error('Account not found. Please check your account number.');
+                    }
+                    const accountData = matchedDoc.data() || {};
+                    if (accountData.email) {
+                        identifier = String(accountData.email).toLowerCase();
+                    } else if (accountData.phone) {
+                        identifier = String(accountData.phone) + '@mobile.local';
+                    } else {
+                        throw new Error('This account has no valid login identifier.');
+                    }
+                }
+
+                // Assuming standard Email login (or a fake email mapped from phone: +1123456789@mobile.local)
+                const userCredential = await signInWithEmailAndPassword(auth, identifier, password);
+                const user = userCredential.user;
+
+                // AUTO-SYNC Recovery Logic: 
+                // If user exists in Auth but missing in Firestore (e.g. from a failed CORS registration)
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+
+                if (!userDocSnap.exists()) {
+                    console.log("Partial Registration Detected: Auto-syncing user to Firestore...");
+                    const numericId = buildDeterministicUserId(user.uid);
+                    await setDoc(userDocRef, {
+                        uid: user.uid,
+                        user_id: numericId,
+                        account: `EC${numericId}`,
+                        email: identifier.includes('@mobile.local') ? '' : identifier,
+                        phone: identifier.includes('@mobile.local') ? identifier.split('@')[0] : '',
+                        platform: 'Website (Recovered)',
+                        name: identifier.split('@')[0],
+                        balance: 0,
+                        kyc_status: 'Not Verified',
+                        status: 'Active',
+                        role: 'user',
+                        joined: new Date().toISOString()
+                    });
+                    console.log("User recovery sync complete.");
+                }
+
+                const latestUserDoc = await getDoc(userDocRef);
+                const kycStatus = latestUserDoc.exists() ? (latestUserDoc.data().kyc_status || 'Not Verified') : 'Not Verified';
+                const kycCompleted = kycStatus === 'Pending' || kycStatus === 'Verified';
+
+                if (currentTab === 'account') {
+                    localStorage.setItem('ec_force_kyc_once', '1');
+                    sessionStorage.setItem('mobile_session_active', 'true');
+                    alert("Login successful! Redirecting to KYC.");
+                    window.location.href = 'mobile.html';
+                    return;
+                }
+
+                if (!kycCompleted) {
+                    alert("KYC is required before entering the platform. Please complete KYC first.");
+                    window.location.href = 'mobile.html';
+                    return;
+                }
+
+                sessionStorage.removeItem('mobile_session_active');
+
+                alert("Login successful!");
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                alert("Login failed: " + error.message);
+            }
+        });
+
+        document.getElementById('forgot-password-link').addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            let email = '';
+            const emailInput = document.getElementById('email-login-input');
+            if (emailInput && emailInput.value) {
+                email = emailInput.value.trim().toLowerCase();
+            }
+
+            if (!email) {
+                const manual = window.prompt('Enter your registered email to reset password:');
+                email = manual ? manual.trim().toLowerCase() : '';
+            }
+
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert('Password reset email sent. Please check your inbox.');
+            } catch (error) {
+                alert('Failed to send reset email: ' + error.message);
+            }
+        });
+
+        // Transaction Dropdown logic
+        const txMenu = document.getElementById('transaction-menu');
+        const txDropdown = document.getElementById('transaction-dropdown');
+
+        txMenu.addEventListener('mouseenter', () => txDropdown.classList.add('active'));
+        txMenu.addEventListener('mouseleave', () => txDropdown.classList.remove('active'));
+
+        // Financial business Dropdown logic
+        const finMenu = document.getElementById('finance-menu');
+        const finDropdown = document.getElementById('finance-dropdown');
+
+        finMenu.addEventListener('mouseenter', () => finDropdown.classList.add('active'));
+        finMenu.addEventListener('mouseleave', () => finDropdown.classList.remove('active'));
+    </script>
+    <script src="/js/site-language.js"></script>
+</body>
+
+</html>
+
+
+
+
+
+
+
+

@@ -1,0 +1,929 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyCrypto - Australia's Safest Crypto Exchange</title>
+    <meta name="description"
+        content="EasyCrypto Exchange - Perpetual, Spot and Delivery trading with real-time markets and secure KYC onboarding." />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/brand/favicon-16x16.png">
+    <link rel="shortcut icon" href="/assets/brand/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="EasyCrypto Exchange">
+    <meta property="og:title" content="EasyCrypto Exchange | Perpetual, Spot & Delivery">
+    <meta property="og:description"
+        content="Trade like a real exchange. Perpetual, Spot and Delivery contracts with a professional crypto interface.">
+    <meta property="og:image" content="https://YOUR_DOMAIN/assets/brand/og-preview.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="https://YOUR_DOMAIN/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EasyCrypto Exchange | Perpetual, Spot & Delivery">
+    <meta name="twitter:description"
+        content="Trade like a real exchange. Perpetual, Spot and Delivery contracts with a professional crypto interface.">
+    <meta name="twitter:image" content="https://YOUR_DOMAIN/assets/brand/og-preview.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* DROPDOWN ENHANCEMENTS */
+        .l-nav-item {
+            position: relative;
+        }
+
+        .l-dropdown {
+            position: absolute;
+            top: calc(100% + 15px);
+            left: 0;
+            background: linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%);
+            min-width: 260px;
+            padding: 8px 0;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            list-style: none;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+
+        .l-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .l-dropdown-item a {
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .l-dropdown-item a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .l-dropdown-item small {
+            display: block;
+            font-size: 0.75rem;
+            opacity: 0.6;
+            margin-top: 2px;
+        }
+
+        .l-nav-link span {
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+
+        .l-nav-link.active span {
+            transform: rotate(180deg);
+        }
+
+        /* Ensure no horizontal overflow and solid bottom */
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            background-color: #111 !important;
+            min-height: 100vh;
+        }
+
+        #landing-page {
+            background-color: #111;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+
+<body class="landing-mode">
+
+    <div id="landing-page">
+        <!-- Error Overlay -->
+        <div id="error-overlay">
+            <div>
+                <p>System error detected.</p>
+                <small id="error-details"></small>
+                <br><br>
+                <button onclick="location.reload()" style="padding: 10px 20px; cursor:pointer;">Reload Page</button>
+            </div>
+        </div>
+
+        <header class="landing-nav container">
+            <a href="index.html" class="l-logo">
+                <svg width="28" height="28" viewBox="0 0 40 40" fill="white" style="margin-right:4px;">
+                    <path d="M20 0L37.3205 10V30L20 40L2.67949 30V10L20 0Z" fill-opacity="0.2" />
+                    <path d="M20 8L30.3923 14V26L20 32L9.6077 26V14L20 8Z" />
+                </svg>
+                EASYCRYPTO
+            </a>
+            <div class="l-nav-links">
+                <div class="l-nav-item">
+                    <button class="l-nav-link" id="buy-sell-toggle">Buy & Sell <span>▼</span></button>
+                    <ul class="l-dropdown" id="buy-sell-dropdown">
+                        <li class="l-dropdown-item">
+                            <a href="#" id="instant-buy-link"><span>•</span> Instant buy & sell</a>
+                        </li>
+                        <li class="l-dropdown-item">
+                            <a href="buy-sell.html#multi-coin"><span></span> Multi-coin order</a>
+                        </li>
+                        <li class="l-dropdown-item">
+                            <a href="buy-sell.html#auto-buy"><span></span> Auto-Buy</a>
+                        </li>
+                        <li class="l-dropdown-item">
+                            <a href="buy-sell.html#swap"><span></span> Swap</a>
+                        </li>
+                        <li class="l-dropdown-item">
+                            <a href="#"><span></span> Institutional</a>
+                        </li>
+                        <li class="l-dropdown-item">
+                            <a href="#"><span></span> OTC</a>
+                        </li>
+                    </ul>
+                </div>
+                <a href="#" class="l-nav-link">Rates</a>
+                <a href="#" class="l-nav-link">Tracker</a>
+                <a href="#" class="l-nav-link">SMSF</a>
+                <a href="#" class="l-nav-link">Learn <span>▼</span></a>
+                <a href="#" class="l-nav-link">About Us</a>
+                <a href="login.html" class="l-nav-link">Sign In</a>
+                <a href="signup.html" class="btn-signup">Sign up</a>
+            </div>
+        </header>
+
+        <main class="hero container landing-section">
+            <div class="hero-grid">
+                <div class="hero-text">
+                    <h1>We trade cryptocurrencies in most countries and regions of the world. Makes trading
+                        cryptocurrencies easier.</h1>
+                    <p class="subtext">You can easily trade contracts and quickly store and withdraw cryptocurrencies on
+                        our exchange.</p>
+                    <p class="desc">Buy and sell instantly with Australia's fastest and safest crypto retailer. Deliver
+                        to any wallet address or withdraw to your bank account in as little as two minutes. Easy!</p>
+
+                    <div class="as-featured">
+                        <p
+                            style="color:white; opacity:0.7; margin-bottom: 2rem; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">
+                            As featured in</p>
+                        <div class="feature-logos">
+                            <span class="f-logo-item"
+                                style="font-weight:900; letter-spacing:-2px; font-size:2.5rem; font-family:'Outfit';">stuff</span>
+                            <span class="f-logo-item" style="font-size:1.5rem;">:am <small
+                                    style="font-size:0.5rem; display:block; margin-top:-8px;">SHOW</small></span>
+                            <span class="f-logo-item" style="font-size:1.8rem; font-weight:700;">Newshub.</span>
+                            <span class="f-logo-item" style="text-transform:uppercase; font-size:1.8rem;">SCOOP</span>
+                            <span class="f-logo-item" style="font-size:1.8rem;">NBR</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="buy-card">
+                    <h2>Start Investing in Crypto Today</h2>
+
+                    <div class="buy-label">From Australian dollar (AUD)...</div>
+                    <div class="buy-in">
+                        <input type="text" placeholder="Enter amount...">
+                        <div class="buy-tag">
+                            <img src="https://flagcdn.com/w80/au.png" alt="AUD">
+                            AUD
+                        </div>
+                    </div>
+
+                    <div class="swap-icon">鈫戔啌</div>
+
+                    <div class="buy-label">To Bitcoin...</div>
+                    <div class="buy-in">
+                        <input type="text" placeholder="Minimum $100...">
+                        <div class="buy-tag">
+                            <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="BTC"
+                                style="width:20px; height:20px;">
+                            BTC
+                        </div>
+                    </div>
+
+                    <button class="buy-now-btn">Buy now</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- SECTION 2: MARKET PREVIEW -->
+        <section class="market-preview-section landing-section">
+            <div class="container">
+                <h2 style="text-align: center; margin-bottom: 3rem; font-size: 1.85rem;">Track the Market and Watch Your
+                    Portfolio Grow</h2>
+
+                <div class="preview-tabs">
+                    <div class="preview-tab active">market</div>
+                    <div class="preview-tab">Hot</div>
+                    <div class="preview-tab">24-hour increase list</div>
+                </div>
+
+                <table class="preview-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Latest price</th>
+                            <th>24H change</th>
+                            <th>24H transaction volume</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="pair-info">
+                                    <div
+                                        style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#f59e0b; font-weight:900;">
+                                        B</div>
+                                    BTC/USDT
+                                </div>
+                            </td>
+                            <td style="font-weight: 500;">$ 0.0000</td>
+                            <td style="color: #94a3b8;">0.00 %</td>
+                            <td>$ 0</td>
+                            <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="pair-info">
+                                    <div
+                                        style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#6366f1; font-weight:900;">
+                                        E</div>
+                                    ETH/USDT
+                                </div>
+                            </td>
+                            <td style="font-weight: 500;">$ 0.0000</td>
+                            <td style="color: #94a3b8;">0.00 %</td>
+                            <td>$ 0</td>
+                            <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="pair-info">
+                                    <div
+                                        style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#111; font-weight:900;">
+                                        H</div>
+                                    HBAR/USDT
+                                </div>
+                            </td>
+                            <td style="font-weight: 500;">$ 0.0000</td>
+                            <td style="color: #94a3b8;">0.00 %</td>
+                            <td>$ 0</td>
+                            <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="pair-info">
+                                    <div
+                                        style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#f59e0b; font-weight:900;">
+                                        IP</div>
+                                    IP/USDT
+                                </div>
+                            </td>
+                            <td style="font-weight: 500;">$ 0.0000</td>
+                            <td style="color: #94a3b8;">0.00 %</td>
+                            <td>$ 0</td>
+                            <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="pair-info">
+                                    <div
+                                        style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#f59e0b; font-weight:900;">
+                                        W</div>
+                                    WBT/USDT
+                                </div>
+                            </td>
+                            <td style="font-weight: 500;">$ 0.0000</td>
+                            <td style="color: #94a3b8;">0.00 %</td>
+                            <td>$ 0</td>
+                            <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="text-align: center; margin-top: 3rem;">
+                    <a href="#" style="color: #8147ff; text-decoration: none; font-size: 0.9rem; font-weight: 500;">View
+                        All Markets</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: HOW TO USE -->
+        <section class="how-it-works landing-section" style="padding: 6rem 0; background: var(--primary-bg);">
+            <div class="container">
+                <h2 style="font-size: 2.2rem; margin-bottom: 1rem; text-align: center; color: white;">How to Use
+                    EASYCRYPTO?</h2>
+                <p style="margin-bottom: 4rem; opacity: 0.9; font-size: 1.1rem; text-align: center; color: white;">New
+                    to crypto? We make crypto easy for anyone. Follow these steps to get started!</p>
+
+                <div
+                    style="display: flex; gap: 4rem; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                    <!-- LEFT COLUMN: STEPS -->
+                    <div style="flex: 1; min-width: 320px; display: flex; flex-direction: column; gap: 1.5rem;">
+                        <!-- STEP 1 -->
+                        <div
+                            style="background: white; padding: 1.75rem; border-radius: 20px; display: flex; align-items: center; gap: 1.5rem; color: #1e293b; box-shadow: 0 15px 35px rgba(0,0,0,0.15);">
+                            <div
+                                style="width: 80px; height: 80px; flex-shrink: 0; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <img src="assets/images/home/step1.png" alt="Step 1"
+                                    style="width: 60px; height: 60px; object-fit: contain;">
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #111;">
+                                    Create an EASYCRYPTO Account</h3>
+                                <p style="font-size: 0.9rem; color: #64748b; line-height: 1.6;">Get started by signing
+                                    up for an EASYCRYPTO account if you haven't already.</p>
+                            </div>
+                        </div>
+                        <!-- STEP 2 -->
+                        <div
+                            style="background: white; padding: 1.75rem; border-radius: 20px; display: flex; align-items: center; gap: 1.5rem; color: #1e293b; box-shadow: 0 15px 35px rgba(0,0,0,0.15);">
+                            <div
+                                style="width: 80px; height: 80px; flex-shrink: 0; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <img src="assets/images/home/step2.png" alt="Step 2"
+                                    style="width: 60px; height: 60px; object-fit: contain;">
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #111;">
+                                    Complete Verification</h3>
+                                <p style="font-size: 0.9rem; color: #64748b; line-height: 1.6;">Proceed with our KYC
+                                    process and verify your EASYCRYPTO account to proceed with your crypto purchase.</p>
+                            </div>
+                        </div>
+                        <!-- STEP 3 -->
+                        <div
+                            style="background: white; padding: 1.75rem; border-radius: 20px; display: flex; align-items: center; gap: 1.5rem; color: #1e293b; box-shadow: 0 15px 35px rgba(0,0,0,0.15);">
+                            <div
+                                style="width: 80px; height: 80px; flex-shrink: 0; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <img src="assets/images/home/step3.png" alt="Step 3"
+                                    style="width: 60px; height: 60px; object-fit: contain;">
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #111;">
+                                    Place an Order</h3>
+                                <p style="font-size: 0.9rem; color: #64748b; line-height: 1.6;">Place your buy or sell
+                                    order for Bitcoin (BTC) and other cryptocurrencies.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: ILLUSTRATION -->
+                    <div style="flex: 1; min-width: 380px; display: flex; justify-content: center; position: relative;">
+                        <img src="assets/images/home/trading_illustration.png" alt="Trading illustration"
+                            style="width: 100%; max-width: 580px; height: auto; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.2));">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: HORIZONTAL STEP CARDS -->
+        <section class="how-it-works-alt landing-section" style="padding: 6rem 0; background: var(--primary-bg);">
+            <div class="container">
+                <h2 style="font-size: 2.2rem; margin-bottom: 1rem; text-align: center; color: white;">How to Use Easy
+                    Crypto?</h2>
+                <p style="margin-bottom: 4rem; opacity: 0.9; font-size: 1.1rem; text-align: center; color: white;">New
+                    to crypto? We make crypto easy for anyone. Follow these steps to get started!</p>
+
+                <div style="display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center;">
+                    <!-- CARD 1 -->
+                    <div
+                        style="flex: 1; min-width: 280px; background: white; padding: 3rem 2rem; border-radius: 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+                        <div
+                            style="height: 120px; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
+                            <img src="assets/images/home/create_account.png" alt="Create Account"
+                                style="height: 100px; object-fit: contain;">
+                        </div>
+                        <h3 style="color: #111; font-size: 1.3rem; margin-bottom: 1rem; font-weight: 700;">Create an
+                            Account</h3>
+                        <p style="color: #4b5563; font-size: 0.95rem; line-height: 1.6;">Get started by signing up for
+                            an Easy Crypto account</p>
+                    </div>
+                    <!-- CARD 2 -->
+                    <div
+                        style="flex: 1; min-width: 280px; background: white; padding: 3rem 2rem; border-radius: 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+                        <div
+                            style="height: 120px; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
+                            <img src="assets/images/home/get_verified.png" alt="Get Verified" style="height: 100px; object-fit: contain;">
+                        </div>
+                        <h3 style="color: #111; font-size: 1.3rem; margin-bottom: 1rem; font-weight: 700;">Get Verified
+                        </h3>
+                        <p style="color: #4b5563; font-size: 0.95rem; line-height: 1.6;">Proceed with our KYC process,
+                            verify your account and continue with your crypto purchase</p>
+                    </div>
+                    <!-- CARD 3 -->
+                    <div
+                        style="flex: 1; min-width: 280px; background: white; padding: 3rem 2rem; border-radius: 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+                        <div
+                            style="height: 120px; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
+                            <img src="assets/images/home/place_order.png" alt="Place Order" style="height: 100px; object-fit: contain;">
+                        </div>
+                        <h3 style="color: #111; font-size: 1.3rem; margin-bottom: 1rem; font-weight: 700;">Place Your
+                            Order</h3>
+                        <p style="color: #4b5563; font-size: 0.95rem; line-height: 1.6;">Buy or sell Bitcoin, Ethereum,
+                            Solana or hundreds of other cryptos and have your order processed safely, quickly and easily
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: TESTIMONIALS -->
+        <section class="testimonials-section landing-section"
+            style="padding: 6rem 0; background: #f9f9fb; color: #1e293b;">
+            <div class="container">
+                <h2 style="font-size: 2rem; text-align: center; margin-bottom: 1rem; color: #111;">Trusted by +100K
+                    Customers</h2>
+                <p style="text-align: center; margin-bottom: 4rem; color: #64748b;">Don't just take our word for it, see
+                    why Aussies trust EASYCRYPTO:</p>
+
+                <div style="display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center;">
+                    <!-- DAN R -->
+                    <div
+                        style="flex: 1; min-width: 320px; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); display: flex; gap: 1.5rem;">
+                        <img src="assets/images/home/dan.png" alt="Dan R"
+                            style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">
+                        <div>
+                            <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">Dan R</h4>
+                            <div style="color: #f59e0b; margin-bottom: 1rem; font-size: 0.8rem;">鈽呪槄鈽呪槄☆/div>
+                            <p style="font-size: 0.9rem; line-height: 1.6; color: #475569;">"These guys are really
+                                great. I knew virtually nothing about crypto when I first joined Easy Crypto and they
+                                have helped me through everything."</p>
+                        </div>
+                    </div>
+                    <!-- HEATH -->
+                    <div
+                        style="flex: 1; min-width: 320px; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); display: flex; gap: 1.5rem;">
+                        <img src="assets/images/home/heath.png" alt="Heath"
+                            style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">
+                        <div>
+                            <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">Heath</h4>
+                            <div style="color: #f59e0b; margin-bottom: 1rem; font-size: 0.8rem;">鈽呪槄鈽呪槄☆/div>
+                            <p style="font-size: 0.9rem; line-height: 1.6; color: #475569;">"been using for a year now,
+                                quick efficient and hassle free. mistakes on my end were sorted in less than 3 hours.
+                                can't recommend enough."</p>
+                        </div>
+                    </div>
+                    <!-- JANIE -->
+                    <div
+                        style="flex: 1; min-width: 320px; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); display: flex; gap: 1.5rem;">
+                        <img src="assets/images/home/janie.png" alt="Janie"
+                            style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">
+                        <div>
+                            <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">Janie</h4>
+                            <div style="color: #f59e0b; margin-bottom: 1rem; font-size: 0.8rem;">鈽呪槄鈽呪槄☆/div>
+                            <p style="font-size: 0.9rem; line-height: 1.6; color: #475569;">"If you are wondering
+                                whether to buy Bitcoin or other alt coins, dip your toes in with EasyCrypto. They make
+                                it really easy to get started."</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 4rem; opacity: 0.8;">
+                    <p style="font-size: 1.1rem; font-weight: 500;">Check out our <strong>1,998 reviews</strong> <span
+                            style="color: #10b981;">★★★★★</span> <strong
+                            style="color: #10b981; font-size: 1.2rem;">Trustpilot</strong></p>
+                </div>
+            </div>
+            <!-- SECTION 6: CRYPTO NEWS -->
+            <section class="news-section landing-section" style="padding: 6rem 0; background: #fff; color: #1e293b;">
+                <div class="container">
+                    <h2 style="font-size: 2rem; text-align: center; margin-bottom: 1rem; color: #111;">Crypto News</h2>
+                    <p
+                        style="text-align: center; margin-bottom: 4rem; color: #64748b; max-width: 600px; margin-left: auto; margin-right: auto;">
+                        Stay on the pulse with the latest crypto and defi news from Australia and around the globe.</p>
+
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px;">
+                        <!-- NEWS CARD 1 -->
+                        <div class="card"
+                            style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: auto;">
+                            <div class="card-image">
+                                <img src="assets/images/home/news1.png" alt="News 1"
+                                    style="width: 100%; height: 200px; object-fit: cover; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                            </div>
+                            <div class="card-content" style="padding: 20px;">
+                                <h3
+                                    style="font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #111; line-height: 1.4; word-wrap: break-word;">
+                                    "Not my keys, not my crypto?" Maybe it's time for an upgrade?</h3>
+                                <p class="date" style="font-size: 14px; color: #777; margin-bottom: 12px;">October 21,
+                                    2025</p>
+                                <a href="#" class="read-more"
+                                    style="color: #5b3df5; text-decoration: none; font-weight: 600; font-size: 14px;">Read
+                                    more</a>
+                            </div>
+                        </div>
+                        <!-- NEWS CARD 2 -->
+                        <div class="card"
+                            style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: auto;">
+                            <div class="card-image">
+                                <img src="assets/images/home/news2.png" alt="News 2"
+                                    style="width: 100%; height: 200px; object-fit: cover; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                            </div>
+                            <div class="card-content" style="padding: 20px;">
+                                <h3
+                                    style="font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #111; line-height: 1.4; word-wrap: break-word;">
+                                    Weekly Crypto Market Update: Whale Games & Speculation</h3>
+                                <p class="date" style="font-size: 14px; color: #777; margin-bottom: 12px;">October 15,
+                                    2025</p>
+                                <a href="#" class="read-more"
+                                    style="color: #5b3df5; text-decoration: none; font-weight: 600; font-size: 14px;">Read
+                                    more</a>
+                            </div>
+                        </div>
+                        <!-- NEWS CARD 3 -->
+                        <div class="card"
+                            style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: auto;">
+                            <div class="card-image">
+                                <img src="assets/images/home/news3.png" alt="News 3"
+                                    style="width: 100%; height: 200px; object-fit: cover; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                            </div>
+                            <div class="card-content" style="padding: 20px;">
+                                <h3
+                                    style="font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #111; line-height: 1.4; word-wrap: break-word;">
+                                    Institutions Set to Benefit from New Sponsorship Deal</h3>
+                                <p class="date" style="font-size: 14px; color: #777; margin-bottom: 12px;">October 13,
+                                    2025</p>
+                                <a href="#" class="read-more"
+                                    style="color: #5b3df5; text-decoration: none; font-weight: 600; font-size: 14px;">Read
+                                    more</a>
+                            </div>
+                        </div>
+                        <!-- NEWS CARD 4 -->
+                        <div class="card"
+                            style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: auto;">
+                            <div class="card-image">
+                                <img src="assets/images/home/news1.png" alt="News 4"
+                                    style="width: 100%; height: 200px; object-fit: cover; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                            </div>
+                            <div class="card-content" style="padding: 20px;">
+                                <h3
+                                    style="font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #111; line-height: 1.4; word-wrap: break-word;">
+                                    Blockchain Set for Multimillion-Dollar Investment Industry-First</h3>
+                                <p class="date" style="font-size: 14px; color: #777; margin-bottom: 12px;">October 9,
+                                    2025</p>
+                                <a href="#" class="read-more"
+                                    style="color: #5b3df5; text-decoration: none; font-weight: 600; font-size: 14px;">Read
+                                    more</a>
+                            </div>
+                        </div>
+                        <!-- NEWS CARD 5 -->
+                        <div class="card"
+                            style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: auto;">
+                            <div class="card-image">
+                                <img src="assets/images/home/news2.png" alt="News 5"
+                                    style="width: 100%; height: 200px; object-fit: cover; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                            </div>
+                            <div class="card-content" style="padding: 20px;">
+                                <h3
+                                    style="font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #111; line-height: 1.4; word-wrap: break-word;">
+                                    Weekly Market Update: Let the Good Times Roll</h3>
+                                <p class="date" style="font-size: 14px; color: #777; margin-bottom: 12px;">October 8,
+                                    2025</p>
+                                <a href="#" class="read-more"
+                                    style="color: #5b3df5; text-decoration: none; font-weight: 600; font-size: 14px;">Read
+                                    more</a>
+                            </div>
+                        </div>
+                        <!-- NEWS CARD 6 -->
+                        <div class="card"
+                            style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: auto;">
+                            <div class="card-image">
+                                <img src="assets/images/home/news3.png" alt="News 6"
+                                    style="width: 100%; height: 200px; object-fit: cover; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                            </div>
+                            <div class="card-content" style="padding: 20px;">
+                                <h3
+                                    style="font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #111; line-height: 1.4; word-wrap: break-word;">
+                                    AI Agents Meet Stablecoins.. When Money Gets Interesting!</h3>
+                                <p class="date" style="font-size: 14px; color: #777; margin-bottom: 12px;">October 2,
+                                    2025</p>
+                                <a href="#" class="read-more"
+                                    style="color: #5b3df5; text-decoration: none; font-weight: 600; font-size: 14px;">Read
+                                    more</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 7: PURPLE CTA + FOOTER -->
+            <section class="bottom-cta landing-section"
+                style="padding: 8rem 0; background: var(--primary-bg); color: white; position: relative; overflow: hidden;">
+                <div class="container" style="display: flex; align-items: center; gap: 4rem; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 320px;">
+                        <h2 style="font-size: 2.5rem; line-height: 1.2; margin-bottom: 2rem; font-weight: 700;">Ready?
+                            Start trading now and have your order in as little as 2 minutes</h2>
+                        <p style="opacity: 0.8; font-size: 1.1rem; margin-bottom: 2.5rem; line-height: 1.6;">Australia's
+                            safest and easiest Bitcoin & Cryptocurrency retailer. We're open 24/7, we guarantee every
+                            order, and most orders are completed within 2 minutes. Sign up today!</p>
+
+                        <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem;">
+                            <li style="display: flex; align-items: center; gap: 0.75rem; font-size: 1.1rem;"><span
+                                    style="color: #10b981;">✓</span> It's a better way to move money</li>
+                            <li style="display: flex; align-items: center; gap: 0.75rem; font-size: 1.1rem;"><span
+                                    style="color: #10b981;">✓</span> It's a new type of investment</li>
+                            <li style="display: flex; align-items: center; gap: 0.75rem; font-size: 1.1rem;"><span
+                                    style="color: #10b981;">✓</span> It's true financial freedom</li>
+                        </ul>
+                    </div>
+
+                    <div class="buy-card" style="margin-top: 0;">
+                        <h2>Start Investing in Crypto Today</h2>
+                        <div class="buy-label">From Australian dollar (AUD)...</div>
+                        <div class="buy-in">
+                            <input type="text" placeholder="Enter amount...">
+                            <div class="buy-tag"><img src="https://flagcdn.com/w80/au.png" alt="AUD"
+                                    style="width:20px;"> AUD</div>
+                        </div>
+                        <div class="swap-icon" style="margin: 1rem 0; text-align: center; color: #94a3b8;">鈫戔啌</div>
+                        <div class="buy-label">To Bitcoin...</div>
+                        <div class="buy-in">
+                            <input type="text" placeholder="Minimum $100...">
+                            <div class="buy-tag"><img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="BTC"
+                                    style="width:20px;"> BTC</div>
+                        </div>
+                        <button class="buy-now-btn" style="margin-top: 2rem;">Buy now</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FOOTER -->
+            <footer style="background: #111; color: #94a3b8; padding: 6rem 0 3rem;">
+                <div class="container">
+                    <div
+                        style="display: flex; justify-content: space-between; gap: 4rem; flex-wrap: wrap; margin-bottom: 4rem;">
+                        <!-- LEFT COLUMN -->
+                        <div style="flex: 2; min-width: 300px;">
+                            <div class="l-logo" style="font-size: 1.5rem; color: white; margin-bottom: 1.5rem;">
+                                EASYCRYPTO</div>
+                            <p style="line-height: 1.6; margin-bottom: 1.5rem; max-width: 400px;">Easy Crypto wants to
+                                make it easy for anyone to get into the crypto market - no matter how much they have to
+                                invest.</p>
+                            <a href="#"
+                                style="color: white; text-decoration: none; font-size: 0.9rem; display: block; margin-bottom: 2rem;">See
+                                the full list of coins we trade</a>
+
+                            <div style="font-size: 0.8rem; line-height: 1.8;">
+                                ACN: 624780409<br>
+                                ABN: 17624780409<br>
+                                AUSTRAC Registration: DCE100581365-001
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                                <!-- Icons placeholder -->
+                                <span
+                                    style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">f</span>
+                                <span
+                                    style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">t</span>
+                                <span
+                                    style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">i</span>
+                                <span
+                                    style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">l</span>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT COLUMNS -->
+                        <div style="flex: 1; min-width: 150px;">
+                            <h4 style="color: white; margin-bottom: 1.5rem;">Start Here</h4>
+                            <ul
+                                style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+                                <li><a href="signup.html" style="color: inherit; text-decoration: none;">Sign Up</a>
+                                </li>
+                                <li><a href="buy-sell.html" style="color: inherit; text-decoration: none;">Buy &
+                                        Sell</a></li>
+                                <li><a href="#" style="color: inherit; text-decoration: none;">Our Rates</a></li>
+                                <li><a href="#" style="color: inherit; text-decoration: none;">Portfolio Tracker</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <h4 style="color: white; margin-bottom: 1.5rem;">Useful Links</h4>
+                            <ul
+                                style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+                                <li><a href="#" style="color: inherit; text-decoration: none;">Get Help</a></li>
+                                <li><a href="#" style="color: inherit; text-decoration: none;">Learn About Crypto</a>
+                                </li>
+                                <li><a href="#" style="color: inherit; text-decoration: none;">Blog</a></li>
+                                <li><a href="#" style="color: inherit; text-decoration: none;">Careers</a></li>
+                            </ul>
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <h4 style="color: white; margin-bottom: 1.5rem;">About Us</h4>
+                            <ul
+                                style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+                                <li><a href="#" style="color: inherit; text-decoration: none;">About Us</a></li>
+                                <li><a href="#" style="color: inherit; text-decoration: none;">Stats</a></li>
+                                <li><a href="#" style="color: inherit; text-decoration: none;">Terms of Service</a></li>
+                                <li><a href="#" style="color: inherit; text-decoration: none;">Privacy Policy</a></li>
+                            </ul>
+                        </div> <!-- End About Us Column -->
+                    </div> <!-- End Columns Row -->
+
+                    <div
+                        style="border-top: 1px solid #1e293b; padding-top: 2rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+                        <div>漏 2026 Easy Crypto. All rights reserved.</div>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <span>Change country: Australia AU</span>
+                        </div>
+                    </div>
+                </div> <!-- End Container -->
+            </footer>
+    </div> <!-- End Landing Page -->
+
+    <!-- QUICK BUY/SELL MODAL -->
+    <div class="modal-overlay" id="quick-buy-modal">
+        <div class="modal-box">
+            <button class="modal-close" id="modal-close-btn">&times;</button>
+            <div class="modal-content">
+                <h2 style="font-family: 'Outfit';">Quick Buy/Sell</h2>
+                <div class="modal-form-group">
+                    <label class="modal-label">From Australian dollar (AUD)...</label>
+                    <div class="modal-input-wrap">
+                        <input type="text" placeholder="Enter amount...">
+                        <div class="modal-currency"><img src="https://flagcdn.com/w80/au.png" alt="AUD"> AUD</div>
+                    </div>
+                </div>
+                <div class="modal-swap">鈫戔啌</div>
+                <div class="modal-form-group">
+                    <label class="modal-label">To Bitcoin...</label>
+                    <div class="modal-input-wrap">
+                        <input type="text" placeholder="Minimum $100...">
+                        <div class="modal-currency"><img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png"
+                                alt="BTC"> BTC</div>
+                    </div>
+                </div>
+                <button class="modal-btn">Buy now</button>
+                <a href="#" class="modal-footer-link">... or sell</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import {
+            auth,
+            createUserWithEmailAndPassword,
+            enforceKycAccess,
+            db,
+            doc,
+            setDoc,
+            collection,
+            query,
+            where,
+            getDocs
+        } from './firebase-config.js';
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const toggle = document.getElementById('buy-sell-toggle');
+            const dropdown = document.getElementById('buy-sell-dropdown');
+            const instantBuyBtn = document.getElementById('instant-buy-link');
+            const modal = document.getElementById('quick-buy-modal');
+            const modalClose = document.getElementById('modal-close-btn');
+
+            const closeDropdown = () => {
+                if (dropdown && toggle) {
+                    dropdown.classList.remove('active');
+                    toggle.classList.remove('active');
+                }
+            };
+
+            const closeModal = () => {
+                if (modal) {
+                    modal.classList.remove('active');
+                    document.body.classList.remove('modal-open');
+                }
+            };
+
+            const openModal = () => {
+                if (modal) {
+                    closeDropdown();
+                    modal.classList.add('active');
+                    document.body.classList.add('modal-open');
+                }
+            };
+
+            if (toggle && dropdown) {
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = dropdown.classList.contains('active');
+                    if (isOpen) closeDropdown();
+                    else {
+                        dropdown.classList.add('active');
+                        toggle.classList.add('active');
+                    }
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!dropdown.contains(e.target) && !toggle.contains(e.target)) closeDropdown();
+                });
+
+                dropdown.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', closeDropdown);
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') closeDropdown();
+                });
+            }
+
+            if (instantBuyBtn) {
+                instantBuyBtn.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
+            }
+
+            if (modalClose) modalClose.addEventListener('click', closeModal);
+            if (modal) {
+                modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
+                });
+            }
+
+            try {
+                await enforceKycAccess({
+                    requireAuth: false,
+                    kycRedirect: 'mobile.html',
+                    redirectOnPass: 'dashboard.html'
+                });
+            } catch (e) { }
+
+            const regForm = document.getElementById('register-form');
+            if (regForm) {
+                regForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const fullName = document.getElementById('full-name').value;
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    const btn = document.getElementById('reg-btn');
+
+                    try {
+                        btn.innerText = 'Creating Account...';
+                        btn.disabled = true;
+                        const normalizedEmail = email.trim().toLowerCase();
+
+                        const existingUsers = await getDocs(query(collection(db, 'users'), where('email', '==', normalizedEmail)));
+                        if (!existingUsers.empty) {
+                            throw new Error('This email is already registered. Please login directly.');
+                        }
+
+                        const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+                        const user = userCredential.user;
+
+                        // Save user metadata to Firestore
+                        await setDoc(doc(db, 'users', user.uid), {
+                            uid: user.uid,
+                            account: 'EC' + user.uid.substring(0, 8).toUpperCase(),
+                            email: normalizedEmail,
+                            phone: '',
+                            platform: 'Website',
+                            name: 'New User',
+                            balance: 0,
+                            kyc_status: 'Not Verified',
+                            status: 'Active',
+                            role: 'user',
+                            joined: new Date().toISOString()
+                        });
+
+                        alert(`Registration successful! Please login.\nAccount: EC${user.uid.substring(0, 8).toUpperCase()}`);
+                        window.location.href = 'login.html';
+                    } catch (err) {
+                        if (err.code === 'auth/email-already-in-use') {
+                            alert('This email is already registered. Please login directly.');
+                        } else {
+                            alert(err.message);
+                        }
+                        btn.innerText = 'Create Account';
+                        btn.disabled = false;
+                    }
+                });
+            }
+        });
+    </script>
+    <script src="/js/site-language.js"></script>
+</body>
+
+
+</html>
+
+
+
+
+
+
+

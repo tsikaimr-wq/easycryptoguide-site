@@ -1,0 +1,159 @@
+/* --- MULTI-COIN DASHBOARD STYLES --- */
+.mc-wrapper {
+    background: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.mc-header-banner {
+    background: linear-gradient(135deg, #8147ff 0%, #4c1d95 100%);
+    padding: 3rem 0;
+    text-align: center;
+    color: white;
+}
+
+.mc-toggle-wrap {
+    display: inline-flex;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px;
+    border-radius: 8px;
+    gap: 4px;
+}
+
+.mc-toggle-btn {
+    padding: 10px 24px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.mc-toggle-btn.active {
+    background: #22c55e;
+}
+
+.mc-toggle-btn.secondary {
+    background: white;
+    color: #111;
+}
+
+.mc-main-content {
+    background: #fff;
+    padding: 4rem 0;
+    flex: 1;
+}
+
+.mc-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 4rem;
+}
+
+.mc-coin-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.mc-search-box {
+    position: relative;
+    max-width: 300px;
+}
+
+.mc-search-box input {
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    color: #334155;
+    background: #f8fafc;
+}
+
+.mc-search-icons {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.4;
+    font-size: 0.9rem;
+}
+
+.mc-coin-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.mc-coin-card {
+    background: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mc-coin-card:hover {
+    border-color: #8147ff;
+    box-shadow: 0 4px 12px rgba(129, 71, 255, 0.1);
+}
+
+.mc-coin-card img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+}
+
+.mc-coin-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #334155;
+}
+
+.mc-order-summary {
+    position: sticky;
+    top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.mc-total-display {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.mc-total-display span {
+    font-size: 1rem;
+    color: #94a3b8;
+    font-weight: 400;
+    margin-left: 8px;
+}
+
+.mc-buy-btn {
+    background: #22c55e;
+    color: white;
+    border: none;
+    padding: 1.1rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.2s;
+}
+
+.mc-buy-btn:hover {
+    background: #16a34a;
+}

@@ -1,0 +1,20 @@
+{
+  "name": "ecproject-main",
+  "version": "1.0.0",
+  "description": "这是一个以交易所为主题的纯前端项目，包含官网首页、登录注册、移动端主站、行情页、永续与交割合约页面，以及后台页面。",
+  "main": "firebase-config.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "acceptance": "node scripts/acceptance-check.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "playwright-core": "^1.58.2"
+  }
+}

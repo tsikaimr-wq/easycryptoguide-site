@@ -1,0 +1,606 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyCrypto - Mining Pool Lock</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/brand/favicon-16x16.png">
+    <link rel="shortcut icon" href="/assets/brand/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #fff !important;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            overflow-y: scroll;
+        }
+
+        .topbar-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        /* Hero Section */
+        .fund-hero {
+            background: #111;
+            color: #fff;
+            padding: 40px 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hero-title {
+            font-size: 22px;
+            font-weight: 400;
+            margin-bottom: 10px;
+        }
+
+        .hero-subtitle {
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 40px;
+        }
+
+        /* Dashboard Board */
+        .fund-board {
+            position: relative;
+            border: 1px solid rgba(234, 179, 8, 0.4);
+            border-radius: 4px;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 800px;
+            background: rgba(234, 179, 8, 0.05);
+            margin-bottom: 90px;
+        }
+
+        .board-corner {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+        }
+
+        .bc-tl {
+            top: -1px;
+            left: -1px;
+            border-top: 2px solid #eab308;
+            border-left: 2px solid #eab308;
+        }
+
+        .bc-tr {
+            top: -1px;
+            right: -1px;
+            border-top: 2px solid #eab308;
+            border-right: 2px solid #eab308;
+        }
+
+        .bc-bl {
+            bottom: -1px;
+            left: -1px;
+            border-bottom: 2px solid #eab308;
+            border-left: 2px solid #eab308;
+        }
+
+        .bc-br {
+            bottom: -1px;
+            right: -1px;
+            border-bottom: 2px solid #eab308;
+            border-right: 2px solid #eab308;
+        }
+
+        .stat-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .stat-currency {
+            font-size: 11px;
+            color: #888;
+            margin-top: -2px;
+            display: none;
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-top: 4px;
+        }
+
+        .stat-val-small {
+            font-size: 13px;
+            color: #ccc;
+        }
+
+        .board-tabs {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 150px;
+            z-index: 10;
+        }
+
+        .board-tab {
+            color: #d97706;
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Abstract Center Graphic overlay */
+        .board-center-graphic {
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .board-center-graphic i {
+            font-size: 44px;
+            color: #eab308;
+            /* Yellow/Gold */
+        }
+
+        .board-line-bg {
+            position: absolute;
+            bottom: -90px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 20px;
+            border-bottom: 1px dashed #444;
+        }
+
+        .board-glow {
+            position: absolute;
+            bottom: -90px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 40px;
+            background: radial-gradient(ellipse at center, rgba(234, 179, 8, 0.15) 0%, transparent 60%);
+        }
+
+        /* Page Tabs (Fund/Mine) */
+        .page-tabs-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            gap: 40px;
+            padding: 0 20px;
+        }
+
+        .p-tab {
+            color: #888;
+            font-size: 14px;
+            padding-bottom: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .p-tab.active {
+            color: #0ea5e9;
+            border-bottom: 2px solid #0ea5e9;
+        }
+
+        /* Main Content Area */
+        .main-area {
+            background: #fff;
+            position: relative;
+        }
+
+        .table-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px 20px;
+        }
+
+        .fund-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .fund-table th {
+            text-align: left;
+            padding: 15px;
+            color: #888;
+            font-weight: 500;
+            font-size: 13px;
+            border-bottom: 1px solid #f9f9f9;
+        }
+
+        .fund-table td {
+            padding: 20px 15px;
+            border-bottom: 1px solid #f9f9f9;
+            vertical-align: middle;
+            font-size: 14px;
+            font-weight: 500;
+            color: #111;
+        }
+
+        .no-data {
+            text-align: center !important;
+            padding: 40px 0 !important;
+            color: #999 !important;
+            font-size: 13px !important;
+            border-bottom: none !important;
+        }
+
+        /* FAQ Area */
+        .faq-container {
+            max-width: 1000px;
+            margin: 40px auto 100px;
+            padding: 0 20px;
+        }
+
+        .faq-title {
+            font-size: 19px;
+            font-weight: 400;
+            margin-bottom: 20px;
+            color: #111;
+        }
+
+        .faq-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 0;
+            border-bottom: 1px solid #f5f5f5;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .faq-item:hover {
+            color: #111;
+        }
+
+        .faq-item i {
+            color: #999;
+            font-size: 18px;
+        }
+
+        .ec-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(9, 11, 16, 0.62);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2200;
+            padding: 18px;
+        }
+
+        .ec-modal-overlay.show {
+            display: flex;
+        }
+
+        .ec-modal-card {
+            width: min(560px, 96vw);
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 22px 54px rgba(5, 9, 20, 0.24);
+            border: 1px solid #e8ebf1;
+            overflow: hidden;
+        }
+
+        .ec-modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid #eef2f7;
+            font-weight: 600;
+            color: #1a2233;
+            font-size: 15px;
+        }
+
+        .ec-modal-close {
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            color: #7a8395;
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .ec-modal-body {
+            padding: 16px;
+            color: #394252;
+            font-size: 14px;
+            line-height: 1.62;
+        }
+
+        .ec-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 28px;
+            transform: translateX(-50%) translateY(14px);
+            opacity: 0;
+            pointer-events: none;
+            background: rgba(19, 24, 35, 0.95);
+            color: #fff;
+            font-size: 13px;
+            border-radius: 8px;
+            padding: 10px 14px;
+            z-index: 2300;
+            transition: all 0.2s ease;
+        }
+
+        .ec-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topbar-wrapper">
+        <nav class="topbar">
+            <a href="dashboard.html" class="t-logo">
+                <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+                    <path d="M20 0L37.3205 10V30L20 40L2.67949 30V10L20 0Z" fill="white" fill-opacity="0.2" />
+                    <path d="M20 8L30.3923 14V26L20 32L9.6077 26V14L20 8Z" fill="white" />
+                </svg>
+                EASYCRYPTO
+            </a>
+            <div class="t-links">
+                <a href="markets.html" class="t-link">Markets</a>
+                <div class="t-link arr" id="transaction-menu">
+                    Transaction
+                    <div class="nav-dropdown" id="transaction-dropdown">
+                        <a href="contract.html" class="dropdown-item">
+                            <i class="ri-file-list-3-line"></i>
+                            Perpetual
+                        </a>
+                        <a href="delivery_chart.html" class="dropdown-item">
+                            <i class="ri-wallet-3-line"></i>
+                            Delivery
+                        </a>
+                        <a href="trade.html" class="dropdown-item">
+                            <i class="ri-focus-3-line"></i>
+                            Spot
+                        </a>
+                    </div>
+                </div>
+                <div class="t-link arr active" id="finance-menu">
+                    Financial business
+                    <div class="nav-dropdown" id="finance-dropdown">
+                        <a href="fund.html" class="dropdown-item">
+                            <i class="ri-funds-box-line"></i>
+                            <div class="dropdown-col">
+                                <span class="dropdown-title">Fund Management</span>
+                                <span class="dropdown-desc">One-stop investment service</span>
+                            </div>
+                        </a>
+                        <a href="mine.html" class="dropdown-item">
+                            <i class="ri-hammer-line"></i>
+                            <div class="dropdown-col">
+                                <span class="dropdown-title">Mining Pool lock</span>
+                                <span class="dropdown-desc">Serve the miners and improve mining income</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <a href="mobile.html" class="t-link">Mobile</a>
+            </div>
+            <div class="t-actions">
+                <button class="btn-dep">Deposit</button>
+                <a href="#" class="t-r arr">Wallet</a>
+                <a href="#" class="t-r arr">Order</a>
+                <a href="login.html" class="t-r arr">Account</a>
+                <div class="t-r" style="border-left:1px solid #333; margin-left:15px; color:#fff;">English</div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Top Dashboard Section -->
+    <div class="fund-hero">
+        <h1 class="hero-title">It is so simple to improve the income of DEMO mining pool financing</h1>
+        <div class="hero-subtitle">Mining machine generates money and seizes new opportunities</div>
+
+        <div class="fund-board">
+            <div class="board-corner bc-tl"></div>
+            <div class="board-corner bc-tr"></div>
+            <div class="board-corner bc-bl"></div>
+            <div class="board-corner bc-br"></div>
+
+            <div class="stat-group">
+                <span class="stat-label">Order</span>
+                <span class="stat-value">0.0 USDT</span>
+                <span class="stat-val-small">鈮?$ 0.0</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-label">Daily Revenue</span>
+                <span class="stat-value">0.0 USDT</span>
+                <span class="stat-val-small">鈮?$ 0.0</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-label">Cumulative Revenue</span>
+                <span class="stat-value">0.0 USDT</span>
+                <span class="stat-val-small">鈮?$ 0.0</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-label">Order in custody</span>
+                <span class="stat-value"></span>
+            </div>
+
+            <!-- Dashboard inner Graphic & Tabs -->
+            <div class="board-line-bg"></div>
+            <div class="board-glow"></div>
+            <div class="board-center-graphic">
+                <i class="ri-shield-check-line"></i>
+            </div>
+            <div class="board-tabs">
+                <div class="board-tab">Account</div>
+                <div class="board-tab">History</div>
+            </div>
+        </div>
+
+        <!-- Lower tabs -->
+        <div class="page-tabs-container">
+            <a href="fund.html" class="p-tab">Fund</a>
+            <a href="mine.html" class="p-tab active">Mine</a>
+        </div>
+    </div>
+
+    <!-- Main Section -->
+    <div class="main-area">
+        <div class="table-container">
+            <table class="fund-table">
+                <thead>
+                    <tr>
+                        <th>Project name</th>
+                        <th>Daily Revenue</th>
+                        <th>Period</th>
+                        <th>Single limit</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="5" class="no-data">No Data</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bottom FAQ Section -->
+        <div class="faq-container">
+            <h2 class="faq-title">Related questions</h2>
+            <div class="faq-list">
+                <div class="faq-item" data-faq-key="mine_locked">
+                    <span>1.What is Locked Mining</span>
+                    <i class="ri-arrow-right-s-line"></i>
+                </div>
+                <div class="faq-item" data-faq-key="mine_reward">
+                    <span>2.Miner Reward</span>
+                    <i class="ri-arrow-right-s-line"></i>
+                </div>
+                <div class="faq-item" data-faq-key="mine_invite">
+                    <span>3.Promotion invitation reward</span>
+                    <i class="ri-arrow-right-s-line"></i>
+                </div>
+            </div>
+        </div>
+
+        <div id="ec-faq-modal" class="ec-modal-overlay" aria-hidden="true">
+            <div class="ec-modal-card" role="dialog" aria-modal="true" aria-labelledby="ec-faq-title">
+                <div class="ec-modal-head">
+                    <span id="ec-faq-title">Question</span>
+                    <button class="ec-modal-close" type="button" data-close-faq>&times;</button>
+                </div>
+                <div class="ec-modal-body" id="ec-faq-content"></div>
+            </div>
+        </div>
+        <div id="ec-page-toast" class="ec-toast"></div>
+    </div>
+
+    <script>
+        // Transaction Dropdown logic
+        const txMenu = document.getElementById('transaction-menu');
+        const txDropdown = document.getElementById('transaction-dropdown');
+
+        txMenu.addEventListener('mouseenter', () => txDropdown.classList.add('active'));
+        txMenu.addEventListener('mouseleave', () => txDropdown.classList.remove('active'));
+
+        // Financial business Dropdown logic
+        const finMenu = document.getElementById('finance-menu');
+        const finDropdown = document.getElementById('finance-dropdown');
+
+        finMenu.addEventListener('mouseenter', () => finDropdown.classList.add('active'));
+        finMenu.addEventListener('mouseleave', () => finDropdown.classList.remove('active'));
+
+        const toastEl = document.getElementById('ec-page-toast');
+        function showPageToast(message) {
+            if (!toastEl) return;
+            toastEl.textContent = message;
+            toastEl.classList.add('show');
+            clearTimeout(toastEl._timer);
+            toastEl._timer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+        }
+
+        const faqAnswers = {
+            mine_locked: {
+                title: 'What is Locked Mining',
+                content: 'Locked mining means your subscribed amount is kept in custody for a fixed period. During this period, it generates daily revenue based on the selected plan.'
+            },
+            mine_reward: {
+                title: 'Miner Reward',
+                content: 'Miner reward is distributed daily according to plan rate and subscription principal. Revenue can be viewed in account history after settlement.'
+            },
+            mine_invite: {
+                title: 'Promotion invitation reward',
+                content: 'Invitation reward is credited when invited users complete eligible orders. Reward ratio and conditions follow current campaign rules.'
+            }
+        };
+
+        const faqModal = document.getElementById('ec-faq-modal');
+        const faqTitle = document.getElementById('ec-faq-title');
+        const faqContent = document.getElementById('ec-faq-content');
+
+        document.querySelectorAll('.faq-item').forEach((item) => {
+            item.addEventListener('click', () => {
+                const key = item.getAttribute('data-faq-key');
+                const data = faqAnswers[key];
+                if (!data) {
+                    showPageToast('FAQ content is being prepared.');
+                    return;
+                }
+                faqTitle.textContent = data.title;
+                faqContent.textContent = data.content;
+                faqModal.classList.add('show');
+            });
+        });
+
+        document.querySelectorAll('[data-close-faq]').forEach((btn) => {
+            btn.addEventListener('click', () => faqModal.classList.remove('show'));
+        });
+        faqModal.addEventListener('click', (e) => {
+            if (e.target === faqModal) faqModal.classList.remove('show');
+        });
+    </script>
+    <script type="module">
+        import { enforceKycAccess } from './firebase-config.js';
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await enforceKycAccess({
+                requireAuth: true,
+                unauthRedirect: 'login.html',
+                kycRedirect: 'mobile.html'
+            });
+        });
+    </script>
+    <script src="/js/site-language.js"></script>
+</body>
+
+</html>
+
+
+
+

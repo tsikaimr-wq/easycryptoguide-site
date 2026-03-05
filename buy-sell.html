@@ -1,0 +1,2256 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Multi-coin Order - EasyCrypto</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/brand/favicon-16x16.png">
+    <link rel="shortcut icon" href="/assets/brand/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap"
+                rel="stylesheet">
+        <link rel="stylesheet" href="style.css">
+        <style>
+                /* DROPDOWN ENHANCEMENTS */
+                .l-nav-item {
+                        position: relative;
+                }
+
+                .l-dropdown {
+                        position: absolute;
+                        top: calc(100% + 15px);
+                        left: 0;
+                        background: linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%);
+                        min-width: 260px;
+                        padding: 8px 0;
+                        border-radius: 12px;
+                        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                        list-style: none;
+                        z-index: 9999;
+                        opacity: 0;
+                        visibility: hidden;
+                        transform: translateY(-10px);
+                        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        pointer-events: none;
+                }
+
+                .l-dropdown.active {
+                        opacity: 1;
+                        visibility: visible;
+                        transform: translateY(0);
+                        pointer-events: auto;
+                }
+
+                .l-dropdown-item a {
+                        color: white;
+                        text-decoration: none;
+                        padding: 12px 20px;
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        font-size: 0.95rem;
+                        font-weight: 500;
+                        transition: background 0.2s;
+                }
+
+                .l-dropdown-item a:hover {
+                        background: rgba(255, 255, 255, 0.1);
+                }
+
+                .l-nav-link span {
+                        transition: transform 0.2s;
+                        display: inline-block;
+                }
+
+                .l-nav-link.active span {
+                        transform: rotate(180deg);
+                }
+
+                body {
+                        overflow-x: hidden;
+                }
+
+                .coin-item {
+                        background: white;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 12px;
+                        padding: 12px 16px;
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                }
+
+                .coin-item:hover {
+                        border-color: #8147ff;
+                        box-shadow: 0 4px 12px rgba(129, 71, 255, 0.1);
+                        transform: translateY(-2px);
+                }
+
+                .coin-item img {
+                        width: 28px;
+                        height: 28px;
+                }
+
+                .coin-item span {
+                        font-weight: 600;
+                        color: #334155;
+                        font-size: 0.95rem;
+                }
+
+                body.modal-open {
+                        overflow: hidden;
+                }
+        </style>
+</head>
+
+<body class="app-mode">
+
+        <div id="landing-page" style="background: var(--primary-bg); min-height: auto;">
+                <!-- FULL HEADER FROM REGISTER.HTML -->
+                <header class="landing-nav container">
+                        <a href="index.html" class="l-logo">
+                                <svg width="28" height="28" viewBox="0 0 40 40" fill="white" style="margin-right:4px;">
+                                        <path d="M20 0L37.3205 10V30L20 40L2.67949 30V10L20 0Z" fill-opacity="0.2" />
+                                        <path d="M20 8L30.3923 14V26L20 32L9.6077 26V14L20 8Z" />
+                                </svg>
+                                EASYCRYPTO
+                        </a>
+                        <div class="l-nav-links">
+                                <div class="l-nav-item">
+                                        <button class="l-nav-link" id="buy-sell-toggle">Buy & Sell
+                                                <span>▼</span></button>
+                                        <ul class="l-dropdown" id="buy-sell-dropdown">
+                                                <li class="l-dropdown-item">
+                                                        <a href="#" id="instant-buy-link"><span>•</span> Instant buy &
+                                                                sell</a>
+                                                </li>
+                                                <li class="l-dropdown-item">
+                                                        <a href="buy-sell.html#multi-coin"><span></span> Multi-coin
+                                                                order</a>
+                                                </li>
+                                                <li class="l-dropdown-item">
+                                                        <a href="buy-sell.html#auto-buy"
+                                                                id="auto-buy-link"><span></span> Auto-Buy</a>
+                                                </li>
+                                                <li class="l-dropdown-item">
+                                                        <a href="buy-sell.html#swap"><span></span> Swap</a>
+                                                </li>
+                                                <li class="l-dropdown-item">
+                                                        <a href="#"><span></span> Institutional</a>
+                                                </li>
+                                                <li class="l-dropdown-item">
+                                                        <a href="#"><span></span> OTC</a>
+                                                </li>
+                                        </ul>
+                                </div>
+                                <a href="#" class="l-nav-link">Rates</a>
+                                <a href="#" class="l-nav-link">Tracker</a>
+                                <a href="#" class="l-nav-link">SMSF</a>
+                                <a href="#" class="l-nav-link">Learn <span>▼</span></a>
+                                <a href="#" class="l-nav-link">About Us</a>
+                                <a href="login.html" class="l-nav-link">Sign In</a>
+                                <a href="signup.html" class="btn-signup">Sign up</a>
+                        </div>
+                </header>
+
+                <!-- HERO SECTION -->
+                <section
+                        style="background: var(--primary-bg); padding: 8rem 0 10rem; text-align: center; position: relative; overflow: hidden;">
+                        <div class="container" style="position: relative; z-index: 2;">
+                                <h1 id="hero-title"
+                                        style="font-family: 'Outfit'; font-size: 3.5rem; font-weight: 700; color: white; margin-bottom: 1rem;">
+                                        Buy & Sell</h1>
+                                <p
+                                        style="color: rgba(255,255,255,0.9); font-size: 1.1rem; margin-bottom: 3rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                                        Select from any of our 160 coins and place an order direct from AUD
+                                </p>
+                                <div id="view-toggles"
+                                        style="display: inline-flex; background: white; border-radius: 12px; padding: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                                        <button id="buy-tab-btn"
+                                                style="padding: 14px 35px; border: none; background: #10b981; color: white; border-radius: 9px; font-weight: 700; cursor: pointer; font-size: 1rem;">Buy</button>
+                                        <button id="sell-tab-btn"
+                                                style="padding: 14px 35px; border: none; background: transparent; color: #1e293b; border-radius: 9px; font-weight: 700; cursor: pointer; font-size: 1rem;">Sell</button>
+                                </div>
+                        </div>
+                        <!-- CURVED WAVE DIVIDER -->
+                        <svg style="position: absolute; bottom: -1px; left: 0; width: 100%; height: auto; display: block;"
+                                viewBox="0 0 1440 120" preserveAspectRatio="none">
+                                <path fill="white"
+                                        d="M0,64L120,74.7C240,85,480,107,720,106.7C960,107,1200,85,1320,74.7L1440,64L1440,120L1320,120C1200,120,960,120,720,120C480,120,240,120,120,120L0,120Z">
+                                </path>
+                        </svg>
+                </section>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div id="buy-sell-view" class="container" style="padding: 4rem 2rem;">
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 60px; align-items: start;">
+                        <!-- CATEGORY BAR (Spans both columns) -->
+                        <div
+                                style="grid-column: 1 / -1; background: white; padding: 1rem 1.5rem; border-radius: 16px; display: flex; align-items: center; gap: 3rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.02);">
+                                <div style="position: relative; width: 300px;">
+                                        <input type="text" placeholder="Search"
+                                                style="width: 100%; padding: 12px 15px; padding-left: 45px; border: 1px solid #f1f5f9; border-radius: 10px; outline: none; background: #f8fafc; font-size: 0.95rem;">
+                                        <span
+                                                style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); opacity: 0.4;">🔍</span>
+                                </div>
+                                <div
+                                        style="display: flex; gap: 2rem; font-size: 0.9rem; font-weight: 500; color: #64748b; overflow-x: auto; white-space: nowrap; align-items: center;">
+                                        <span style="color: #111; font-weight: 700; cursor: pointer;">All</span>
+                                        <span style="cursor: pointer;">DeFi</span>
+                                        <span style="cursor: pointer;">Medium of Exchange</span>
+                                        <span style="cursor: pointer;">Metaverse</span>
+                                        <span style="cursor: pointer; color: #8147ff; font-weight: 600;">NFT</span>
+                                        <span style="cursor: pointer;">DAO</span>
+                                        <span style="cursor: pointer;">Governance</span>
+                                        <span style="cursor: pointer;">Logistics</span>
+                                        <span style="cursor: pointer;">DEX</span>
+                                        <span style="cursor: pointer;">Gaming</span>
+                                </div>
+                        </div>
+                        <div>
+                                <div
+                                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;">
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/bitcoin-btc-logo.png"
+                                                        alt="BTC"><span>Bitcoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ethereum-eth-logo.png"
+                                                        alt="ETH"><span>Ethereum</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/binance-coin-bnb-logo.png"
+                                                        alt="BNB"><span>Binance Coin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/solana-sol-logo.png"
+                                                        alt="SOL"><span>Solana</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/cardano-ada-logo.png"
+                                                        alt="ADA"><span>Cardano</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/xrp-xrp-logo.png"
+                                                        alt="XRP"><span>XRP</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/dogecoin-doge-logo.png"
+                                                        alt="DOGE"><span>Dogecoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/polkadot-dot-logo.png"
+                                                        alt="DOT"><span>Polkadot</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png"
+                                                        alt="SHIB"><span>Shiba Inu</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/avalanche-avax-logo.png"
+                                                        alt="AVAX"><span>Avalanche</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/chainlink-link-logo.png"
+                                                        alt="LINK"><span>Chainlink</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/uniswap-uni-logo.png"
+                                                        alt="UNI"><span>Uniswap</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/binance-usd-busd-logo.png"
+                                                        alt="BUSD"><span>Binance USD</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/bitcoin-cash-bch-logo.png"
+                                                        alt="BCH"><span>Bitcoin Cash</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/litecoin-ltc-logo.png"
+                                                        alt="LTC"><span>Litecoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/polygon-matic-logo.png"
+                                                        alt="MATIC"><span>Polygon</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/theta-theta-logo.png"
+                                                        alt="THETA"><span>Theta Token</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/stellar-xlm-logo.png"
+                                                        alt="XLM"><span>Stellar</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.png"
+                                                        alt="DAI"><span>Dai</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/vechain-vet-logo.png"
+                                                        alt="VET"><span>VeChain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ethereum-classic-etc-logo.png"
+                                                        alt="ETC"><span>ETC Ethereum Classic</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/filecoin-fil-logo.png"
+                                                        alt="FIL"><span>Filecoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/monero-xmr-logo.png"
+                                                        alt="XMR"><span>Monero</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/tron-trx-logo.png"
+                                                        alt="TRX"><span>TRON</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/eos-eos-logo.png"
+                                                        alt="EOS"><span>EOS</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/aave-aave-logo.png"
+                                                        alt="AAVE"><span>Aave</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/algorand-algo-logo.png"
+                                                        alt="ALGO"><span>Algorand</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/theta-fuel-tfuel-logo.png"
+                                                        alt="TFUEL"><span>Theta Fuel</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/pancakeswap-cake-logo.png"
+                                                        alt="CAKE"><span>PancakeSwap</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/maker-mkr-logo.png"
+                                                        alt="MKR"><span>Maker</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/neo-neo-logo.png"
+                                                        alt="NEO"><span>NEO</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/tezos-xtz-logo.png"
+                                                        alt="XTZ"><span>Tezos</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/iota-miota-logo.png"
+                                                        alt="IOTA"><span>IOTA</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/cosmos-atom-logo.png"
+                                                        alt="ATOM"><span>Cosmos</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/kusama-ksm-logo.png"
+                                                        alt="KSM"><span>Kusama</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/hedera-hashgraph-hbar-logo.png"
+                                                        alt="HBAR"><span>Hedera Hashgraph</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/the-graph-grt-logo.png"
+                                                        alt="GRT"><span>The Graph</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/thorchain-rune-logo.png"
+                                                        alt="RUNE"><span>THORChain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/trueusd-tusd-logo.png"
+                                                        alt="TUSD"><span>TrueUSD</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/chiliz-chz-logo.png"
+                                                        alt="CHZ"><span>Chiliz</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/decred-dcr-logo.png"
+                                                        alt="DCR"><span>Decred</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/zcash-zec-logo.png"
+                                                        alt="ZEC"><span>ZCash</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/compound-comp-logo.png"
+                                                        alt="COMP"><span>Compound</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/waves-waves-logo.png"
+                                                        alt="WAVES"><span>Waves</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/dash-dash-logo.png"
+                                                        alt="DASH"><span>Dash</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/yearn-finance-yfi-logo.png"
+                                                        alt="YFI"><span>Yearn.Finance</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/multiversx-egld-egld-logo.png"
+                                                        alt="EGLD"><span>MultiverseX</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/holo-hot-logo.png"
+                                                        alt="HOT"><span>Holo</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/nem-xem-logo.png"
+                                                        alt="XEM"><span>NEM</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/sushiswap-sushi-logo.png"
+                                                        alt="SUSHI"><span>SushiSwap</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/zilliqa-zil-logo.png"
+                                                        alt="ZIL"><span>Zilliqa</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/enjin-coin-enj-logo.png"
+                                                        alt="ENJ"><span>Enjin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/basic-attention-token-bat-logo.png"
+                                                        alt="BAT"><span>Basic Attention Token</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/synthetix-snx-logo.png"
+                                                        alt="SNX"><span>Synthetix</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/decentraland-mana-logo.png"
+                                                        alt="MANA"><span>Decentraland</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/stacks-stx-logo.png"
+                                                        alt="STX"><span>Stacks</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/quant-qnt-logo.png"
+                                                        alt="QNT"><span>Quant Network</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/digibyte-dgb-logo.png"
+                                                        alt="DGB"><span>DigiByte</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/fantom-ftm-logo.png"
+                                                        alt="FTM"><span>Fantom</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/qtum-qtum-logo.png"
+                                                        alt="QTUM"><span>QTUM</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/kucoin-token-kcs-logo.png"
+                                                        alt="KCS"><span>KuCoin Shares</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ontology-ont-logo.png"
+                                                        alt="ONT"><span>Ontology</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/0x-zrx-logo.png"
+                                                        alt="ZRX"><span>0x</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/omisego-omg-logo.png"
+                                                        alt="OMG"><span>OmiseGo</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/siacoin-sc-logo.png"
+                                                        alt="SC"><span>Siacoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/icon-icx-logo.png"
+                                                        alt="ICX"><span>Icon</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ravencoin-rvn-logo.png"
+                                                        alt="RVN"><span>Ravencoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/1inch-1inch-logo.png"
+                                                        alt="1INCH"><span>1inch Exchange</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ankr-ankr-logo.png"
+                                                        alt="ANKR"><span>Ankr</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/verge-xvg-logo.png"
+                                                        alt="XVG"><span>Verge</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/ren-ren-logo.png"
+                                                        alt="REN"><span>Ren</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/reserve-rights-rsr-logo.png"
+                                                        alt="RSR"><span>Reserve Rights</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/kyber-network-crystal-v2-kncl-logo.png"
+                                                        alt="KNC"><span>Kyber Network</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/loopring-lrc-logo.png"
+                                                        alt="LRC"><span>Loopring</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/lisk-lsk-logo.png"
+                                                        alt="LSK"><span>Lisk</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ocean-protocol-ocean-logo.png"
+                                                        alt="OCEAN"><span>Ocean Protocol</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/kava-kava-logo.png"
+                                                        alt="KAVA"><span>Kava</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/iexec-rlc-rlc-logo.png"
+                                                        alt="RLC"><span>iExec RLC</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/reef-reef-logo.png"
+                                                        alt="REEF"><span>Reef</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/band-protocol-band-logo.png"
+                                                        alt="BAND"><span>BandChain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/swipe-sxp-logo.png"
+                                                        alt="SXP"><span>Swipe</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/funfair-fun-logo.png"
+                                                        alt="FUN"><span>FunFair</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/injective-protocol-inj-logo.png"
+                                                        alt="INJ"><span>Injective Protocol</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/orchid-oxt-logo.png"
+                                                        alt="OXT"><span>Orchid</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/fetch-ai-fet-logo.png"
+                                                        alt="FET"><span>Fetch.AI</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/numeraire-nmr-logo.png"
+                                                        alt="NMR"><span>Numeraire</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ontology-ont-logo.png"
+                                                        alt="ONG"><span>Ontology Gas</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/the-sandbox-sand-logo.png"
+                                                        alt="SAND"><span>The Sandbox</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/storm-stmx-logo.png"
+                                                        alt="STMX"><span>StormX</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/pax-gold-paxg-logo.png"
+                                                        alt="PAXG"><span>PAX Gold</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/streamr-data-logo.png"
+                                                        alt="DATA"><span>Streamr DATAcoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/coti-coti-logo.png"
+                                                        alt="COTI"><span>COTI</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/utrust-utk-logo.png"
+                                                        alt="UTK"><span>Utrust</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/hive-hive-logo.png"
+                                                        alt="HIVE"><span>Hive</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/defichain-dfi-logo.png"
+                                                        alt="DFI"><span>DeFiChain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/orion-protocol-orn-logo.png"
+                                                        alt="ORN"><span>Orion Protocol</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/steem-steem-logo.png"
+                                                        alt="STEEM"><span>Steem</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/wanchain-wan-logo.png"
+                                                        alt="WAN"><span>Wanchain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/komodo-kmd-logo.png"
+                                                        alt="KMD"><span>Komodo</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/polymath-poly-logo.png"
+                                                        alt="POLY"><span>Polymath</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/trust-wallet-token-twt-logo.png"
+                                                        alt="TWT"><span>Trust Wallet Token</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/aion-aion-logo.png"
+                                                        alt="AION"><span>Aion</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/request-network-req-logo.png"
+                                                        alt="REQ"><span>Request</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/power-ledger-powr-logo.png"
+                                                        alt="POWR"><span>Power Ledger</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/neo-gas-gas-logo.png"
+                                                        alt="GAS"><span>NEO Gas</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/waltonchain-wtc-logo.png"
+                                                        alt="WTC"><span>Waltonchain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/singularitynet-agix-logo.png"
+                                                        alt="AGIX"><span>SingularityNET</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/apecoin-ape-logo.png"
+                                                        alt="APE"><span>ApeCoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/arweave-ar-logo.png"
+                                                        alt="AR"><span>Arweave</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/ark-ark-logo.png"
+                                                        alt="ARK"><span>Ark</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/audius-audio-logo.png"
+                                                        alt="AUDIO"><span>Audius</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/axie-infinity-axs-logo.png"
+                                                        alt="AXS"><span>Axie Infinity</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/beam-beam-logo.png"
+                                                        alt="BEAM"><span>Beam</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/bitcoin-gold-btg-logo.png"
+                                                        alt="BTG"><span>Bitcoin Gold</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/celo-celo-logo.png"
+                                                        alt="CELO"><span>Celo</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/centrality-cennz-logo.png"
+                                                        alt="CENNZ"><span>Centrality</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/cronos-cro-logo.png"
+                                                        alt="CRO"><span>Crypto.com CRO</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/dent-dent-logo.png"
+                                                        alt="DENT"><span>Dent</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/digixdao-dgd-logo.png"
+                                                        alt="DGD"><span>DigixDAO</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/dragonchain-drgn-logo.png"
+                                                        alt="DRGN"><span>Dragonchain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/electroneum-etn-logo.png"
+                                                        alt="ETN"><span>Electroneum</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/factom-fct-logo.png"
+                                                        alt="FCT"><span>Factom</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/flux-flux-logo.png"
+                                                        alt="FLUX"><span>Flux</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/frontier-front-logo.png"
+                                                        alt="FRONT"><span>Frontier</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ftx-token-ftt-logo.png"
+                                                        alt="FTT"><span>FTX Token</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/gala-gala-logo.png"
+                                                        alt="GALA"><span>Gala</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/stepn-gmt-logo.png"
+                                                        alt="GMT"><span>STEPN</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/golem-glm-logo.png"
+                                                        alt="GLM"><span>Golem</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/genesis-vision-gvt-logo.png"
+                                                        alt="GVT"><span>Genesis Vision</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/helium-hnt-logo.png"
+                                                        alt="HNT"><span>Helium</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/illuvium-ilv-logo.png"
+                                                        alt="ILV"><span>Illuvium</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/nano-nano-logo.png"
+                                                        alt="NANO"><span>Nano</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/navcoin-nav-logo.png"
+                                                        alt="NAV"><span>NavCoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/nucleus-vision-ncash-logo.png"
+                                                        alt="NCASH"><span>Nucleus</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/nimiq-nim-logo.png"
+                                                        alt="NIM"><span>Nimiq</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/pundi-x-npxs-logo.png"
+                                                        alt="NPXS"><span>Pundi X</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/nexus-nxs-logo.png"
+                                                        alt="NXS"><span>Nexus</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/origin-protocol-ogn-logo.png"
+                                                        alt="OGN"><span>Origin Protocol</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/harmony-one-logo.png"
+                                                        alt="ONE"><span>Harmony</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/optimism-op-logo.png"
+                                                        alt="OP"><span>Optimism</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/particl-part-logo.png"
+                                                        alt="PART"><span>Particl</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/poet-poe-logo.png"
+                                                        alt="POE"><span>Po.et</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ripio-credit-network-rcn-logo.png"
+                                                        alt="RCN"><span>Ripio Credit</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/augur-rep-logo.png"
+                                                        alt="REP"><span>Augur</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/render-token-rndr-logo.png"
+                                                        alt="RNDR"><span>Render</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png"
+                                                        alt="SHIB"><span>Shiba Inu</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/smooth-love-potion-slp-logo.png"
+                                                        alt="SLP"><span>Smooth Love Potion</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/status-snt-logo.png"
+                                                        alt="SNT"><span>Status</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/serum-srm-logo.png"
+                                                        alt="SRM"><span>Serum</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/tierion-tnt-logo.png"
+                                                        alt="TNT"><span>Tierion</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/origintrail-trac-logo.png"
+                                                        alt="TRAC"><span>OriginTrail</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                </div>
+                        </div>
+
+                        <div
+                                style="background: white; padding: 2rem; border-radius: 16px; border: 1px solid #e2e8f0; position: sticky; top: 120px; box-shadow: 0 10px 40px rgba(0,0,0,0.02);">
+                                <h3
+                                        style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 2rem; color: #111;">
+                                        Most popular
+                                        coins</h3>
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                        <div
+                                                style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #f1f5f9; border-radius: 12px;">
+                                                <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png"
+                                                        style="width: 24px;">
+                                                <span style="font-weight: 600; font-size: 0.95rem; color: #1e293b;">Bitcoin
+                                                        (BTC)</span>
+                                        </div>
+                                        <div
+                                                style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #f1f5f9; border-radius: 12px;">
+                                                <img src="https://cryptologos.cc/logos/tether-usdt-logo.png"
+                                                        style="width: 24px;">
+                                                <span style="font-weight: 600; font-size: 0.95rem; color: #1e293b;">Tether
+                                                        (USDT)</span>
+                                        </div>
+                                        <div
+                                                style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #f1f5f9; border-radius: 12px;">
+                                                <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png"
+                                                        style="width: 24px;">
+                                                <span style="font-weight: 600; font-size: 0.95rem; color: #1e293b;">Ethereum
+                                                        (ETH)</span>
+                                        </div>
+                                        <div
+                                                style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #f1f5f9; border-radius: 12px;">
+                                                <img src="https://cryptologos.cc/logos/solana-sol-logo.png"
+                                                        style="width: 24px;">
+                                                <span style="font-weight: 600; font-size: 0.95rem; color: #1e293b;">Solana
+                                                        (SOL)</span>
+                                        </div>
+                                        <div
+                                                style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #f1f5f9; border-radius: 12px;">
+                                                <img src="https://cryptologos.cc/logos/xrp-xrp-logo.png"
+                                                        style="width: 24px;">
+                                                <span style="font-weight: 600; font-size: 0.95rem; color: #1e293b;">XRP
+                                                        (XRP)</span>
+                                        </div>
+                                </div>
+                        </div>
+                </div>
+        </div>
+
+        <!-- AUTO-BUY VIEW -->
+        <div id="auto-buy-view" class="container" style="display: none; padding: 4rem 2rem;">
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 60px; align-items: start;">
+                        <!-- CATEGORY BAR (Spans both columns) -->
+                        <div
+                                style="grid-column: 1 / -1; background: white; padding: 1rem 1.5rem; border-radius: 16px; display: flex; align-items: center; gap: 3rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.02);">
+                                <div style="position: relative; width: 300px;">
+                                        <input type="text" placeholder="Search"
+                                                style="width: 100%; padding: 12px 15px; padding-left: 45px; border: 1px solid #f1f5f9; border-radius: 10px; outline: none; background: #f8fafc; font-size: 0.95rem;">
+                                        <span
+                                                style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); opacity: 0.4;">🔍</span>
+                                </div>
+                                <div
+                                        style="display: flex; gap: 2rem; font-size: 0.9rem; font-weight: 500; color: #64748b; overflow-x: auto; white-space: nowrap; align-items: center;">
+                                        <span style="color: #111; font-weight: 700; cursor: pointer;">All</span>
+                                        <span style="cursor: pointer;">DeFi</span>
+                                        <span style="cursor: pointer;">Medium of Exchange</span>
+                                        <span style="cursor: pointer;">Metaverse</span>
+                                        <span style="cursor: pointer; color: #8147ff; font-weight: 600;">NFT</span>
+                                        <span style="cursor: pointer;">DAO</span>
+                                        <span style="cursor: pointer;">Governance</span>
+                                        <span style="cursor: pointer;">Logistics</span>
+                                        <span style="cursor: pointer;">DEX</span>
+                                        <span style="cursor: pointer;">Gaming</span>
+                                </div>
+                        </div>
+                        <div>
+                                <div
+                                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;">
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/bitcoin-btc-logo.png"
+                                                        alt="BTC"><span>Bitcoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ethereum-eth-logo.png"
+                                                        alt="ETH"><span>Ethereum</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/binance-coin-bnb-logo.png"
+                                                        alt="BNB"><span>Binance Coin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/solana-sol-logo.png"
+                                                        alt="SOL"><span>Solana</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/cardano-ada-logo.png"
+                                                        alt="ADA"><span>Cardano</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/xrp-xrp-logo.png"
+                                                        alt="XRP"><span>XRP</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/dogecoin-doge-logo.png"
+                                                        alt="DOGE"><span>Dogecoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/polkadot-dot-logo.png"
+                                                        alt="DOT"><span>Polkadot</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png"
+                                                        alt="SHIB"><span>Shiba Inu</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/avalanche-avax-logo.png"
+                                                        alt="AVAX"><span>Avalanche</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/chainlink-link-logo.png"
+                                                        alt="LINK"><span>Chainlink</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/uniswap-uni-logo.png"
+                                                        alt="UNI"><span>Uniswap</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/binance-usd-busd-logo.png"
+                                                        alt="BUSD"><span>Binance USD</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/bitcoin-cash-bch-logo.png"
+                                                        alt="BCH"><span>Bitcoin Cash</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/litecoin-ltc-logo.png"
+                                                        alt="LTC"><span>Litecoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/polygon-matic-logo.png"
+                                                        alt="MATIC"><span>Polygon</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/theta-theta-logo.png"
+                                                        alt="THETA"><span>Theta Token</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/stellar-xlm-logo.png"
+                                                        alt="XLM"><span>Stellar</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.png"
+                                                        alt="DAI"><span>Dai</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/vechain-vet-logo.png"
+                                                        alt="VET"><span>VeChain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ethereum-classic-etc-logo.png"
+                                                        alt="ETC"><span>ETC Ethereum Classic</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/filecoin-fil-logo.png"
+                                                        alt="FIL"><span>Filecoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/monero-xmr-logo.png"
+                                                        alt="XMR"><span>Monero</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/tron-trx-logo.png"
+                                                        alt="TRX"><span>TRON</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/eos-eos-logo.png"
+                                                        alt="EOS"><span>EOS</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/aave-aave-logo.png"
+                                                        alt="AAVE"><span>Aave</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/algorand-algo-logo.png"
+                                                        alt="ALGO"><span>Algorand</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/theta-fuel-tfuel-logo.png"
+                                                        alt="TFUEL"><span>Theta Fuel</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/pancakeswap-cake-logo.png"
+                                                        alt="CAKE"><span>PancakeSwap</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/maker-mkr-logo.png"
+                                                        alt="MKR"><span>Maker</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/neo-neo-logo.png"
+                                                        alt="NEO"><span>NEO</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/tezos-xtz-logo.png"
+                                                        alt="XTZ"><span>Tezos</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/iota-miota-logo.png"
+                                                        alt="IOTA"><span>IOTA</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/cosmos-atom-logo.png"
+                                                        alt="ATOM"><span>Cosmos</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/kusama-ksm-logo.png"
+                                                        alt="KSM"><span>Kusama</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/hedera-hashgraph-hbar-logo.png"
+                                                        alt="HBAR"><span>Hedera Hashgraph</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/the-graph-grt-logo.png"
+                                                        alt="GRT"><span>The Graph</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/thorchain-rune-logo.png"
+                                                        alt="RUNE"><span>THORChain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/trueusd-tusd-logo.png"
+                                                        alt="TUSD"><span>TrueUSD</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/chiliz-chz-logo.png"
+                                                        alt="CHZ"><span>Chiliz</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/decred-dcr-logo.png"
+                                                        alt="DCR"><span>Decred</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/zcash-zec-logo.png"
+                                                        alt="ZEC"><span>ZCash</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/compound-comp-logo.png"
+                                                        alt="COMP"><span>Compound</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/waves-waves-logo.png"
+                                                        alt="WAVES"><span>Waves</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/dash-dash-logo.png"
+                                                        alt="DASH"><span>Dash</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/yearn-finance-yfi-logo.png"
+                                                        alt="YFI"><span>Yearn.Finance</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/multiversx-egld-egld-logo.png"
+                                                        alt="EGLD"><span>MultiverseX</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/holo-hot-logo.png"
+                                                        alt="HOT"><span>Holo</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/nem-xem-logo.png"
+                                                        alt="XEM"><span>NEM</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/sushiswap-sushi-logo.png"
+                                                        alt="SUSHI"><span>SushiSwap</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/zilliqa-zil-logo.png"
+                                                        alt="ZIL"><span>Zilliqa</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/enjin-coin-enj-logo.png"
+                                                        alt="ENJ"><span>Enjin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/basic-attention-token-bat-logo.png"
+                                                        alt="BAT"><span>Basic Attention Token</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/synthetix-snx-logo.png"
+                                                        alt="SNX"><span>Synthetix</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/decentraland-mana-logo.png"
+                                                        alt="MANA"><span>Decentraland</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/stacks-stx-logo.png"
+                                                        alt="STX"><span>Stacks</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/quant-qnt-logo.png"
+                                                        alt="QNT"><span>Quant Network</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/digibyte-dgb-logo.png"
+                                                        alt="DGB"><span>DigiByte</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/fantom-ftm-logo.png"
+                                                        alt="FTM"><span>Fantom</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/qtum-qtum-logo.png"
+                                                        alt="QTUM"><span>QTUM</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/kucoin-token-kcs-logo.png"
+                                                        alt="KCS"><span>KuCoin Shares</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ontology-ont-logo.png"
+                                                        alt="ONT"><span>Ontology</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/0x-zrx-logo.png"
+                                                        alt="ZRX"><span>0x</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/omisego-omg-logo.png"
+                                                        alt="OMG"><span>OmiseGo</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/siacoin-sc-logo.png"
+                                                        alt="SC"><span>Siacoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/icon-icx-logo.png"
+                                                        alt="ICX"><span>Icon</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ravencoin-rvn-logo.png"
+                                                        alt="RVN"><span>Ravencoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/1inch-1inch-logo.png"
+                                                        alt="1INCH"><span>1inch Exchange</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ankr-ankr-logo.png"
+                                                        alt="ANKR"><span>Ankr</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/verge-xvg-logo.png"
+                                                        alt="XVG"><span>Verge</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/ren-ren-logo.png"
+                                                        alt="REN"><span>Ren</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/reserve-rights-rsr-logo.png"
+                                                        alt="RSR"><span>Reserve Rights</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/kyber-network-crystal-v2-kncl-logo.png"
+                                                        alt="KNC"><span>Kyber Network</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/loopring-lrc-logo.png"
+                                                        alt="LRC"><span>Loopring</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/lisk-lsk-logo.png"
+                                                        alt="LSK"><span>Lisk</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ocean-protocol-ocean-logo.png"
+                                                        alt="OCEAN"><span>Ocean Protocol</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/kava-kava-logo.png"
+                                                        alt="KAVA"><span>Kava</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/iexec-rlc-rlc-logo.png"
+                                                        alt="RLC"><span>iExec RLC</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/reef-reef-logo.png"
+                                                        alt="REEF"><span>Reef</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/band-protocol-band-logo.png"
+                                                        alt="BAND"><span>BandChain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/swipe-sxp-logo.png"
+                                                        alt="SXP"><span>Swipe</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/funfair-fun-logo.png"
+                                                        alt="FUN"><span>FunFair</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/injective-protocol-inj-logo.png"
+                                                        alt="INJ"><span>Injective Protocol</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/orchid-oxt-logo.png"
+                                                        alt="OXT"><span>Orchid</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/fetch-ai-fet-logo.png"
+                                                        alt="FET"><span>Fetch.AI</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/numeraire-nmr-logo.png"
+                                                        alt="NMR"><span>Numeraire</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ontology-ont-logo.png"
+                                                        alt="ONG"><span>Ontology Gas</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/the-sandbox-sand-logo.png"
+                                                        alt="SAND"><span>The Sandbox</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/storm-stmx-logo.png"
+                                                        alt="STMX"><span>StormX</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/pax-gold-paxg-logo.png"
+                                                        alt="PAXG"><span>PAX Gold</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/streamr-data-logo.png"
+                                                        alt="DATA"><span>Streamr DATAcoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/coti-coti-logo.png"
+                                                        alt="COTI"><span>COTI</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/utrust-utk-logo.png"
+                                                        alt="UTK"><span>Utrust</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/hive-hive-logo.png"
+                                                        alt="HIVE"><span>Hive</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/defichain-dfi-logo.png"
+                                                        alt="DFI"><span>DeFiChain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/orion-protocol-orn-logo.png"
+                                                        alt="ORN"><span>Orion Protocol</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/steem-steem-logo.png"
+                                                        alt="STEEM"><span>Steem</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/wanchain-wan-logo.png"
+                                                        alt="WAN"><span>Wanchain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/komodo-kmd-logo.png"
+                                                        alt="KMD"><span>Komodo</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/polymath-poly-logo.png"
+                                                        alt="POLY"><span>Polymath</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/trust-wallet-token-twt-logo.png"
+                                                        alt="TWT"><span>Trust Wallet Token</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/aion-aion-logo.png"
+                                                        alt="AION"><span>Aion</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/request-network-req-logo.png"
+                                                        alt="REQ"><span>Request</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/power-ledger-powr-logo.png"
+                                                        alt="POWR"><span>Power Ledger</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/neo-gas-gas-logo.png"
+                                                        alt="GAS"><span>NEO Gas</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/waltonchain-wtc-logo.png"
+                                                        alt="WTC"><span>Waltonchain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/singularitynet-agix-logo.png"
+                                                        alt="AGIX"><span>SingularityNET</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/apecoin-ape-logo.png"
+                                                        alt="APE"><span>ApeCoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/arweave-ar-logo.png"
+                                                        alt="AR"><span>Arweave</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/ark-ark-logo.png"
+                                                        alt="ARK"><span>Ark</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/audius-audio-logo.png"
+                                                        alt="AUDIO"><span>Audius</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/axie-infinity-axs-logo.png"
+                                                        alt="AXS"><span>Axie Infinity</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/beam-beam-logo.png"
+                                                        alt="BEAM"><span>Beam</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/bitcoin-gold-btg-logo.png"
+                                                        alt="BTG"><span>Bitcoin Gold</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/celo-celo-logo.png"
+                                                        alt="CELO"><span>Celo</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/centrality-cennz-logo.png"
+                                                        alt="CENNZ"><span>Centrality</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/cronos-cro-logo.png"
+                                                        alt="CRO"><span>Crypto.com CRO</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/dent-dent-logo.png"
+                                                        alt="DENT"><span>Dent</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/digixdao-dgd-logo.png"
+                                                        alt="DGD"><span>DigixDAO</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/dragonchain-drgn-logo.png"
+                                                        alt="DRGN"><span>Dragonchain</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/electroneum-etn-logo.png"
+                                                        alt="ETN"><span>Electroneum</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/factom-fct-logo.png"
+                                                        alt="FCT"><span>Factom</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/flux-flux-logo.png"
+                                                        alt="FLUX"><span>Flux</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/frontier-front-logo.png"
+                                                        alt="FRONT"><span>Frontier</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ftx-token-ftt-logo.png"
+                                                        alt="FTT"><span>FTX Token</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/gala-gala-logo.png"
+                                                        alt="GALA"><span>Gala</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/stepn-gmt-logo.png"
+                                                        alt="GMT"><span>STEPN</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/golem-glm-logo.png"
+                                                        alt="GLM"><span>Golem</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/genesis-vision-gvt-logo.png"
+                                                        alt="GVT"><span>Genesis Vision</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/helium-hnt-logo.png"
+                                                        alt="HNT"><span>Helium</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/illuvium-ilv-logo.png"
+                                                        alt="ILV"><span>Illuvium</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/nano-nano-logo.png"
+                                                        alt="NANO"><span>Nano</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/navcoin-nav-logo.png"
+                                                        alt="NAV"><span>NavCoin</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/nucleus-vision-ncash-logo.png"
+                                                        alt="NCASH"><span>Nucleus</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/nimiq-nim-logo.png"
+                                                        alt="NIM"><span>Nimiq</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/pundi-x-npxs-logo.png"
+                                                        alt="NPXS"><span>Pundi X</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/nexus-nxs-logo.png"
+                                                        alt="NXS"><span>Nexus</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/origin-protocol-ogn-logo.png"
+                                                        alt="OGN"><span>Origin Protocol</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/harmony-one-logo.png"
+                                                        alt="ONE"><span>Harmony</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/optimism-op-logo.png"
+                                                        alt="OP"><span>Optimism</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/particl-part-logo.png"
+                                                        alt="PART"><span>Particl</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img src="https://cryptologos.cc/logos/poet-poe-logo.png"
+                                                        alt="POE"><span>Po.et</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/ripio-credit-network-rcn-logo.png"
+                                                        alt="RCN"><span>Ripio Credit</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/augur-rep-logo.png"
+                                                        alt="REP"><span>Augur</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/render-token-rndr-logo.png"
+                                                        alt="RNDR"><span>Render</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/smooth-love-potion-slp-logo.png"
+                                                        alt="SLP"><span>Smooth Love Potion</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/status-snt-logo.png"
+                                                        alt="SNT"><span>Status</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/serum-srm-logo.png"
+                                                        alt="SRM"><span>Serum</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/tierion-tnt-logo.png"
+                                                        alt="TNT"><span>Tierion</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                        <div class="coin-item"><img
+                                                        src="https://cryptologos.cc/logos/origintrail-trac-logo.png"
+                                                        alt="TRAC"><span>OriginTrail</span><span
+                                                        style="margin-left:auto; opacity:0.3; font-size:0.8rem;">›</span>
+                                        </div>
+                                </div>
+                        </div>
+
+                        <div
+                                style="background: white; padding: 2rem; border-radius: 16px; border: 1px solid #e2e8f0; position: sticky; top: 120px; box-shadow: 0 10px 40px rgba(0,0,0,0.02);">
+                                <h3
+                                        style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 2rem; color: #111;">
+                                        Most popular
+                                        coins</h3>
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                        <div
+                                                style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #f1f5f9; border-radius: 12px;">
+                                                <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png"
+                                                        style="width: 24px;">
+                                                <span style="font-weight: 600; font-size: 0.95rem; color: #1e293b;">Bitcoin
+                                                        (BTC)</span>
+                                        </div>
+                                        <div
+                                                style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #f1f5f9; border-radius: 12px;">
+                                                <img src="https://cryptologos.cc/logos/tether-usdt-logo.png"
+                                                        style="width: 24px;">
+                                                <span style="font-weight: 600; font-size: 0.95rem; color: #1e293b;">Tether
+                                                        (USDT)</span>
+                                        </div>
+                                        <div
+                                                style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #f1f5f9; border-radius: 12px;">
+                                                <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png"
+                                                        style="width: 24px;">
+                                                <span style="font-weight: 600; font-size: 0.95rem; color: #1e293b;">Ethereum
+                                                        (ETH)</span>
+                                        </div>
+                                        <div
+                                                style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #f1f5f9; border-radius: 12px;">
+                                                <img src="https://cryptologos.cc/logos/solana-sol-logo.png"
+                                                        style="width: 24px;">
+                                                <span style="font-weight: 600; font-size: 0.95rem; color: #1e293b;">Solana
+                                                        (SOL)</span>
+                                        </div>
+                                        <div
+                                                style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #f1f5f9; border-radius: 12px;">
+                                                <img src="https://cryptologos.cc/logos/xrp-xrp-logo.png"
+                                                        style="width: 24px;">
+                                                <span style="font-weight: 600; font-size: 0.95rem; color: #1e293b;">XRP
+                                                        (XRP)</span>
+                                        </div>
+                                </div>
+                        </div>
+                </div>
+        </div>
+        </div>
+
+        <!-- SWAP SECTION -->
+        <div id="swap-section" class="container"
+                style="display: none; padding: 6rem 2rem; max-width: 800px; margin: 0 auto; text-align: left; line-height: 1.8; color: #475569; font-size: 1.05rem;">
+                <p style="margin-bottom: 2rem;">Swaps have been disabled.</p>
+                <p style="margin-bottom: 2rem;">Based on your feedback, we've heard that swapping was not easy to do. It
+                        was not
+                        intuitive, and it did not communicate its fees in a transparent manner.</p>
+                <p style="margin-bottom: 2rem;">For these reasons we've decided to disable it, until we can deliver this
+                        feature
+                        in a way that aligns with our values, and your expectations.</p>
+                <p style="margin-bottom: 2rem;">Thank you for your feedback & support. It will continue to guide our
+                        product
+                        decisions.</p>
+                <p>In the interim, if you are struggling to find a way to swap your crypto, please reach out to <a
+                                href="#" style="color: #8147ff; text-decoration: none; font-weight: 500;">our support
+                                team</a>.</p>
+        </div>
+
+        <!-- MULTI-COIN SECTION -->
+        <div id="multi-section" class="container" style="display: none; padding: 4rem 2rem;">
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px; align-items: start;">
+                        <!-- LEFT COLUMN: SEARCH + GRID -->
+                        <div>
+                                <div style="position: relative; margin-bottom: 2.5rem; max-width: 280px;">
+                                        <input type="text" placeholder="Search coins..."
+                                                style="width: 100%; padding: 12px 15px; padding-left: 45px; border: 1px solid #e2e8f0; border-radius: 50px; outline: none; background: white; font-size: 0.95rem; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                                        <span
+                                                style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); opacity: 0.4; font-size: 0.9rem;">🔍</span>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/0x-zrx-logo.png" alt="ZRX">
+                                                <span>0x</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/binance-coin-bnb-logo.png"
+                                                        alt="BNB">
+                                                <span>Binance Coin</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="BTC">
+                                                <span>Bitcoin</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/bitcoin-cash-bch-logo.png"
+                                                        alt="BCH">
+                                                <span>Bitcoin Cash</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/cardano-ada-logo.png" alt="ADA">
+                                                <span>Cardano</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.png"
+                                                        alt="DAI">
+                                                <span>Dai</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/dogecoin-doge-logo.png"
+                                                        alt="DOGE">
+                                                <span>Dogecoin</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/enjin-coin-enj-logo.png"
+                                                        alt="ENJ">
+                                                <span>Enjin</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" alt="ETH">
+                                                <span>Ethereum</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/hedera-hashgraph-hbar-logo.png"
+                                                        alt="HBAR">
+                                                <span>Hedera Hashgraph</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/maker-mkr-logo.png" alt="MKR">
+                                                <span>Maker</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/polygon-matic-logo.png"
+                                                        alt="MATIC">
+                                                <span>Polygon</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/solana-sol-logo.png" alt="SOL">
+                                                <span>Solana</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/stellar-xlm-logo.png" alt="XLM">
+                                                <span>Stellar</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" alt="USDT">
+                                                <span>Tether</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/uniswap-uni-logo.png" alt="UNI">
+                                                <span>Uniswap</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/vechain-vet-logo.png" alt="VET">
+                                                <span>VeChain</span>
+                                        </div>
+                                        <div class="coin-item">
+                                                <img src="https://cryptologos.cc/logos/xrp-xrp-logo.png" alt="XRP">
+                                                <span>XRP</span>
+                                        </div>
+                                </div>
+                        </div>
+
+                        <!-- RIGHT COLUMN: TOTAL BOX -->
+                        <div style="text-align: right; padding-top: 2rem;">
+                                <div style="font-size: 2.2rem; font-weight: 500; color: #1e293b; margin-bottom: 2rem;">
+                                        $0 <span
+                                                style="font-size: 1.1rem; color: #64748b; font-weight: 400;">total</span>
+                                </div>
+                                <button
+                                        style="background: #10b981; color: white; border: none; padding: 18px 45px; border-radius: 10px; font-weight: 700; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s;">
+                                        BUY NOW
+                                </button>
+                        </div>
+                </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer style="background: #111; color: #94a3b8; padding: 6rem 0 3rem;">
+                <div class="container">
+                        <div
+                                style="display: flex; justify-content: space-between; gap: 4rem; flex-wrap: wrap; margin-bottom: 4rem;">
+                                <!-- LEFT COLUMN -->
+                                <div style="flex: 2; min-width: 300px;">
+                                        <div class="l-logo"
+                                                style="font-size: 1.5rem; color: white; margin-bottom: 1.5rem;">
+                                                EASYCRYPTO</div>
+                                        <p style="line-height: 1.6; margin-bottom: 1.5rem; max-width: 400px;">Easy
+                                                Crypto wants to
+                                                make it easy for anyone to get into the crypto market - no matter how
+                                                much they have to
+                                                invest.</p>
+                                        <a href="#"
+                                                style="color: white; text-decoration: none; font-size: 0.9rem; display: block; margin-bottom: 2rem;">See
+                                                the full list of coins we trade</a>
+
+                                        <div style="font-size: 0.8rem; line-height: 1.8;">
+                                                ACN: 624780409<br>
+                                                ABN: 17624780409<br>
+                                                AUSTRAC Registration: DCE100581365-001
+                                        </div>
+
+                                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                                                <span
+                                                        style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">f</span>
+                                                <span
+                                                        style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">t</span>
+                                                <span
+                                                        style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">i</span>
+                                                <span
+                                                        style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">l</span>
+                                        </div>
+                                </div>
+
+                                <!-- RIGHT COLUMNS -->
+                                <div style="flex: 1; min-width: 150px;">
+                                        <h4 style="color: white; margin-bottom: 1.5rem;">Start Here</h4>
+                                        <ul
+                                                style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+                                                <li><a href="signup.html"
+                                                                style="color: inherit; text-decoration: none;">Sign
+                                                                Up</a></li>
+                                                <li><a href="buy-sell.html"
+                                                                style="color: inherit; text-decoration: none;">Buy &
+                                                                Sell</a>
+                                                </li>
+                                                <li><a href="#" style="color: inherit; text-decoration: none;">Our
+                                                                Rates</a></li>
+                                                <li><a href="#" style="color: inherit; text-decoration: none;">Portfolio
+                                                                Tracker</a></li>
+                                        </ul>
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                        <h4 style="color: white; margin-bottom: 1.5rem;">Useful Links</h4>
+                                        <ul
+                                                style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+                                                <li><a href="#" style="color: inherit; text-decoration: none;">Get
+                                                                Help</a></li>
+                                                <li><a href="#" style="color: inherit; text-decoration: none;">Learn
+                                                                About Crypto</a></li>
+                                                <li><a href="#" style="color: inherit; text-decoration: none;">Blog</a>
+                                                </li>
+                                                <li><a href="#"
+                                                                style="color: inherit; text-decoration: none;">Careers</a>
+                                                </li>
+                                        </ul>
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                        <h4 style="color: white; margin-bottom: 1.5rem;">About Us</h4>
+                                        <ul
+                                                style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+                                                <li><a href="#" style="color: inherit; text-decoration: none;">About
+                                                                Us</a></li>
+                                                <li><a href="#" style="color: inherit; text-decoration: none;">Stats</a>
+                                                </li>
+                                                <li><a href="#" style="color: inherit; text-decoration: none;">Terms of
+                                                                Service</a></li>
+                                                <li><a href="#" style="color: inherit; text-decoration: none;">Privacy
+                                                                Policy</a></li>
+                                        </ul>
+                                </div>
+                        </div>
+
+                        <div
+                                style="border-top: 1px solid #1e293b; padding-top: 2rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+                                <div>漏 2026 Easy Crypto. All rights reserved.</div>
+                                <div style="display: flex; gap: 1rem; align-items: center;">
+                                        <span>Change country: Australia AU</span>
+                                </div>
+                        </div>
+                </div>
+        </footer>
+
+        <!-- QUICK BUY/SELL MODAL -->
+        <div class="modal-overlay" id="quick-buy-modal">
+                <div class="modal-box">
+                        <button class="modal-close" id="modal-close-btn">&times;</button>
+                        <div class="modal-content">
+                                <h2 style="font-family: 'Outfit';">Quick Buy/Sell</h2>
+                                <div class="modal-form-group">
+                                        <label class="modal-label">From Australian dollar (AUD)...</label>
+                                        <div class="modal-input-wrap">
+                                                <input type="text" placeholder="Enter amount...">
+                                                <div class="modal-currency"><img src="https://flagcdn.com/w80/au.png"
+                                                                alt="AUD"> AUD</div>
+                                        </div>
+                                </div>
+                                <div class="modal-swap">鈫戔啌</div>
+                                <div class="modal-form-group">
+                                        <label class="modal-label">To Bitcoin...</label>
+                                        <div class="modal-input-wrap">
+                                                <input type="text" placeholder="Minimum $100...">
+                                                <div class="modal-currency"><img
+                                                                src="https://cryptologos.cc/logos/bitcoin-btc-logo.png"
+                                                                alt="BTC"> BTC</div>
+                                        </div>
+                                </div>
+                                <button class="modal-btn">Buy now</button>
+                                <a href="#" class="modal-footer-link">... or sell</a>
+                        </div>
+                </div>
+        </div>
+
+        <script>
+                window.addEventListener('DOMContentLoaded', () => {
+                        const toggle = document.getElementById('buy-sell-toggle');
+                        const dropdown = document.getElementById('buy-sell-dropdown');
+                        const instantBuyBtn = document.getElementById('instant-buy-link');
+                        const modal = document.getElementById('quick-buy-modal');
+                        const modalClose = document.getElementById('modal-close-btn');
+
+                        const closeDropdown = () => {
+                                if (dropdown && toggle) {
+                                        dropdown.classList.remove('active');
+                                        toggle.classList.remove('active');
+                                }
+                        };
+
+                        const closeModal = () => {
+                                if (modal) {
+                                        modal.classList.remove('active');
+                                        document.body.classList.remove('modal-open');
+                                }
+                        };
+
+                        const openModal = () => {
+                                if (modal) {
+                                        closeDropdown();
+                                        modal.classList.add('active');
+                                        document.body.classList.add('modal-open');
+                                }
+                        };
+
+                        if (toggle && dropdown) {
+                                toggle.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+                                        const isOpen = dropdown.classList.contains('active');
+                                        if (isOpen) closeDropdown();
+                                        else {
+                                                dropdown.classList.add('active');
+                                                toggle.classList.add('active');
+                                        }
+                                });
+
+                                document.addEventListener('click', (e) => {
+                                        if (!dropdown.contains(e.target) && !toggle.contains(e.target)) closeDropdown();
+                                });
+
+                                dropdown.querySelectorAll('a').forEach(link => {
+                                        link.addEventListener('click', closeDropdown);
+                                });
+
+                                document.addEventListener('keydown', (e) => {
+                                        if (e.key === 'Escape') closeDropdown();
+                                });
+                        }
+
+                        if (instantBuyBtn) {
+                                instantBuyBtn.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
+                        }
+
+                        if (modalClose) modalClose.addEventListener('click', closeModal);
+                        if (modal) {
+                                modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+                                document.addEventListener('keydown', (e) => {
+                                        if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
+                                });
+                        }
+
+                        // VIEW SWITCHING LOGIC
+                        const buySellView = document.getElementById('buy-sell-view');
+                        const autoBuyView = document.getElementById('auto-buy-view');
+                        const swapSection = document.getElementById('swap-section');
+                        const multiSection = document.getElementById('multi-section');
+                        const heroTitle = document.getElementById('hero-title');
+                        const heroText = heroTitle.nextElementSibling;
+                        const viewToggles = document.getElementById('view-toggles');
+                        const buyTabBtn = document.getElementById('buy-tab-btn');
+                        const sellTabBtn = document.getElementById('sell-tab-btn');
+
+                        const switchToAutoBuy = () => {
+                                buySellView.style.display = 'none';
+                                swapSection.style.display = 'none';
+                                multiSection.style.display = 'none';
+                                autoBuyView.style.display = 'grid';
+                                heroTitle.textContent = 'Auto-Buy';
+                                heroText.style.display = 'block';
+                                viewToggles.style.display = 'none';
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                        };
+
+                        const switchToSwap = () => {
+                                buySellView.style.display = 'none';
+                                autoBuyView.style.display = 'none';
+                                multiSection.style.display = 'none';
+                                swapSection.style.display = 'block';
+                                heroTitle.textContent = 'Crypto Swap';
+                                heroText.style.display = 'none';
+                                viewToggles.style.display = 'none';
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                        };
+
+                        const switchToMulti = () => {
+                                buySellView.style.display = 'none';
+                                autoBuyView.style.display = 'none';
+                                swapSection.style.display = 'none';
+                                multiSection.style.display = 'block';
+                                heroTitle.textContent = 'Multi-coin Order';
+                                heroText.style.display = 'block';
+                                viewToggles.style.display = 'none';
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                        };
+
+                        const switchToBuySell = (title) => {
+                                buySellView.style.display = 'grid';
+                                autoBuyView.style.display = 'none';
+                                swapSection.style.display = 'none';
+                                multiSection.style.display = 'none';
+                                heroTitle.textContent = title || 'Buy & Sell';
+                                heroText.style.display = 'block';
+                                viewToggles.style.display = 'inline-flex';
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                        };
+
+
+
+                        if (buyTabBtn) {
+                                buyTabBtn.addEventListener('click', () => {
+                                        switchToBuySell('Buy');
+                                        buyTabBtn.style.background = '#10b981';
+                                        buyTabBtn.style.color = 'white';
+                                        sellTabBtn.style.background = 'transparent';
+                                        sellTabBtn.style.color = '#1e293b';
+                                });
+                        }
+
+                        if (sellTabBtn) {
+                                sellTabBtn.addEventListener('click', () => {
+                                        switchToBuySell('Sell');
+                                        sellTabBtn.style.background = '#ef4444'; // Use red for sell
+                                        sellTabBtn.style.color = 'white';
+                                        buyTabBtn.style.background = 'transparent';
+                                        buyTabBtn.style.color = '#1e293b';
+                                });
+                        }
+
+                        // HASH NAVIGATION HANDLER
+                        const handleHash = () => {
+                                const hash = window.location.hash;
+                                if (hash === '#auto-buy') {
+                                        switchToAutoBuy();
+                                } else if (hash === '#swap') {
+                                        switchToSwap();
+                                } else if (hash === '#multi-coin') {
+                                        switchToMulti();
+                                } else {
+                                        switchToBuySell();
+                                }
+                        };
+
+                        // Check hash on load
+                        handleHash();
+
+                        // Listen for hash changes
+                        window.addEventListener('hashchange', handleHash);
+                });
+        </script>
+    <script src="/js/site-language.js"></script>
+</body>
+
+</html>
+
+
+
+

@@ -1,0 +1,925 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyCrypto - Fund Management</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/brand/favicon-16x16.png">
+    <link rel="shortcut icon" href="/assets/brand/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #fff !important;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            overflow-y: scroll;
+        }
+
+        .topbar-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        /* Hero Section */
+        .fund-hero {
+            background: #111;
+            color: #fff;
+            padding: 40px 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hero-title {
+            font-size: 22px;
+            font-weight: 400;
+            margin-bottom: 10px;
+        }
+
+        .hero-subtitle {
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 40px;
+        }
+
+        /* Dashboard Board */
+        .fund-board {
+            position: relative;
+            border: 1px solid rgba(234, 179, 8, 0.4);
+            border-radius: 4px;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 800px;
+            background: rgba(234, 179, 8, 0.05);
+            margin-bottom: 90px;
+        }
+
+        .board-corner {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+        }
+
+        .bc-tl {
+            top: -1px;
+            left: -1px;
+            border-top: 2px solid #eab308;
+            border-left: 2px solid #eab308;
+        }
+
+        .bc-tr {
+            top: -1px;
+            right: -1px;
+            border-top: 2px solid #eab308;
+            border-right: 2px solid #eab308;
+        }
+
+        .bc-bl {
+            bottom: -1px;
+            left: -1px;
+            border-bottom: 2px solid #eab308;
+            border-left: 2px solid #eab308;
+        }
+
+        .bc-br {
+            bottom: -1px;
+            right: -1px;
+            border-bottom: 2px solid #eab308;
+            border-right: 2px solid #eab308;
+        }
+
+        .stat-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .stat-currency {
+            font-size: 11px;
+            color: #888;
+            margin-top: -2px;
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-top: 4px;
+        }
+
+        .stat-val-small {
+            font-size: 13px;
+            color: #ccc;
+        }
+
+        .board-tabs {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 150px;
+            z-index: 10;
+        }
+
+        .board-tab {
+            color: #d97706;
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Abstract Center Graphic overlay */
+        .board-center-graphic {
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .board-center-graphic i {
+            font-size: 44px;
+            color: #eab308;
+            /* Yellow/Gold for coins */
+        }
+
+        .board-line-bg {
+            position: absolute;
+            bottom: -90px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 20px;
+            border-bottom: 1px dashed #444;
+        }
+
+        .board-glow {
+            position: absolute;
+            bottom: -90px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 40px;
+            background: radial-gradient(ellipse at center, rgba(234, 179, 8, 0.15) 0%, transparent 60%);
+        }
+
+        /* Page Tabs (Fund/Mine) */
+        .page-tabs-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            gap: 40px;
+            padding: 0 20px;
+        }
+
+        .p-tab {
+            color: #888;
+            font-size: 14px;
+            padding-bottom: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .p-tab.active {
+            color: #0ea5e9;
+            border-bottom: 2px solid #0ea5e9;
+        }
+
+        /* Main Content Area */
+        .main-area {
+            background: #fff;
+            position: relative;
+        }
+
+        .table-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px 20px;
+        }
+
+        .fund-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .fund-table th {
+            text-align: left;
+            padding: 15px;
+            color: #888;
+            font-weight: 500;
+            font-size: 13px;
+            border-bottom: 1px solid #f9f9f9;
+        }
+
+        .fund-table td {
+            padding: 20px 15px;
+            border-bottom: 1px solid #f9f9f9;
+            vertical-align: middle;
+            font-size: 14px;
+            font-weight: 500;
+            color: #111;
+        }
+
+        .yield-text {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .action-btn {
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
+            background: transparent;
+            border-radius: 4px;
+            padding: 8px 26px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+        .action-btn:hover {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .proj-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .proj-icon {
+            width: 24px;
+            height: 24px;
+            background: #7c3aed;
+            color: #fff;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        /* FAQ Area */
+        .faq-container {
+            max-width: 1000px;
+            margin: 40px auto 100px;
+            padding: 0 20px;
+        }
+
+        .faq-title {
+            font-size: 19px;
+            font-weight: 400;
+            margin-bottom: 20px;
+            color: #111;
+        }
+
+        .faq-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 0;
+            border-bottom: 1px solid #f5f5f5;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .faq-item:hover {
+            color: #111;
+        }
+
+        .faq-item i {
+            color: #999;
+            font-size: 18px;
+        }
+
+        .ec-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(9, 11, 16, 0.62);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2200;
+            padding: 18px;
+        }
+
+        .ec-modal-overlay.show {
+            display: flex;
+        }
+
+        .ec-modal-card {
+            width: min(560px, 96vw);
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 22px 54px rgba(5, 9, 20, 0.24);
+            border: 1px solid #e8ebf1;
+            overflow: hidden;
+        }
+
+        .ec-modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid #eef2f7;
+            font-weight: 600;
+            color: #1a2233;
+            font-size: 15px;
+        }
+
+        .ec-modal-close {
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            color: #7a8395;
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .ec-modal-body {
+            padding: 16px;
+            color: #394252;
+            font-size: 14px;
+            line-height: 1.62;
+        }
+
+        .ec-field {
+            display: grid;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .ec-field label {
+            color: #4d5668;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .ec-field input {
+            width: 100%;
+            border: 1px solid #d7dfeb;
+            border-radius: 8px;
+            height: 40px;
+            padding: 0 12px;
+            outline: none;
+            font-size: 14px;
+            color: #1c2537;
+        }
+
+        .ec-field input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        }
+
+        .ec-plan-meta {
+            border: 1px solid #edf1f7;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: #fbfdff;
+            margin-bottom: 12px;
+            display: grid;
+            gap: 4px;
+            font-size: 13px;
+            color: #566074;
+        }
+
+        .ec-plan-meta b {
+            color: #212c40;
+            font-weight: 600;
+        }
+
+        .ec-estimate {
+            margin-top: 8px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #f8fbff;
+            border: 1px solid #e8f0ff;
+            font-size: 13px;
+            color: #4f5b6f;
+            display: grid;
+            gap: 4px;
+        }
+
+        .ec-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .ec-btn {
+            border: 1px solid #d5deea;
+            border-radius: 8px;
+            padding: 9px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #fff;
+            color: #3b4352;
+            font-weight: 600;
+        }
+
+        .ec-btn.primary {
+            border-color: #3b82f6;
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .ec-btn.primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .ec-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 28px;
+            transform: translateX(-50%) translateY(14px);
+            opacity: 0;
+            pointer-events: none;
+            background: rgba(19, 24, 35, 0.95);
+            color: #fff;
+            font-size: 13px;
+            border-radius: 8px;
+            padding: 10px 14px;
+            z-index: 2300;
+            transition: all 0.2s ease;
+        }
+
+        .ec-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topbar-wrapper">
+        <nav class="topbar">
+            <a href="dashboard.html" class="t-logo">
+                <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+                    <path d="M20 0L37.3205 10V30L20 40L2.67949 30V10L20 0Z" fill="white" fill-opacity="0.2" />
+                    <path d="M20 8L30.3923 14V26L20 32L9.6077 26V14L20 8Z" fill="white" />
+                </svg>
+                EASYCRYPTO
+            </a>
+            <div class="t-links">
+                <a href="markets.html" class="t-link">Markets</a>
+                <div class="t-link arr" id="transaction-menu">
+                    Transaction
+                    <div class="nav-dropdown" id="transaction-dropdown">
+                        <a href="contract.html" class="dropdown-item">
+                            <i class="ri-file-list-3-line"></i>
+                            Perpetual
+                        </a>
+                        <a href="delivery_chart.html" class="dropdown-item">
+                            <i class="ri-wallet-3-line"></i>
+                            Delivery
+                        </a>
+                        <a href="trade.html" class="dropdown-item">
+                            <i class="ri-focus-3-line"></i>
+                            Spot
+                        </a>
+                    </div>
+                </div>
+                <div class="t-link arr active" id="finance-menu">
+                    Financial business
+                    <div class="nav-dropdown" id="finance-dropdown">
+                        <a href="fund.html" class="dropdown-item">
+                            <i class="ri-funds-box-line"></i>
+                            <div class="dropdown-col">
+                                <span class="dropdown-title">Fund Management</span>
+                                <span class="dropdown-desc">One-stop investment service</span>
+                            </div>
+                        </a>
+                        <a href="mine.html" class="dropdown-item">
+                            <i class="ri-hammer-line"></i>
+                            <div class="dropdown-col">
+                                <span class="dropdown-title">Mining Pool lock</span>
+                                <span class="dropdown-desc">Serve the miners and improve mining income</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <a href="mobile.html" class="t-link">Mobile</a>
+            </div>
+            <div class="t-actions">
+                <button class="btn-dep">Deposit</button>
+                <a href="#" class="t-r arr">Wallet</a>
+                <a href="#" class="t-r arr">Order</a>
+                <a href="login.html" class="t-r arr">Account</a>
+                <div class="t-r" style="border-left:1px solid #333; margin-left:15px; color:#fff;">English</div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Top Dashboard Section -->
+    <div class="fund-hero">
+        <h1 class="hero-title">DEMO fund management is committed to improving user income</h1>
+        <div class="hero-subtitle">Use idle digital currency to earn additional income</div>
+
+        <div class="fund-board">
+            <div class="board-corner bc-tl"></div>
+            <div class="board-corner bc-tr"></div>
+            <div class="board-corner bc-bl"></div>
+            <div class="board-corner bc-br"></div>
+
+            <div class="stat-group">
+                <span class="stat-label">Total order amount</span>
+                <span class="stat-currency">USDT</span>
+                <span class="stat-value"><span class="stat-val-small">鈮?$</span>0.00</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-label">Daily Revenue</span>
+                <span class="stat-currency">USDT</span>
+                <span class="stat-value"><span class="stat-val-small">鈮?$</span>0.00</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-label">Cumulative Revenue</span>
+                <span class="stat-currency">USDT</span>
+                <span class="stat-value"><span class="stat-val-small">鈮?$</span>0.00</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-label">Order in custody</span>
+                <span class="stat-value" style="margin-top:20px; font-weight:400; font-size:13px;">--</span>
+            </div>
+
+            <!-- Dashboard inner Graphic & Tabs -->
+            <div class="board-line-bg"></div>
+            <div class="board-glow"></div>
+            <div class="board-center-graphic">
+                <i class="ri-coins-line"></i>
+                <i class="ri-line-chart-line"
+                    style="font-size:24px; color:#fff; position:absolute; top:-10px; right:-10px;"></i>
+            </div>
+            <div class="board-tabs">
+                <div class="board-tab">Account</div>
+                <div class="board-tab">History</div>
+            </div>
+        </div>
+
+        <!-- Lower tabs -->
+        <div class="page-tabs-container">
+            <a href="fund.html" class="p-tab active">Fund</a>
+            <a href="mine.html" class="p-tab">Mine</a>
+        </div>
+    </div>
+
+    <!-- Main Section -->
+    <div class="main-area">
+        <div class="table-container">
+            <table class="fund-table">
+                <thead>
+                    <tr>
+                        <th>Project name</th>
+                        <th>Daily Yield</th>
+                        <th>Period</th>
+                        <th>Single limit</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="proj-title">
+                                <div class="proj-icon">C</div>
+                                Financing 5 days
+                            </div>
+                        </td>
+                        <td class="yield-text">0.3 ~ 0.3 %</td>
+                        <td>5</td>
+                        <td>1000 - 9999999</td>
+                        <td><button class="action-btn">Buy</button></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="proj-title">
+                                <div class="proj-icon">C</div>
+                                Financing 15 days
+                            </div>
+                        </td>
+                        <td class="yield-text">0.5 ~ 0.5 %</td>
+                        <td>15</td>
+                        <td>10000 - 9999999</td>
+                        <td><button class="action-btn">Buy</button></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="proj-title">
+                                <div class="proj-icon">C</div>
+                                Financial 30 days
+                            </div>
+                        </td>
+                        <td class="yield-text">0.7 ~ 0.7 %</td>
+                        <td>30</td>
+                        <td>30000 - 9999999</td>
+                        <td><button class="action-btn">Buy</button></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="proj-title">
+                                <div class="proj-icon">C</div>
+                                Financial 60 days
+                            </div>
+                        </td>
+                        <td class="yield-text">1.0 ~ 1.0 %</td>
+                        <td>60</td>
+                        <td>50000 - 9999999</td>
+                        <td><button class="action-btn">Buy</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bottom FAQ Section -->
+        <div class="faq-container">
+            <h2 class="faq-title">Related questions</h2>
+            <div class="faq-list">
+                <div class="faq-item" data-faq-key="fund_intro">
+                    <span>1.What is fund management</span>
+                    <i class="ri-arrow-right-s-line"></i>
+                </div>
+                <div class="faq-item" data-faq-key="fund_calc">
+                    <span>2.Revenue calculation</span>
+                    <i class="ri-arrow-right-s-line"></i>
+                </div>
+                <div class="faq-item" data-faq-key="fund_penalty">
+                    <span>3.About liquidated damages</span>
+                    <i class="ri-arrow-right-s-line"></i>
+                </div>
+                <div class="faq-item" data-faq-key="fund_start">
+                    <span>4.How to start earning income?</span>
+                    <i class="ri-arrow-right-s-line"></i>
+                </div>
+            </div>
+        </div>
+
+        <div id="ec-fund-order-modal" class="ec-modal-overlay" aria-hidden="true">
+            <div class="ec-modal-card" role="dialog" aria-modal="true" aria-labelledby="ec-order-title">
+                <div class="ec-modal-head">
+                    <span id="ec-order-title">Fund Subscription</span>
+                    <button class="ec-modal-close" type="button" data-close-order>&times;</button>
+                </div>
+                <div class="ec-modal-body">
+                    <div class="ec-plan-meta">
+                        <div>Plan: <b id="ec-plan-name">-</b></div>
+                        <div>Daily yield: <b id="ec-plan-yield">-</b></div>
+                        <div>Period: <b id="ec-plan-period">-</b></div>
+                        <div>Single limit: <b id="ec-plan-limit">-</b></div>
+                    </div>
+                    <div class="ec-field">
+                        <label for="ec-order-amount">Order Amount (USDT)</label>
+                        <input id="ec-order-amount" type="number" min="0" step="0.01" />
+                    </div>
+                    <div class="ec-estimate">
+                        <div>Estimated daily revenue: <b id="ec-est-daily">0.00 USDT</b></div>
+                        <div>Estimated maturity revenue: <b id="ec-est-total">0.00 USDT</b></div>
+                    </div>
+                    <div class="ec-modal-actions">
+                        <button class="ec-btn" type="button" data-close-order>Cancel</button>
+                        <button class="ec-btn primary" type="button" id="ec-order-confirm">Confirm Buy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="ec-faq-modal" class="ec-modal-overlay" aria-hidden="true">
+            <div class="ec-modal-card" role="dialog" aria-modal="true" aria-labelledby="ec-faq-title">
+                <div class="ec-modal-head">
+                    <span id="ec-faq-title">Question</span>
+                    <button class="ec-modal-close" type="button" data-close-faq>&times;</button>
+                </div>
+                <div class="ec-modal-body" id="ec-faq-content"></div>
+            </div>
+        </div>
+        <div id="ec-page-toast" class="ec-toast"></div>
+    </div>
+
+    <script>
+        // Transaction Dropdown logic
+        const txMenu = document.getElementById('transaction-menu');
+        const txDropdown = document.getElementById('transaction-dropdown');
+
+        txMenu.addEventListener('mouseenter', () => txDropdown.classList.add('active'));
+        txMenu.addEventListener('mouseleave', () => txDropdown.classList.remove('active'));
+
+        // Financial business Dropdown logic
+        const finMenu = document.getElementById('finance-menu');
+        const finDropdown = document.getElementById('finance-dropdown');
+
+        finMenu.addEventListener('mouseenter', () => finDropdown.classList.add('active'));
+        finMenu.addEventListener('mouseleave', () => finDropdown.classList.remove('active'));
+
+        const toastEl = document.getElementById('ec-page-toast');
+        function showPageToast(message) {
+            if (!toastEl) return;
+            toastEl.textContent = message;
+            toastEl.classList.add('show');
+            clearTimeout(toastEl._timer);
+            toastEl._timer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+        }
+
+        function parseRange(text) {
+            const nums = String(text || '')
+                .match(/[\d.]+/g);
+            const values = (nums || [])
+                .map((n) => parseFloat(n))
+                .filter((n) => Number.isFinite(n));
+            const first = values[0] || 0;
+            return {
+                min: first,
+                max: values.length > 1 ? values[1] : first
+            };
+        }
+
+        function formatUsdt(value) {
+            return Number(value || 0).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        const faqAnswers = {
+            fund_intro: {
+                title: 'What is fund management',
+                content: 'Fund management lets you subscribe idle USDT into fixed-cycle plans. Revenue is settled daily based on the plan daily yield and order amount.'
+            },
+            fund_calc: {
+                title: 'Revenue calculation',
+                content: 'Daily revenue = order amount x daily yield. Maturity revenue is daily revenue x period days. The actual number may vary if platform rate strategy changes.'
+            },
+            fund_penalty: {
+                title: 'About liquidated damages',
+                content: 'Early redemption may trigger a handling fee or revenue adjustment. Please check current rules in the order confirmation before submitting.'
+            },
+            fund_start: {
+                title: 'How to start earning income',
+                content: 'Choose a plan, input the subscription amount within the allowed limit, then confirm. The order starts after successful submission.'
+            }
+        };
+
+        const faqModal = document.getElementById('ec-faq-modal');
+        const faqTitle = document.getElementById('ec-faq-title');
+        const faqContent = document.getElementById('ec-faq-content');
+        document.querySelectorAll('.faq-item').forEach((item) => {
+            item.addEventListener('click', () => {
+                const key = item.getAttribute('data-faq-key');
+                const data = faqAnswers[key];
+                if (!data) {
+                    showPageToast('FAQ content is being prepared.');
+                    return;
+                }
+                faqTitle.textContent = data.title;
+                faqContent.textContent = data.content;
+                faqModal.classList.add('show');
+            });
+        });
+
+        document.querySelectorAll('[data-close-faq]').forEach((btn) => {
+            btn.addEventListener('click', () => faqModal.classList.remove('show'));
+        });
+        faqModal.addEventListener('click', (e) => {
+            if (e.target === faqModal) faqModal.classList.remove('show');
+        });
+
+        const orderModal = document.getElementById('ec-fund-order-modal');
+        const orderAmount = document.getElementById('ec-order-amount');
+        const orderConfirm = document.getElementById('ec-order-confirm');
+        const planName = document.getElementById('ec-plan-name');
+        const planYield = document.getElementById('ec-plan-yield');
+        const planPeriod = document.getElementById('ec-plan-period');
+        const planLimit = document.getElementById('ec-plan-limit');
+        const estDaily = document.getElementById('ec-est-daily');
+        const estTotal = document.getElementById('ec-est-total');
+
+        let activePlan = null;
+
+        function readPlan(button) {
+            const row = button.closest('tr');
+            if (!row) return null;
+            const title = row.querySelector('.proj-title') ? row.querySelector('.proj-title').innerText.trim() : 'Fund plan';
+            const yieldText = row.querySelector('.yield-text') ? row.querySelector('.yield-text').innerText.trim() : '0.00 %';
+            const periodText = row.children[2] ? row.children[2].innerText.trim() : '1';
+            const limitText = row.children[3] ? row.children[3].innerText.trim() : '0 - 0';
+            const yieldRange = parseRange(yieldText);
+            const limitRange = parseRange(limitText);
+            return {
+                title,
+                yieldText,
+                periodDays: Math.max(1, parseInt(periodText, 10) || 1),
+                minAmount: Math.max(0, limitRange.min),
+                maxAmount: Math.max(limitRange.max, limitRange.min),
+                avgYieldPct: (yieldRange.min + yieldRange.max) / 2
+            };
+        }
+
+        function refreshEstimate() {
+            if (!activePlan) return;
+            const amount = parseFloat(orderAmount.value);
+            const valid = Number.isFinite(amount) && amount >= activePlan.minAmount && amount <= activePlan.maxAmount;
+            const useAmount = valid ? amount : 0;
+            const daily = useAmount * (activePlan.avgYieldPct / 100);
+            const total = daily * activePlan.periodDays;
+            estDaily.textContent = `${formatUsdt(daily)} USDT`;
+            estTotal.textContent = `${formatUsdt(total)} USDT`;
+            orderConfirm.disabled = !valid;
+        }
+
+        function openOrderModal(plan) {
+            activePlan = plan;
+            planName.textContent = plan.title;
+            planYield.textContent = plan.yieldText;
+            planPeriod.textContent = `${plan.periodDays} days`;
+            planLimit.textContent = `${formatUsdt(plan.minAmount)} - ${formatUsdt(plan.maxAmount)} USDT`;
+            orderAmount.min = String(plan.minAmount);
+            orderAmount.max = String(plan.maxAmount);
+            orderAmount.value = String(plan.minAmount);
+            refreshEstimate();
+            orderModal.classList.add('show');
+        }
+
+        document.querySelectorAll('.action-btn').forEach((button) => {
+            button.addEventListener('click', () => {
+                const plan = readPlan(button);
+                if (!plan) {
+                    showPageToast('Plan data unavailable.');
+                    return;
+                }
+                openOrderModal(plan);
+            });
+        });
+
+        orderAmount.addEventListener('input', refreshEstimate);
+
+        orderConfirm.addEventListener('click', () => {
+            if (!activePlan) return;
+            const amount = parseFloat(orderAmount.value);
+            if (!Number.isFinite(amount) || amount < activePlan.minAmount || amount > activePlan.maxAmount) {
+                showPageToast(`Amount must be between ${activePlan.minAmount} and ${activePlan.maxAmount} USDT.`);
+                return;
+            }
+            const orders = JSON.parse(localStorage.getItem('ec_fund_orders') || '[]');
+            orders.push({
+                id: `FUND-${Date.now()}`,
+                title: activePlan.title,
+                amount,
+                periodDays: activePlan.periodDays,
+                avgYieldPct: activePlan.avgYieldPct,
+                createdAt: new Date().toISOString(),
+                status: 'active'
+            });
+            localStorage.setItem('ec_fund_orders', JSON.stringify(orders));
+            orderModal.classList.remove('show');
+            showPageToast('Subscription submitted successfully.');
+        });
+
+        document.querySelectorAll('[data-close-order]').forEach((btn) => {
+            btn.addEventListener('click', () => orderModal.classList.remove('show'));
+        });
+        orderModal.addEventListener('click', (e) => {
+            if (e.target === orderModal) orderModal.classList.remove('show');
+        });
+    </script>
+    <script type="module">
+        import { enforceKycAccess } from './firebase-config.js';
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await enforceKycAccess({
+                requireAuth: true,
+                unauthRedirect: 'login.html',
+                kycRedirect: 'mobile.html'
+            });
+        });
+    </script>
+    <script src="/js/site-language.js"></script>
+</body>
+
+</html>
+
+
+
+

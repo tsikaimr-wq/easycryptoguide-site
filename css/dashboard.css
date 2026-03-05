@@ -1,0 +1,63 @@
+.dashboard-page {
+    padding-bottom: 4rem;
+}
+
+.dash-nav {
+    height: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4rem;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.dash-content {
+    margin-top: 3rem;
+}
+
+.wallet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.wallet-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.balance-list {
+    margin-top: 1rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.dash-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 3rem;
+}
+
+.btn-primary {
+    background: var(--secondary);
+    color: white;
+    padding: 1rem 2rem;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 1rem 2rem;
+}
+
+#logout-btn {
+    background: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}

@@ -1,0 +1,250 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyCrypto - Dashboard</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/brand/favicon-16x16.png">
+    <link rel="shortcut icon" href="/assets/brand/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+        <meta name="description" content="EasyCrypto Exchange - Perpetual, Spot and Delivery trading with real-time markets and secure KYC onboarding.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="EasyCrypto Exchange">
+    <meta property="og:title" content="EasyCrypto Exchange | Perpetual, Spot & Delivery">
+    <meta property="og:description" content="Trade like a real exchange. Perpetual, Spot and Delivery contracts with a professional crypto interface.">
+    <meta property="og:image" content="https://YOUR_DOMAIN/assets/brand/og-preview.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="https://YOUR_DOMAIN/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EasyCrypto Exchange | Perpetual, Spot & Delivery">
+    <meta name="twitter:description" content="Trade like a real exchange. Perpetual, Spot and Delivery contracts with a professional crypto interface.">
+    <meta name="twitter:image" content="https://YOUR_DOMAIN/assets/brand/og-preview.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+
+<body class="app-mode">
+
+    <div id="app">
+        <!-- Error Overlay -->
+        <div id="error-overlay">
+            <div>
+                <p>System error detected.</p>
+                <small id="error-details"></small>
+                <br><br>
+                <button onclick="location.reload()" style="padding: 10px 20px; cursor:pointer;">Reload Page</button>
+            </div>
+        </div>
+
+        <nav class="topbar">
+            <a href="dashboard.html" class="t-logo">
+                <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+                    <path d="M20 0L37.3205 10V30L20 40L2.67949 30V10L20 0Z" fill="white" fill-opacity="0.2" />
+                    <path d="M20 8L30.3923 14V26L20 32L9.6077 26V14L20 8Z" fill="white" />
+                </svg>
+                EASYCRYPTO
+            </a>
+            <div class="t-links">
+                <a href="markets.html" class="t-link">Markets</a>
+                <div class="t-link arr" id="transaction-menu">
+                    Transaction
+                    <div class="nav-dropdown" id="transaction-dropdown">
+                        <a href="contract.html" class="dropdown-item">
+                            <i class="ri-file-list-3-line"></i>
+                            Perpetual
+                        </a>
+                        <a href="delivery_chart.html" class="dropdown-item">
+                            <i class="ri-wallet-3-line"></i>
+                            Delivery
+                        </a>
+                        <a href="trade.html" class="dropdown-item">
+                            <i class="ri-focus-3-line"></i>
+                            Spot
+                        </a>
+                    </div>
+                </div>
+                <div class="t-link arr" id="finance-menu">
+                    Financial business
+                    <div class="nav-dropdown" id="finance-dropdown">
+                        <a href="fund.html" class="dropdown-item">
+                            <i class="ri-funds-box-line"></i>
+                            <div class="dropdown-col">
+                                <span class="dropdown-title">Fund Management</span>
+                                <span class="dropdown-desc">One-stop investment service</span>
+                            </div>
+                        </a>
+                        <a href="mine.html" class="dropdown-item">
+                            <i class="ri-hammer-line"></i>
+                            <div class="dropdown-col">
+                                <span class="dropdown-title">Mining Pool lock</span>
+                                <span class="dropdown-desc">Serve the miners and improve mining income</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <a href="#" class="t-link">Mobile</a>
+            </div>
+            <div class="t-actions">
+                <button class="btn-dep">Deposit</button>
+                <a href="#" class="t-r arr">Wallet</a>
+                <a href="#" class="t-r arr">Order</a>
+                <div class="t-r arr" onclick="handleLogout()" style="cursor: pointer; color: #ffeb3b;">Logout</div>
+                <div class="t-r" style="border-left:1px solid #333; margin-left:15px; color:#fff;">English</div>
+            </div>
+        </nav>
+
+        <main class="app-main">
+            <div id="dashboard-content">
+                <div style="padding:4rem; text-align:center; opacity:0.5;">Loading Dashboard...</div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { db, collection, getDocs, enforceKycAccess, logError } from './firebase-config.js';
+
+        async function renderDashboard() {
+            try {
+                const content = document.getElementById('dashboard-content');
+
+                // Fetch Market Data from Firestore
+                const querySnapshot = await getDocs(collection(db, 'market_summaries'));
+                const markets = querySnapshot.docs.map(doc => doc.data());
+
+                const findPair = (sym) => markets.find(m => m.symbol === sym) || { stats: { last: 0, change_pct: 0, quote_volume: 0 } };
+                const btc = findPair('BTC/USDT');
+                const eth = findPair('ETH/USDT');
+                const etc = findPair('ETC/USDT');
+
+                content.innerHTML = `
+                    <div class="m-title-row">
+                        <h1>Market Overview</h1>
+                        <div class="m-search">?? <input type="text" placeholder="Search markets"></div>
+                    </div>
+                    
+                    <div class="m-ticker-cards">
+                        <div class="t-card">
+                            <div>
+                                <div class="m-pair-cell"><div class="t-icon" style="color:#f59e0b">B</div>BTC/USDT</div>
+                                <div class="t-price">${btc.stats.last.toLocaleString()}</div>
+                                <div class="t-change ${btc.stats.change_pct >= 0 ? 'up' : 'down'}">
+                                    ${btc.stats.change_pct.toFixed(2)}% 
+                                    <span style="font-size:0.7rem; opacity:0.5; margin-left:10px;">Vol ${btc.stats.quote_volume.toLocaleString()}M</span>
+                                </div>
+                            </div>
+                            <div class="t-spark"></div>
+                        </div>
+                        <div class="t-card">
+                            <div>
+                                <div class="m-pair-cell"><div class="t-icon" style="color:#6366f1">E</div>ETH/USDT</div>
+                                <div class="t-price">${eth.stats.last.toLocaleString()}</div>
+                                <div class="t-change ${eth.stats.change_pct >= 0 ? 'up' : 'down'}">
+                                    ${eth.stats.change_pct.toFixed(2)}%
+                                    <span style="font-size:0.7rem; opacity:0.5; margin-left:10px;">Vol ${eth.stats.quote_volume.toLocaleString()}M</span>
+                                </div>
+                            </div>
+                            <div class="t-spark"></div>
+                        </div>
+                        <div class="t-card">
+                            <div>
+                                <div class="m-pair-cell"><div class="t-icon" style="color:#10b981">E</div>ETC/USDT</div>
+                                <div class="t-price">${etc.stats.last.toLocaleString()}</div>
+                                <div class="t-change ${etc.stats.change_pct >= 0 ? 'up' : 'down'}">
+                                    ${etc.stats.change_pct.toFixed(2)}%
+                                    <span style="font-size:0.7rem; opacity:0.5; margin-left:10px;">Vol ${etc.stats.quote_volume.toLocaleString()}M</span>
+                                </div>
+                            </div>
+                            <div class="t-spark"></div>
+                        </div>
+                    </div>
+
+                    <div class="m-tabs-line">
+                        <div class="m-tab">Favorites</div>
+                        <div class="m-tab active">All Cryptos</div>
+                        <div class="m-tab">Spot Markets</div>
+                        <div class="m-tab">Perpetual</div>
+                    </div>
+
+                    <div class="m-split-view">
+                        <div>
+                            <table class="m-tbl">
+                                <thead><tr><th>Name</th><th>Price</th><th>24h Change</th><th>24h Volume</th><th>Action</th></tr></thead>
+                                <tbody>
+                                    ${markets.map(m => `
+                                        <tr>
+                                            <td><div class="m-pair-cell">☆<span style="color:#0081ff">馃敆</span> ${m.symbol}</div></td>
+                                            <td><b>${m.stats.last.toLocaleString()}</b></td>
+                                            <td class="${m.stats.change_pct >= 0 ? 'up' : 'down'}">${m.stats.change_pct >= 0 ? '+' : ''}${m.stats.change_pct.toFixed(2)}%</td>
+                                            <td>${m.stats.quote_volume.toLocaleString()}M</td>
+                                            <td><a href="trade.html?symbol=${m.symbol}" class="btn-trade" style="text-decoration:none;">Trade</a></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <div class="m-tabs-line" style="margin-top:0; border:none;"><div class="m-tab active" style="color:#111; border-bottom-color:#0081ff">Top Gainers</div></div>
+                            <table class="m-tbl">
+                                <thead><tr><th>Name</th><th>Price</th><th>Change</th></tr></thead>
+                                <tbody>
+                                    ${[...markets].sort((a, b) => b.stats.change_pct - a.stats.change_pct).slice(0, 5).map(m => `
+                                        <tr>
+                                            <td>${m.symbol}</td>
+                                            <td>${m.stats.last.toLocaleString()}</td>
+                                            <td class="up">+${m.stats.change_pct.toFixed(2)}%</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                logError("Dashboard initialization failed: " + err.message);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const access = await enforceKycAccess({
+                requireAuth: true,
+                unauthRedirect: 'login.html',
+                kycRedirect: 'mobile.html'
+            });
+            if (access.ok) {
+                renderDashboard();
+            }
+        });
+
+        // Transaction Dropdown logic
+        const txMenu = document.getElementById('transaction-menu');
+        const txDropdown = document.getElementById('transaction-dropdown');
+
+        txMenu.addEventListener('mouseenter', () => txDropdown.classList.add('active'));
+        txMenu.addEventListener('mouseleave', () => txDropdown.classList.remove('active'));
+
+        // Financial business Dropdown logic
+        const finMenu = document.getElementById('finance-menu');
+        const finDropdown = document.getElementById('finance-dropdown');
+
+        finMenu.addEventListener('mouseenter', () => finDropdown.classList.add('active'));
+        finMenu.addEventListener('mouseleave', () => finDropdown.classList.remove('active'));
+    </script>
+    <script src="/js/site-language.js"></script>
+</body>
+
+</html>
+
+
+
+
+
+
+

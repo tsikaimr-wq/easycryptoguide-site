@@ -1,0 +1,690 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Create Account - EASYCRYPTO</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/brand/favicon-16x16.png">
+    <link rel="shortcut icon" href="/assets/brand/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+        <meta name="description" content="EasyCrypto Exchange - Perpetual, Spot and Delivery trading with real-time markets and secure KYC onboarding.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="EasyCrypto Exchange">
+    <meta property="og:title" content="EasyCrypto Exchange | Perpetual, Spot & Delivery">
+    <meta property="og:description" content="Trade like a real exchange. Perpetual, Spot and Delivery contracts with a professional crypto interface.">
+    <meta property="og:image" content="https://YOUR_DOMAIN/assets/brand/og-preview.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="https://YOUR_DOMAIN/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EasyCrypto Exchange | Perpetual, Spot & Delivery">
+    <meta name="twitter:description" content="Trade like a real exchange. Perpetual, Spot and Delivery contracts with a professional crypto interface.">
+    <meta name="twitter:image" content="https://YOUR_DOMAIN/assets/brand/og-preview.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function () {
+            // Initialize EmailJS with Public Key
+            emailjs.init({
+                publicKey: "-TaDEWlDVI41hWXmN",
+            });
+        })();
+    </script>
+    <style>
+        body {
+            background-color: #fff !important;
+            color: #111;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .auth-wrapper {
+            max-width: 480px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        .auth-header {
+            margin-bottom: 40px;
+        }
+
+        .auth-header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0 0 12px;
+            color: #111;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .auth-header p {
+            font-size: 16px;
+            color: #555;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 48px;
+            padding: 0 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 15px;
+            color: #111;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            border-color: #0081ff;
+        }
+
+        .form-input::placeholder {
+            color: #ccc;
+        }
+
+        .btn-auth-primary {
+            width: 100%;
+            height: 50px;
+            background: #0081ff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn-auth-primary:hover {
+            background: #0066cc;
+        }
+
+        .auth-footer-links {
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        .auth-footer-links a {
+            color: #0081ff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .auth-footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Nav overrides */
+        .topbar {
+            background: #111 !important;
+            border-bottom: 1px solid #333;
+        }
+
+        /* Tabs styling */
+        .auth-tabs {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 12px;
+        }
+
+        .auth-tab {
+            font-size: 16px;
+            color: #999;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .auth-tab.active {
+            color: #111;
+            background: #f5f5f5;
+            font-weight: 500;
+        }
+
+        .identifier-section {
+            display: none;
+        }
+
+        .identifier-section.active {
+            display: block;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .country-prefix {
+            width: 80px;
+            height: 48px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            color: #111;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="cors-warning"
+        style="display: none; background: #ff4444; color: #fff; padding: 15px; text-align: center; position: sticky; top: 0; left: 0; width: 100%; z-index: 9999; font-weight: bold; border-bottom: 2px solid #fff;">
+        鈿狅笍 SECURITY BLOCKED: You are opening this file directly. "Send Code" and Registration will NOT work.
+        <br>Please run <code style="background: rgba(0,0,0,0.2); padding: 2px 5px;">server.bat</code> and use <code
+            style="background: rgba(0,0,0,0.2); padding: 2px 5px;">http://localhost:8000/signup.html</code>
+    </div>
+
+    <nav class="topbar">
+        <a href="index.html" class="t-logo">
+            <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+                <path d="M20 0L37.3205 10V30L20 40L2.67949 30V10L20 0Z" fill="white" fill-opacity="0.2" />
+                <path d="M20 8L30.3923 14V26L20 32L9.6077 26V14L20 8Z" fill="white" />
+            </svg>
+            EASYCRYPTO
+        </a>
+        <div class="t-links">
+            <a href="markets.html" class="t-link">Markets</a>
+            <div class="t-link arr" id="transaction-menu">
+                Transaction
+                <div class="nav-dropdown" id="transaction-dropdown">
+                    <a href="contract.html" class="dropdown-item">
+                        <i class="ri-file-list-3-line"></i>
+                        Perpetual
+                    </a>
+                    <a href="delivery_chart.html" class="dropdown-item">
+                        <i class="ri-wallet-3-line"></i>
+                        Delivery
+                    </a>
+                    <a href="trade.html" class="dropdown-item">
+                        <i class="ri-focus-3-line"></i>
+                        Spot
+                    </a>
+                </div>
+            </div>
+            <div class="t-link arr" id="finance-menu">
+                Financial business
+                <div class="nav-dropdown" id="finance-dropdown">
+                    <a href="fund.html" class="dropdown-item">
+                        <i class="ri-funds-box-line"></i>
+                        <div class="dropdown-col">
+                            <span class="dropdown-title">Fund Management</span>
+                            <span class="dropdown-desc">One-stop investment service</span>
+                        </div>
+                    </a>
+                    <a href="mine.html" class="dropdown-item">
+                        <i class="ri-hammer-line"></i>
+                        <div class="dropdown-col">
+                            <span class="dropdown-title">Mining Pool lock</span>
+                            <span class="dropdown-desc">Serve the miners and improve mining income</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <a href="mobile.html" class="t-link">Mobile</a>
+        </div>
+        <div class="t-actions">
+            <a href="login.html" class="t-link">Login</a>
+            <a href="signup.html" class="t-link active">Register</a>
+            <a href="#" class="t-link">Download APP</a>
+            <div class="t-link" style="border-left:1px solid #333; margin-left:15px; padding-left:15px;">English</div>
+        </div>
+    </nav>
+
+    <main class="auth-wrapper">
+        <header class="auth-header">
+            <h1>Create Account</h1>
+            <p>Sign up using your email or mobile number</p>
+        </header>
+
+        <div class="auth-tabs" id="auth-tabs">
+            <div class="auth-tab active" data-tab="email">E-mail</div>
+            <div class="auth-tab" data-tab="mobile">Mobile</div>
+            <div class="auth-tab" data-tab="account">Account</div>
+        </div>
+
+        <form id="signup-form">
+            <!-- Email Section -->
+            <div class="form-group identifier-section active" id="email-section">
+                <label>Email</label>
+                <input type="email" id="email-input" class="form-input" placeholder="Please enter your email" required>
+            </div>
+
+            <!-- Mobile Section (Flexible Prefix) -->
+            <div class="form-group identifier-section" id="mobile-section">
+                <label>Mobile Number</label>
+                <div class="input-group">
+                    <input type="text" id="country-prefix" class="form-input"
+                        style="width: 80px; flex-shrink: 0; text-align: center; font-weight: 600;" value="+1"
+                        placeholder="+1">
+                    <input type="tel" id="mobile-input" class="form-input"
+                        placeholder="Please enter a mobile phone number">
+                </div>
+            </div>
+
+            <!-- Account Section -->
+            <div class="form-group identifier-section" id="account-section">
+                <label>Account</label>
+                <input type="text" id="account-input" class="form-input"
+                    placeholder="Create account (4-24 letters/numbers/underscore)">
+            </div>
+
+            <div id="recaptcha-container"></div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="pass1" class="form-input" placeholder="Please enter your password" required>
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="pass2" class="form-input" placeholder="Please confirm your password"
+                    required>
+            </div>
+
+            <!-- OTP Input for Both Registration Modes -->
+            <div class="form-group" id="otp-section">
+                <label>Verification Code</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="otp-input" class="form-input" placeholder="Enter 6-digit code">
+                    <button type="button" id="send-otp-btn" class="btn-auth-primary"
+                        style="margin-top: 0; width: 140px; font-size: 14px; background: #28a745; flex-shrink: 0;">Send
+                        Code</button>
+                </div>
+            </div>
+
+            <button type="submit" id="main-submit-btn" class="btn-auth-primary">Create Account</button>
+        </form>
+
+        <div class="auth-footer-links">
+            <a href="login.html">Already have an account? Login</a>
+        </div>
+    </main>
+
+    <footer
+        style="background: #111; color: #666; padding: 40px 0; text-align: center; font-size: 13px; border-top: 1px solid #222; margin-top: 100px;">
+        <div class="container">
+            <div style="margin-bottom: 20px;">
+                <a href="#" style="color: #999; margin: 0 15px; text-decoration: none;">Help center</a>
+                <a href="#" style="color: #999; margin: 0 15px; text-decoration: none;">Terms of service</a>
+                <a href="#" style="color: #999; margin: 0 15px; text-decoration: none;">Privacy policy</a>
+            </div>
+            <p>漏 2026 Easy Crypto. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script type="module">
+        // Import centralized firebase configuration and auth functions
+        import {
+            auth,
+            createUserWithEmailAndPassword,
+            db,
+            doc,
+            setDoc,
+            signOut,
+            RecaptchaVerifier,
+            signInWithPhoneNumber,
+            collection,
+            query,
+            where,
+            getDocs
+        } from './firebase-config.js';
+
+        // Protocol check for CORS issues
+        if (window.location.protocol === 'file:') {
+            const warning = document.getElementById('cors-warning');
+            if (warning) warning.style.display = 'block';
+            console.error("Firebase won't work on file:// protocol. Use http://localhost:8000");
+        }
+
+        // Tab Switching Logic
+        const tabs = document.querySelectorAll('.auth-tab');
+        const sections = document.querySelectorAll('.identifier-section');
+        const emailInput = document.getElementById('email-input');
+        const mobileInput = document.getElementById('mobile-input');
+        const accountInput = document.getElementById('account-input');
+        const mainSubmitBtn = document.getElementById('main-submit-btn');
+        const sendOtpBtn = document.getElementById('send-otp-btn');
+
+        let currentTab = 'email';
+        let confirmationResult = null; // Store phone auth result
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.getAttribute('data-tab');
+                currentTab = targetTab;
+
+                // Update tab styles
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Update field visibility
+                document.getElementById('email-section').classList.remove('active');
+                document.getElementById('mobile-section').classList.remove('active');
+                document.getElementById('account-section').classList.remove('active');
+
+                // Reset required attributes and button visibility
+                if (targetTab === 'email') {
+                    document.getElementById('email-section').classList.add('active');
+                    document.getElementById('otp-section').style.display = 'block';
+                    document.getElementById('recaptcha-container').style.display = 'none';
+                    emailInput.required = true;
+                    mobileInput.required = false;
+                    accountInput.required = false;
+                } else if (targetTab === 'mobile') {
+                    document.getElementById('mobile-section').classList.add('active');
+                    document.getElementById('otp-section').style.display = 'block';
+                    document.getElementById('recaptcha-container').style.display = 'block';
+                    emailInput.required = false;
+                    mobileInput.required = true;
+                    accountInput.required = false;
+                } else if (targetTab === 'account') {
+                    document.getElementById('account-section').classList.add('active');
+                    document.getElementById('otp-section').style.display = 'none';
+                    document.getElementById('recaptcha-container').style.display = 'none';
+                    emailInput.required = false;
+                    mobileInput.required = false;
+                    accountInput.required = true;
+                }
+            });
+        });
+
+        // Initialize reCAPTCHA (Required for Phone Auth)
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'invisible',
+            'callback': (response) => { }
+        });
+        document.getElementById('recaptcha-container').style.display = 'none';
+
+        // Helper to generate a consistent code based on email so we can verify it on the frontend
+        function generateCodeForEmail(email) {
+            let hash = 0;
+            for (let i = 0; i < email.length; i++) {
+                hash = ((hash << 5) - hash) + email.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash).toString().substring(0, 6).padStart(6, '0');
+        }
+
+        // Handle Send OTP
+        let generatedEmailOTP = null; // Store locally for comparison
+
+        sendOtpBtn.addEventListener('click', async () => {
+            if (currentTab === 'account') {
+                alert("Account registration does not require OTP.");
+                return;
+            }
+            if (currentTab === 'email') {
+                const email = emailInput.value.trim();
+                if (!email) return alert("Please enter an email first");
+
+                sendOtpBtn.textContent = 'Sending...';
+                sendOtpBtn.disabled = true;
+
+                // Generate random 6-digit OTP code for EmailJS
+                generatedEmailOTP = Math.floor(100000 + Math.random() * 900000).toString();
+
+                try {
+                    console.log("Sending OTP code via EmailJS...");
+                    // Send using EmailJS: ServiceID, TemplateID, Data Payload
+                    await emailjs.send('service_au63y5g', 'template_66g9xxf', {
+                        to_email: email,
+                        otp_code: generatedEmailOTP
+                    });
+
+                    alert("Verification Code has been sent to your email. Please check your inbox / spam folder.");
+
+                    sendOtpBtn.textContent = 'Code Sent!';
+                    sendOtpBtn.style.background = '#6c757d'; // Gray out
+                    setTimeout(() => {
+                        sendOtpBtn.textContent = 'Resend Code';
+                        sendOtpBtn.disabled = false;
+                        sendOtpBtn.style.background = '#28a745'; // Restore color
+                    }, 10000);
+                } catch (err) {
+                    console.error("EmailJS Error:", err);
+                    alert("Failed to send Email OTP. Error: " + JSON.stringify(err));
+                    sendOtpBtn.textContent = 'Send Code';
+                    sendOtpBtn.disabled = false;
+                }
+                return;
+            }
+
+            if (currentTab === 'mobile') {
+                const prefix = document.getElementById('country-prefix').value.trim();
+                let phoneNumber = mobileInput.value.trim();
+                if (!phoneNumber) return alert("Please enter a mobile number");
+
+                // Correctly format the phone number: Ensure it starts with the specified prefix
+                let fullPhoneNumber = phoneNumber;
+                if (!phoneNumber.startsWith('+')) {
+                    // Combine prefix and number, cleaning any extra digits if prefix is already present
+                    const cleanPrefix = prefix.startsWith('+') ? prefix : '+' + prefix;
+                    fullPhoneNumber = cleanPrefix + phoneNumber.replace(/\D/g, '');
+                }
+
+                try {
+                    sendOtpBtn.textContent = 'Sending...';
+                    sendOtpBtn.disabled = true;
+
+                    console.log("Phone Auth: Sending OTP to", fullPhoneNumber);
+                    confirmationResult = await signInWithPhoneNumber(auth, fullPhoneNumber, window.recaptchaVerifier);
+
+                    alert("SMS Verification Code Sent!");
+                    sendOtpBtn.textContent = 'Resend Code';
+                    sendOtpBtn.disabled = false;
+                } catch (error) {
+                    console.error(error);
+                    alert("Failed to send OTP: " + error.message);
+                    sendOtpBtn.textContent = 'Send Code';
+                    sendOtpBtn.disabled = false;
+                    try {
+                        window.recaptchaVerifier.render().then(function (widgetId) {
+                            grecaptcha.reset(widgetId);
+                        });
+                    } catch (e) { }
+                }
+            }
+        });
+
+        function normalizeAccountLogin(value) {
+            return String(value || '').trim().toLowerCase();
+        }
+
+        async function generateUniqueSixDigitUserId() {
+            for (let i = 0; i < 30; i++) {
+                const candidate = String(Math.floor(100000 + Math.random() * 900000));
+                const q = query(collection(db, 'users'), where('user_id', '==', candidate));
+                const snap = await getDocs(q);
+                if (snap.empty) return candidate;
+            }
+            return String((Date.now() % 900000) + 100000).padStart(6, '0');
+        }
+
+        async function ensureUniqueAccount(emailValue, phoneValue, accountLoginValue = '') {
+            const checks = [];
+            if (emailValue) {
+                checks.push(getDocs(query(collection(db, 'users'), where('email', '==', emailValue))));
+            }
+            if (phoneValue) {
+                checks.push(getDocs(query(collection(db, 'users'), where('phone', '==', phoneValue))));
+            }
+            const accountLogin = normalizeAccountLogin(accountLoginValue);
+            if (accountLogin) {
+                checks.push(getDocs(query(collection(db, 'users'), where('account_login', '==', accountLogin))));
+            }
+            if (checks.length === 0) return;
+
+            const results = await Promise.all(checks);
+            const alreadyExists = results.some(s => !s.empty);
+            if (alreadyExists) {
+                throw new Error('This account is already registered. Please login directly.');
+            }
+        }
+
+        // Handle Form Submission
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const pass1 = document.getElementById('pass1').value;
+            const pass2 = document.getElementById('pass2').value;
+
+            if (pass1 !== pass2) {
+                alert("Passwords do not match");
+                return;
+            }
+
+            let finalEmail = '';
+            let fullPhone = '';
+            let accountLogin = '';
+            const code = document.getElementById('otp-input').value.trim();
+
+            if (currentTab === 'email') {
+                if (!code) return alert("Please enter the verification code");
+                if (code !== generatedEmailOTP) {
+                    alert("Invalid verification code. Please check your email and try again.");
+                    return;
+                }
+                // If code matches, email verified before creation
+                finalEmail = emailInput.value.trim().toLowerCase();
+            } else if (currentTab === 'mobile') {
+                if (!code) return alert("Please enter the verification code");
+                if (!confirmationResult) return alert("Please request an OTP first");
+
+                try {
+                    // Verify the SMS OTP code
+                    await confirmationResult.confirm(code);
+                } catch (error) {
+                    return alert("Invalid SMS verification code: " + error.message);
+                }
+
+                const prefix = document.getElementById('country-prefix').value.trim();
+                let phoneNumber = mobileInput.value.trim();
+
+                // Format for consistency
+                const cleanPrefix = prefix.startsWith('+') ? prefix : '+' + prefix;
+                fullPhone = (phoneNumber.startsWith('+')) ? phoneNumber : (cleanPrefix + phoneNumber.replace(/\D/g, ''));
+
+                // Convert phone number to a valid email representation for Firebase easy login handling
+                finalEmail = fullPhone + "@mobile.local";
+            } else if (currentTab === 'account') {
+                accountLogin = normalizeAccountLogin(accountInput.value);
+                if (!/^[a-zA-Z0-9_]{4,24}$/.test(accountLogin)) {
+                    return alert("Account must be 4-24 letters/numbers/underscore.");
+                }
+                finalEmail = `${accountLogin}@account.local`;
+            }
+
+            try {
+                await ensureUniqueAccount(
+                    (currentTab === 'email' || currentTab === 'account') ? finalEmail.toLowerCase() : '',
+                    currentTab === 'mobile' ? fullPhone : '',
+                    currentTab === 'account' ? accountLogin : ''
+                );
+
+                console.log("Signup: Creating auth user with", finalEmail);
+                const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, pass1);
+                const user = userCredential.user;
+                const userNumericId = await generateUniqueSixDigitUserId();
+                console.log("Signup: Auth user created successfully:", user.uid);
+
+                // Save user metadata to Firestore
+                console.log("Signup: Syncing user to Firestore collection 'users'...");
+                await setDoc(doc(db, 'users', user.uid), {
+                    uid: user.uid,
+                    user_id: userNumericId,
+                    account: `EC${userNumericId}`,
+                    account_login: currentTab === 'account' ? accountLogin : '',
+                    email: currentTab === 'email' ? finalEmail : (currentTab === 'account' ? finalEmail : ''),
+                    phone: currentTab === 'mobile' ? fullPhone : '',
+                    platform: 'Website',
+                    name: currentTab === 'account' ? accountLogin : 'New User',
+                    balance: 0,
+                    kyc_status: 'Not Verified',
+                    status: 'Active',
+                    role: 'user',
+                    joined: new Date().toISOString()
+                });
+                console.log("Signup: Firestore sync complete. Signing out for manual login...");
+                sessionStorage.removeItem('mobile_session_active');
+                await signOut(auth);
+
+                if (currentTab === 'email') {
+                    alert(`Account successfully created and verified! You can now login.\nAccount: EC${userNumericId}`);
+                } else if (currentTab === 'account') {
+                    alert(`Account successfully created!\nLogin Account: ${accountLogin}\nUser ID: ${userNumericId}`);
+                } else {
+                    alert(`Signup successful! You can now login.\nAccount: EC${userNumericId}`);
+                }
+
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error("Signup/Sync Error:", error);
+                if (error.code === 'auth/email-already-in-use') {
+                    alert("This account is already registered. Please login directly.");
+                } else {
+                    alert("Signup failed: " + error.message);
+                }
+            }
+        });
+
+        // Transaction Dropdown logic
+        const txMenu = document.getElementById('transaction-menu');
+        const txDropdown = document.getElementById('transaction-dropdown');
+
+        txMenu.addEventListener('mouseenter', () => txDropdown.classList.add('active'));
+        txMenu.addEventListener('mouseleave', () => txDropdown.classList.remove('active'));
+
+        // Financial business Dropdown logic
+        const finMenu = document.getElementById('finance-menu');
+        const finDropdown = document.getElementById('finance-dropdown');
+
+        finMenu.addEventListener('mouseenter', () => finDropdown.classList.add('active'));
+        finMenu.addEventListener('mouseleave', () => finDropdown.classList.remove('active'));
+    </script>
+    <script src="/js/site-language.js"></script>
+</body>
+
+</html>
+
+
+
+
+
+
+
+

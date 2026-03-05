@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Init DB</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/brand/favicon-16x16.png">
+    <link rel="shortcut icon" href="/assets/brand/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+</head>
+
+<body>
+    <h1>Initializing Firestore Database Tables...</h1>
+    <div id="status">Wait...</div>
+
+    <script type="module">
+        import { db, doc, setDoc } from './firebase-config.js';
+
+        const coins = [
+            { id: "BTC-USDT", symbol: "BTC/USDT", stats: { last: 65430.50, change_pct: 2.14, quote_volume: 12500, high_24h: 66000, low_24h: 63000, mark_price: 65430.50, index_price: 65430 } },
+            { id: "ETH-USDT", symbol: "ETH/USDT", stats: { last: 3450.20, change_pct: -0.85, quote_volume: 8500, high_24h: 3500, low_24h: 3300, mark_price: 3450.20, index_price: 3450 } },
+            { id: "SOL-USDT", symbol: "SOL/USDT", stats: { last: 145.80, change_pct: 5.20, quote_volume: 4200, high_24h: 150, low_24h: 140, mark_price: 145.80, index_price: 145 } },
+            { id: "ETC-USDT", symbol: "ETC/USDT", stats: { last: 32.50, change_pct: 4.10, quote_volume: 350, high_24h: 34, low_24h: 30, mark_price: 32.50, index_price: 32 } },
+            { id: "DOGE-USDT", symbol: "DOGE/USDT", stats: { last: 0.16, change_pct: 12.50, quote_volume: 5200, high_24h: 0.18, low_24h: 0.14, mark_price: 0.16, index_price: 0.16 } },
+        ];
+
+        async function initDB() {
+            try {
+                // Seed Market Summaries
+                for (let coin of coins) {
+                    await setDoc(doc(db, 'market_summaries', coin.id), coin);
+                }
+
+                // Initial Tables list
+                await setDoc(doc(db, 'users', 'INITIAL_SETUP'), { note: 'Collection initialized' });
+                await setDoc(doc(db, 'trades', 'INITIAL_SETUP'), { note: 'Collection initialized' });
+                await setDoc(doc(db, 'wallets', 'INITIAL_SETUP'), { note: 'Collection initialized' });
+                await setDoc(doc(db, 'deposits', 'INITIAL_SETUP'), { note: 'Collection initialized' });
+                await setDoc(doc(db, 'withdrawals', 'INITIAL_SETUP'), { note: 'Collection initialized' });
+
+                document.getElementById('status').innerText = 'Success! All tables have been created!';
+            } catch (err) {
+                document.getElementById('status').innerText = 'Error: ' + err.message;
+            }
+        }
+
+        initDB();
+    </script>
+    <script src="/js/site-language.js"></script>
+</body>
+
+</html>
+
+
+
+
