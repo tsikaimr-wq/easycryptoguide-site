@@ -413,6 +413,7 @@
 
         let currentTab = 'email';
         let confirmationResult = null; // Store phone auth result
+        let signupSubmitting = false;
 
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
@@ -566,23 +567,29 @@
             return String((Date.now() % 900000) + 100000).padStart(6, '0');
         }
 
-        async function ensureUniqueAccount(emailValue, phoneValue, accountLoginValue = '') {
-            const checks = [];
-            if (emailValue) {
-                checks.push(getDocs(query(collection(db, 'users'), where('email', '==', emailValue))));
+        function buildDeterministicUserId(uid) {
+            const src = String(uid || '');
+            let hash = 0;
+            for (let i = 0; i < src.length; i++) {
+                hash = ((hash * 31) + src.charCodeAt(i)) % 900000;
             }
-            if (phoneValue) {
-                checks.push(getDocs(query(collection(db, 'users'), where('phone', '==', phoneValue))));
-            }
-            const accountLogin = normalizeAccountLogin(accountLoginValue);
-            if (accountLogin) {
-                checks.push(getDocs(query(collection(db, 'users'), where('account_login', '==', accountLogin))));
-            }
-            if (checks.length === 0) return;
+            return String(hash + 100000).padStart(6, '0');
+        }
 
-            const results = await Promise.all(checks);
-            const alreadyExists = results.some(s => !s.empty);
-            if (alreadyExists) {
+        async function pickFastUserNumericId(uid) {
+            const preferred = buildDeterministicUserId(uid);
+            const preferredSnap = await getDocs(query(collection(db, 'users'), where('user_id', '==', preferred)));
+            if (preferredSnap.empty || preferredSnap.docs.some(d => d.id === uid)) {
+                return preferred;
+            }
+            return generateUniqueSixDigitUserId();
+        }
+
+        async function ensureUniqueAccount(emailValue, phoneValue, accountLoginValue = '') {
+            const accountLogin = normalizeAccountLogin(accountLoginValue);
+            if (!accountLogin) return;
+            const snap = await getDocs(query(collection(db, 'users'), where('account_login', '==', accountLogin)));
+            if (!snap.empty) {
                 throw new Error('This account is already registered. Please login directly.');
             }
         }
@@ -590,6 +597,7 @@
         // Handle Form Submission
         document.getElementById('signup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (signupSubmitting) return;
 
             const pass1 = document.getElementById('pass1').value;
             const pass2 = document.getElementById('pass2').value;
@@ -641,6 +649,12 @@
             }
 
             try {
+                signupSubmitting = true;
+                mainSubmitBtn.disabled = true;
+                const originalSubmitText = mainSubmitBtn.innerText;
+                mainSubmitBtn.dataset.originalText = originalSubmitText;
+                mainSubmitBtn.innerText = 'Creating...';
+
                 await ensureUniqueAccount(
                     (currentTab === 'email' || currentTab === 'account') ? finalEmail.toLowerCase() : '',
                     currentTab === 'mobile' ? fullPhone : '',
@@ -650,7 +664,7 @@
                 console.log("Signup: Creating auth user with", finalEmail);
                 const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, pass1);
                 const user = userCredential.user;
-                const userNumericId = await generateUniqueSixDigitUserId();
+                const userNumericId = await pickFastUserNumericId(user.uid);
                 console.log("Signup: Auth user created successfully:", user.uid);
 
                 // Save user metadata to Firestore
@@ -687,9 +701,15 @@
                 console.error("Signup/Sync Error:", error);
                 if (error.code === 'auth/email-already-in-use') {
                     alert("This account is already registered. Please login directly.");
+                } else if (error.code === 'auth/network-request-failed') {
+                    alert("Network unstable. Please retry.");
                 } else {
                     alert("Signup failed: " + error.message);
                 }
+            } finally {
+                signupSubmitting = false;
+                mainSubmitBtn.disabled = false;
+                mainSubmitBtn.innerText = mainSubmitBtn.dataset.originalText || 'Create Account';
             }
         });
 

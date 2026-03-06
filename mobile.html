@@ -10459,6 +10459,7 @@
 
         let currentLoginTab = 'email';
         let currentSignupTab = 'email';
+        window.__mobileSignupSubmitting = false;
 
         function normalizeAccountLogin(value) {
             return String(value || '').trim().toLowerCase();
@@ -10466,22 +10467,12 @@
         window.sendOTP = sendOTP;
 
         async function ensureMobileAccountUnique(emailValue, phoneValue, accountLoginValue = '') {
-            const checks = [];
-            const normalizedEmail = (emailValue || '').trim().toLowerCase();
-            const normalizedPhone = (phoneValue || '').trim();
             const normalizedAccount = normalizeAccountLogin(accountLoginValue);
-            if (normalizedEmail) {
-                checks.push(window.getDocs(window.query(window.collection(window.db, 'users'), window.where('email', '==', normalizedEmail))));
-            }
-            if (normalizedPhone) {
-                checks.push(window.getDocs(window.query(window.collection(window.db, 'users'), window.where('phone', '==', normalizedPhone))));
-            }
-            if (normalizedAccount) {
-                checks.push(window.getDocs(window.query(window.collection(window.db, 'users'), window.where('account_login', '==', normalizedAccount))));
-            }
-            if (!checks.length) return;
-            const result = await Promise.all(checks);
-            if (result.some(snap => !snap.empty)) {
+            if (!normalizedAccount) return;
+            const snap = await window.getDocs(
+                window.query(window.collection(window.db, 'users'), window.where('account_login', '==', normalizedAccount))
+            );
+            if (!snap.empty) {
                 throw new Error('This account is already registered. Please login directly.');
             }
         }
@@ -10501,7 +10492,7 @@
 
         async function generateUniqueSixDigitUserId() {
             const { db, collection, query, where, getDocs } = window.fb;
-            for (let i = 0; i < 30; i++) {
+            for (let i = 0; i < 8; i++) {
                 const candidate = String(Math.floor(100000 + Math.random() * 900000));
                 const q = query(collection(db, 'users'), where('user_id', '==', candidate));
                 const snap = await getDocs(q);
@@ -10530,11 +10521,14 @@
         }
 
         async function handleSignup() {
+            if (window.__mobileSignupSubmitting) return;
             const rawEmail = document.getElementById('signup-email').value.trim();
             const pass = document.getElementById('signup-password').value;
             const confirm = document.getElementById('signup-confirm').value;
             const otpInput = document.getElementById('signup-otp').value;
             const msg = document.getElementById('auth-msg');
+            const signupBtn = document.querySelector('#signup-form .auth-btn[data-t-key="auth_btn_signup"]');
+            const signupBtnOriginalText = signupBtn ? signupBtn.innerText : 'Create Account';
             const requiresOtp = currentSignupTab !== 'account';
 
             if (!rawEmail || !pass || (requiresOtp && !otpInput)) return msg.innerHTML = '<span class="error-text">Please fill all fields</span>';
@@ -10569,17 +10563,18 @@
 
             console.log("Attempting signup with:", finalEmail);
 
+            window.__mobileSignupSubmitting = true;
             window.__mobileSignupInProgress = true;
+            if (signupBtn) {
+                signupBtn.disabled = true;
+                signupBtn.innerText = 'Creating...';
+            }
+            msg.innerHTML = '<span class="success-text">Creating account...</span>';
             try {
-                const { auth, db, doc, createUserWithEmailAndPassword, setDoc, signOut } = window.fb;
-                await ensureMobileAccountUnique(
-                    (currentSignupTab === 'email' || currentSignupTab === 'account') ? finalEmail : '',
-                    currentSignupTab === 'mobile' ? phone : '',
-                    currentSignupTab === 'account' ? accountLogin : ''
-                );
+                const { auth, db, doc, createUserWithEmailAndPassword, setDoc } = window.fb;
                 const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, pass);
                 const user = userCredential.user;
-                const userNumericId = await generateUniqueSixDigitUserId();
+                const userNumericId = buildDeterministicUserId(user.uid);
                 console.log("Auth user created:", user.uid);
 
                 // Create Firestore document
@@ -10602,40 +10597,41 @@
 
                 const successText = currentSignupTab === 'account'
                     ? `Account created! Login Account: ${accountLogin}. User ID: ${userNumericId}`
-                    : `Account created! Please login. User ID: ${userNumericId}`;
+                    : `Account created! Please complete KYC. User ID: ${userNumericId}`;
                 msg.innerHTML = `<span class="success-text">${successText}</span>`;
 
-                console.log("Firestore sync successful. Signing out for manual login...");
-                try {
-                    await signOut(auth);
-                } catch (signOutErr) {
-                    console.warn('Signup signOut failed, continue with manual login prompt:', signOutErr);
+                // After successful signup, enter app immediately and force KYC step.
+                sessionStorage.setItem('mobile_session_active', 'true');
+                if (typeof window.markMobileSessionGrantNow === 'function') {
+                    window.markMobileSessionGrantNow();
+                } else {
+                    localStorage.setItem('ec_mobile_session_grant_ts', String(Date.now()));
                 }
-
-                // Switch back to login tab and keep success prompt visible.
-                setTimeout(() => {
-                    if (typeof window.switchAuthTab === 'function') {
-                        window.switchAuthTab('login');
-                    } else {
-                        const loginTab = document.getElementById('auth-tab-login');
-                        if (loginTab) loginTab.click();
-                    }
-                    const authMsg = document.getElementById('auth-msg');
-                    if (authMsg) authMsg.innerHTML = `<span class="success-text">${successText}</span>`;
-                    if (currentSignupTab === 'account') {
-                        const loginInput = document.getElementById('login-email');
-                        if (loginInput) loginInput.value = accountLogin;
-                    }
-                }, 1200);
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                if (typeof openApp === 'function') openApp();
+                if (typeof window.showScreen === 'function') {
+                    window.showScreen('certification-center', false);
+                }
+                if (typeof window.showMobileToast === 'function') {
+                    window.showMobileToast('Account created. Please complete KYC.');
+                }
             } catch (error) {
                 console.error("Signup/Sync error:", error);
                 if (error.code === 'auth/email-already-in-use') {
                     msg.innerHTML = '<span class="error-text">This account is already registered. Please login directly.</span>';
+                } else if (error.code === 'auth/network-request-failed') {
+                    msg.innerHTML = '<span class="error-text">Network unstable. Please retry.</span>';
                 } else {
                     msg.innerHTML = `<span class="error-text">${error.message}</span>`;
                 }
             } finally {
                 window.__mobileSignupInProgress = false;
+                window.__mobileSignupSubmitting = false;
+                if (signupBtn) {
+                    signupBtn.disabled = false;
+                    signupBtn.innerText = signupBtnOriginalText;
+                }
             }
         }
 
