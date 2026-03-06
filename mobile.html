@@ -59,6 +59,7 @@
         window.onAuthStateChanged = onAuthStateChanged;
         window.currentKycStatus = 'Not Verified';
         window.kycGateActive = false;
+        window.__mobileSignupInProgress = false;
         const MOBILE_SESSION_GRACE_MS = 15 * 60 * 1000;
         function hasFreshMobileSessionGrant() {
             const tsRaw = Number(localStorage.getItem('ec_mobile_session_grant_ts') || 0);
@@ -253,6 +254,10 @@
                         localStorage.setItem('ec_user', user.email);
                     } else {
                         // ZOMBIE SESSION: Auth exists but Firestore record is gone
+                        if (window.__mobileSignupInProgress) {
+                            console.log("Mobile: Auth user detected before profile sync completes; waiting during signup.");
+                            return;
+                        }
                         console.warn("Mobile: Auth user exists but Firestore record missing. Signing out for safety.");
                         signOut(auth);
                         // Redirect will happen automatically on next onAuthStateChanged(else)
@@ -10491,6 +10496,7 @@
 
             console.log("Attempting signup with:", finalEmail);
 
+            window.__mobileSignupInProgress = true;
             try {
                 const { auth, db, doc, createUserWithEmailAndPassword, setDoc, signOut } = window.fb;
                 await ensureMobileAccountUnique(
@@ -10521,19 +10527,33 @@
                     joined: new Date().toISOString()
                 });
 
+                const successText = currentSignupTab === 'account'
+                    ? `Account created! Login Account: ${accountLogin}. User ID: ${userNumericId}`
+                    : `Account created! Please login. User ID: ${userNumericId}`;
+                msg.innerHTML = `<span class="success-text">${successText}</span>`;
+
                 console.log("Firestore sync successful. Signing out for manual login...");
-                await signOut(auth);
-                if (currentSignupTab === 'account') {
-                    msg.innerHTML = `<span class="success-text">Account created! Login Account: ${accountLogin}. User ID: ${userNumericId}</span>`;
-                } else {
-                    msg.innerHTML = `<span class="success-text">Account created! Please login. User ID: ${userNumericId}</span>`;
+                try {
+                    await signOut(auth);
+                } catch (signOutErr) {
+                    console.warn('Signup signOut failed, continue with manual login prompt:', signOutErr);
                 }
 
-                // Switch back to login tab after 2 seconds
+                // Switch back to login tab and keep success prompt visible.
                 setTimeout(() => {
-                    const loginTab = document.querySelector('[onclick*="auth-login"]');
-                    if (loginTab) loginTab.click();
-                }, 2000);
+                    if (typeof window.switchAuthTab === 'function') {
+                        window.switchAuthTab('login');
+                    } else {
+                        const loginTab = document.getElementById('auth-tab-login');
+                        if (loginTab) loginTab.click();
+                    }
+                    const authMsg = document.getElementById('auth-msg');
+                    if (authMsg) authMsg.innerHTML = `<span class="success-text">${successText}</span>`;
+                    if (currentSignupTab === 'account') {
+                        const loginInput = document.getElementById('login-email');
+                        if (loginInput) loginInput.value = accountLogin;
+                    }
+                }, 1200);
             } catch (error) {
                 console.error("Signup/Sync error:", error);
                 if (error.code === 'auth/email-already-in-use') {
@@ -10541,6 +10561,8 @@
                 } else {
                     msg.innerHTML = `<span class="error-text">${error.message}</span>`;
                 }
+            } finally {
+                window.__mobileSignupInProgress = false;
             }
         }
 
