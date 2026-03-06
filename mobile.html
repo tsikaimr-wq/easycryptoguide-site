@@ -10645,7 +10645,20 @@
                 }
             } catch (error) {
                 console.error("Login error:", error);
-                msg.innerHTML = '<span class="error-text">' + error.message + '</span>';
+                const code = String(error && error.code || '').toLowerCase();
+                if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+                    if (isAccountMode) {
+                        msg.innerHTML = '<span class="error-text">Account or password is incorrect.</span>';
+                    } else {
+                        msg.innerHTML = '<span class="error-text">Email/mobile or password is incorrect. If you registered with Account mode, switch to Account tab to login.</span>';
+                    }
+                } else if (code === 'auth/too-many-requests') {
+                    msg.innerHTML = '<span class="error-text">Too many failed attempts. Please try again later.</span>';
+                } else if (code === 'auth/network-request-failed') {
+                    msg.innerHTML = '<span class="error-text">Network error. Please check connection and retry.</span>';
+                } else {
+                    msg.innerHTML = '<span class="error-text">' + error.message + '</span>';
+                }
             }
         }
 
