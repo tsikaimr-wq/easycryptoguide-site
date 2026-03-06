@@ -977,13 +977,13 @@
         }
 
         .bottom-nav {
-            position: absolute;
-            left: 0;
-            right: 0;
+            position: fixed;
+            left: 50%;
+            right: auto;
             bottom: 0;
-            transform: none;
-            width: 100%;
-            max-width: 100%;
+            transform: translateX(-50%);
+            width: min(100vw, 420px);
+            max-width: 420px;
             background: #1a0b2e;
             display: flex;
             justify-content: space-around;
@@ -994,8 +994,8 @@
 
         @media (max-width: 420px) {
             .bottom-nav {
-                width: 100%;
-                max-width: 100%;
+                width: 100vw;
+                max-width: 100vw;
             }
         }
 
@@ -11232,16 +11232,17 @@
             if (!bottomNav) return;
             const apply = () => {
                 if (forceShow) bottomNav.classList.remove('hidden');
+                const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
                 bottomNav.style.display = 'flex';
                 bottomNav.style.visibility = 'visible';
                 bottomNav.style.opacity = '1';
-                bottomNav.style.position = 'absolute';
-                bottomNav.style.left = '0';
-                bottomNav.style.right = '0';
+                bottomNav.style.position = 'fixed';
+                bottomNav.style.left = '50%';
+                bottomNav.style.right = 'auto';
                 bottomNav.style.bottom = '0';
-                bottomNav.style.transform = 'none';
-                bottomNav.style.width = '100%';
-                bottomNav.style.maxWidth = '100%';
+                bottomNav.style.transform = 'translateX(-50%)';
+                bottomNav.style.width = vw <= 420 ? '100vw' : '420px';
+                bottomNav.style.maxWidth = vw <= 420 ? '100vw' : '420px';
                 bottomNav.style.zIndex = '5000';
             };
             apply();
