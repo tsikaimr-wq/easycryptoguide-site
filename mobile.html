@@ -247,17 +247,25 @@
                             if (appScreen) appScreen.classList.remove('hidden');
                             if (authScreen) authScreen.classList.add('hidden');
                             document.body.classList.add('app-open');
-                            const bottomNav = document.querySelector('.bottom-nav');
-                            if (bottomNav) bottomNav.classList.remove('hidden');
-                            if (typeof ensureBottomNavVisible === 'function') ensureBottomNavVisible(true);
+                            if (typeof window.syncBottomNavState === 'function') {
+                                window.syncBottomNavState();
+                            } else {
+                                const bottomNav = document.querySelector('.bottom-nav');
+                                if (bottomNav) bottomNav.classList.remove('hidden');
+                                if (typeof ensureBottomNavVisible === 'function') ensureBottomNavVisible(true);
+                            }
                         } else {
                             // Valid user, but hasn't explicitly logged in on mobile in this session
                             console.log("Mobile: Valid user, but requires explicit mobile login.");
                             if (appScreen) appScreen.classList.add('hidden');
                             if (authScreen) authScreen.classList.remove('hidden');
                             document.body.classList.remove('app-open');
-                            const bottomNav = document.querySelector('.bottom-nav');
-                            if (bottomNav) bottomNav.classList.add('hidden');
+                            if (typeof window.syncBottomNavState === 'function') {
+                                window.syncBottomNavState();
+                            } else {
+                                const bottomNav = document.querySelector('.bottom-nav');
+                                if (bottomNav) bottomNav.classList.add('hidden');
+                            }
                         }
 
                         const userData = docSnap.data();
@@ -336,8 +344,12 @@
                 if (appScreen) appScreen.classList.add('hidden');
                 if (authScreen) authScreen.classList.remove('hidden');
                 document.body.classList.remove('app-open');
-                const bottomNav = document.querySelector('.bottom-nav');
-                if (bottomNav) bottomNav.classList.add('hidden');
+                if (typeof window.syncBottomNavState === 'function') {
+                    window.syncBottomNavState();
+                } else {
+                    const bottomNav = document.querySelector('.bottom-nav');
+                    if (bottomNav) bottomNav.classList.add('hidden');
+                }
                 window.currentKycStatus = 'Not Verified';
                 window.kycGateActive = false;
                 window.toggleKycGateBanner(false);
@@ -427,6 +439,17 @@
 
         .hidden {
             display: none !important;
+        }
+
+        #auth-screen:not(.hidden)~.bottom-nav {
+            display: none !important;
+        }
+
+        #app-screen:not(.hidden)+.bottom-nav {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
         }
 
         /* --- AUTH SCREEN --- */
@@ -11087,7 +11110,7 @@
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app-screen').classList.remove('hidden');
             document.body.classList.add('app-open');
-            ensureBottomNavVisible(true);
+            syncBottomNavState();
             // Profile Sync is now handled by Firebase in the head section
 
             // Load persistent language
@@ -11114,8 +11137,7 @@
                 sessionStorage.removeItem('mobile_session_active');
                 localStorage.removeItem('ec_mobile_session_grant_ts');
                 document.body.classList.remove('app-open');
-                const bottomNav = document.querySelector('.bottom-nav');
-                if (bottomNav) bottomNav.classList.add('hidden');
+                syncBottomNavState();
                 await auth.signOut();
                 // View switching handled by onAuthStateChanged in the head
             } catch (error) {
@@ -11277,6 +11299,22 @@
             setTimeout(apply, 100);
         }
 
+        function syncBottomNavState() {
+            const bottomNav = document.querySelector('.bottom-nav');
+            const authScreen = document.getElementById('auth-screen');
+            const appScreen = document.getElementById('app-screen');
+            if (!bottomNav || !authScreen || !appScreen) return;
+            const authVisible = !authScreen.classList.contains('hidden');
+            const appVisible = !appScreen.classList.contains('hidden');
+            if (appVisible && !authVisible) {
+                ensureBottomNavVisible(true);
+            } else {
+                bottomNav.classList.add('hidden');
+                bottomNav.style.display = 'none';
+            }
+        }
+        window.syncBottomNavState = syncBottomNavState;
+
         function showScreen(target, isPush = true) {
             if (window.kycGateActive && typeof window.isKycGateScreenAllowed === 'function' && !window.isKycGateScreenAllowed(target)) {
                 // Soft gate only: allow browsing pages while KYC is pending.
@@ -11397,6 +11435,7 @@
             if (header) header.classList.toggle('hidden', shouldHideHeaderNav);
             if (bottomNav) bottomNav.classList.remove('hidden');
             ensureBottomNavVisible(true);
+            syncBottomNavState();
 
             const appScreen = document.getElementById('app-screen');
             const isInsideApp = !!(targetEl && appScreen && appScreen.contains(targetEl));
@@ -12923,7 +12962,17 @@ No transfer fees for account transfer / exchange</div>
                 .v-price { transition: color 0.3s ease; }
             `;
             document.head.appendChild(style);
-            ensureBottomNavVisible();
+            syncBottomNavState();
+
+            const authScreen = document.getElementById('auth-screen');
+            const appScreen = document.getElementById('app-screen');
+            if (authScreen && appScreen && window.MutationObserver) {
+                const obs = new MutationObserver(() => syncBottomNavState());
+                obs.observe(authScreen, { attributes: true, attributeFilter: ['class'] });
+                obs.observe(appScreen, { attributes: true, attributeFilter: ['class'] });
+            }
+            window.addEventListener('resize', () => syncBottomNavState());
+            document.addEventListener('visibilitychange', () => syncBottomNavState());
 
             // Render initial memory immediately
             topCryptoCoins.forEach(sym => {
