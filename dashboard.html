@@ -111,13 +111,40 @@
     <script type="module">
         import { db, collection, getDocs, enforceKycAccess, logError } from './firebase-config.js';
 
-        async function renderDashboard() {
-            try {
-                const content = document.getElementById('dashboard-content');
+        function toNum(value, fallback = 0) {
+            const n = Number(value);
+            return Number.isFinite(n) ? n : fallback;
+        }
 
+        function normalizeMarket(raw) {
+            const data = raw || {};
+            const stats = data.stats || {};
+            const symbol = String(data.symbol || data.pair || '').toUpperCase();
+            return {
+                symbol: symbol,
+                stats: {
+                    last: toNum(stats.last ?? data.last ?? data.price ?? data.last_price, 0),
+                    change_pct: toNum(stats.change_pct ?? data.change_pct ?? data.change24h ?? data.change, 0),
+                    quote_volume: toNum(stats.quote_volume ?? data.quote_volume ?? data.volume24h ?? data.volume, 0)
+                }
+            };
+        }
+
+        async function renderDashboard() {
+            const content = document.getElementById('dashboard-content');
+            try {
                 // Fetch Market Data from Firestore
                 const querySnapshot = await getDocs(collection(db, 'market_summaries'));
-                const markets = querySnapshot.docs.map(doc => doc.data());
+                let markets = querySnapshot.docs
+                    .map((doc) => normalizeMarket(doc.data()))
+                    .filter((m) => !!m.symbol);
+                if (markets.length === 0) {
+                    markets = [
+                        normalizeMarket({ symbol: 'BTC/USDT', stats: { last: 0, change_pct: 0, quote_volume: 0 } }),
+                        normalizeMarket({ symbol: 'ETH/USDT', stats: { last: 0, change_pct: 0, quote_volume: 0 } }),
+                        normalizeMarket({ symbol: 'ETC/USDT', stats: { last: 0, change_pct: 0, quote_volume: 0 } })
+                    ];
+                }
 
                 const findPair = (sym) => markets.find(m => m.symbol === sym) || { stats: { last: 0, change_pct: 0, quote_volume: 0 } };
                 const btc = findPair('BTC/USDT');
@@ -180,7 +207,7 @@
                                 <tbody>
                                     ${markets.map(m => `
                                         <tr>
-                                            <td><div class="m-pair-cell">*<span style="color:#0081ff">*</span> ${m.symbol}</div></td>
+                                            <td><div class="m-pair-cell">&#9733;<span style="color:#0081ff">&#9733;</span> ${m.symbol}</div></td>
                                             <td><b>${m.stats.last.toLocaleString()}</b></td>
                                             <td class="${m.stats.change_pct >= 0 ? 'up' : 'down'}">${m.stats.change_pct >= 0 ? '+' : ''}${m.stats.change_pct.toFixed(2)}%</td>
                                             <td>${m.stats.quote_volume.toLocaleString()}M</td>
@@ -209,6 +236,18 @@
                 `;
             } catch (err) {
                 logError("Dashboard initialization failed: " + err.message);
+                if (content) {
+                    content.innerHTML = `
+                        <div style="padding:28px; color:#fff;">
+                            <div style="font-size:18px; font-weight:600; margin-bottom:8px;">Dashboard data load failed</div>
+                            <div style="opacity:.75; margin-bottom:14px;">Please refresh, or open the Market page to verify data connectivity.</div>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                <button onclick="location.reload()" style="padding:8px 14px; background:#6a35ff; color:#fff; border:none; border-radius:8px; cursor:pointer;">Reload</button>
+                                <a href="markets.html" style="padding:8px 14px; background:#1f2937; color:#fff; border-radius:8px; text-decoration:none;">Open Markets</a>
+                            </div>
+                        </div>
+                    `;
+                }
             }
         }
 

@@ -1916,6 +1916,96 @@
             cursor: pointer;
         }
 
+        .orders-scroll-wrap {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 2px;
+        }
+
+        .orders-scroll-wrap::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .orders-scroll-wrap::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+        }
+
+        .orders-scroll-wrap::-webkit-scrollbar-thumb {
+            background: rgba(106, 53, 255, 0.85);
+            border-radius: 999px;
+        }
+
+        .orders-data-table {
+            width: 100%;
+            min-width: 980px;
+            border-collapse: collapse;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .orders-data-table thead tr {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .orders-data-table th,
+        .orders-data-table td {
+            text-align: left;
+            white-space: nowrap;
+            padding: 9px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            vertical-align: middle;
+        }
+
+        .orders-data-table th {
+            color: rgba(255, 255, 255, 0.72);
+            font-weight: 500;
+            font-size: 11px;
+        }
+
+        .orders-data-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .orders-side-long {
+            color: #2ED573;
+            font-weight: 600;
+        }
+
+        .orders-side-short {
+            color: #FF4757;
+            font-weight: 600;
+        }
+
+        .orders-status-win {
+            color: #2ED573;
+            font-weight: 600;
+        }
+
+        .orders-status-lose {
+            color: #FF4757;
+            font-weight: 600;
+        }
+
+        .orders-status-open {
+            color: #F5A623;
+            font-weight: 600;
+        }
+
+        .orders-close-btn {
+            background: #FF4757;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
         .history-label {
             display: inline-block;
             background: rgba(26, 11, 46, 0.8);
@@ -12527,76 +12617,80 @@
             if (openOrders.length === 0) {
                 html += `<div style="padding:12px; text-align:center; color:rgba(255,255,255,0.45); background:rgba(255,255,255,0.02); border-radius:8px; margin-bottom:14px;">No open orders</div>`;
             } else {
+                html += `<div class="orders-scroll-wrap"><table class="orders-data-table">
+                    <thead><tr>
+                        <th>Pair</th><th>Type</th><th>Status</th><th>Side</th><th>Leverage</th><th>Lots</th><th>Value(USDT)</th><th>Entry</th><th>TP/SL</th><th>Open Time</th><th>Action</th>
+                    </tr></thead><tbody>`;
                 openOrders.forEach((trade) => {
                     const direction = String(trade.direction || '');
                     const isLong = direction.toLowerCase() === 'long' || String(trade.side || '').toLowerCase() === 'buy';
-                    const directionColor = isLong ? '#2ED573' : '#FF4757';
                     const status = String(trade.status || 'Open');
-                    const statusColor = status.toLowerCase() === 'pending' ? '#F5A623' : '#2ED573';
+                    const statusClass = status.toLowerCase() === 'pending' ? 'orders-status-open' : 'orders-status-win';
                     const contractUnit = Number(trade.contract_unit) > 0 ? Number(trade.contract_unit) : getContractUnitValue();
                     const lots = Number(trade.lots) > 0 ? Number(trade.lots) : (Number(trade.amount || 0) > 0 ? Number(trade.amount || 0) / contractUnit : 0);
                     const timeStr = formatTradeTime(trade.timestamp);
                     const isPerpOpen = String(trade.type || '').toLowerCase() === 'perpetual' && status.toLowerCase() === 'open';
+                    const tp = trade.take_profit ? Number(trade.take_profit).toFixed(2) : '--';
+                    const sl = trade.stop_loss ? Number(trade.stop_loss).toFixed(2) : '--';
 
-                    html += `
-                        <div style="background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px; margin-bottom:10px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                                <span style="color:#fff; font-weight:600; font-size:13px;">${trade.coin || '--'}/USDT</span>
-                                <span style="color:${statusColor}; font-size:12px; font-weight:600;">${status}</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; font-size:12px; color:#9CA3AF; margin-bottom:3px;">
-                                <span>Side: <b style="color:${directionColor}; font-weight:600;">${direction || '--'}</b></span>
-                                <span>${trade.leverage || 1}x</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; font-size:12px; color:#9CA3AF; margin-bottom:3px;">
-                                <span>Lots: ${lots.toFixed(0)}</span>
-                                <span>Value: ${Number(trade.amount || 0).toFixed(2)} USDT</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; font-size:12px; color:#9CA3AF;">
-                                <span>Entry: ${Number(trade.price || 0).toFixed(2)}</span>
-                                <span>${timeStr}</span>
-                            </div>
-                            ${isPerpOpen ? `<div style="margin-top:8px; text-align:right;"><button onclick="closePosition('${trade.id}')" style="background:#FF4757; color:#fff; border:none; border-radius:4px; padding:5px 10px; font-size:12px; cursor:pointer;">Close</button></div>` : ''}
-                        </div>
-                    `;
+                    html += `<tr>
+                        <td>${trade.coin || '--'}/USDT</td>
+                        <td>${trade.type || '--'} (${trade.order_type || 'Market'})</td>
+                        <td class="${statusClass}">${status}</td>
+                        <td class="${isLong ? 'orders-side-long' : 'orders-side-short'}">${direction || '--'}</td>
+                        <td>${trade.leverage || 1}x</td>
+                        <td>${lots.toFixed(0)}</td>
+                        <td>${Number(trade.amount || 0).toFixed(2)}</td>
+                        <td>${Number(trade.price || 0).toFixed(2)}</td>
+                        <td>${tp} / ${sl}</td>
+                        <td>${timeStr}</td>
+                        <td>${isPerpOpen ? `<button class="orders-close-btn" onclick="closePosition('${trade.id}')">Close</button>` : '--'}</td>
+                    </tr>`;
                 });
+                html += '</tbody></table></div>';
             }
 
             html += `<div style="color:#fff; font-size:13px; font-weight:600; margin:16px 0 10px;">Historical Orders (${historyOrders.length})</div>`;
             if (historyOrders.length === 0) {
                 html += `<div style="padding:12px; text-align:center; color:rgba(255,255,255,0.45); background:rgba(255,255,255,0.02); border-radius:8px;">No historical orders</div>`;
             } else {
+                html += `<div class="orders-scroll-wrap"><table class="orders-data-table">
+                    <thead><tr>
+                        <th>Pair</th><th>Type</th><th>Status</th><th>Side</th><th>Leverage</th><th>Lots</th><th>Entry</th><th>Close</th><th>P/L(USDT)</th><th>ROE</th><th>Fee(USDT)</th><th>Open Time</th><th>Close Time</th>
+                    </tr></thead><tbody>`;
                 historyOrders.forEach((trade) => {
                     const direction = String(trade.direction || '');
                     const isLong = direction.toLowerCase() === 'long' || String(trade.side || '').toLowerCase() === 'buy';
-                    const directionColor = isLong ? '#2ED573' : '#FF4757';
                     const rawStatus = String(trade.status || 'Closed');
                     const pnlVal = Number(trade.final_pnl !== undefined ? trade.final_pnl : (trade.pnl_amount !== undefined ? trade.pnl_amount : (trade.pnl || 0)));
                     const status = rawStatus.toLowerCase() === 'closed' ? (pnlVal >= 0 ? 'Win' : 'Lose') : rawStatus;
-                    const statusColor = status.toLowerCase() === 'win' ? '#2ED573' : (status.toLowerCase() === 'lose' ? '#FF4757' : '#9CA3AF');
-                    const timeStr = formatTradeTime(trade.timestamp);
+                    const statusClass = status.toLowerCase() === 'win' ? 'orders-status-win' : (status.toLowerCase() === 'lose' ? 'orders-status-lose' : 'orders-status-open');
+                    const contractUnit = Number(trade.contract_unit) > 0 ? Number(trade.contract_unit) : getContractUnitValue();
+                    const lots = Number(trade.lots) > 0 ? Number(trade.lots) : (Number(trade.amount || 0) > 0 ? Number(trade.amount || 0) / contractUnit : 0);
+                    const openTime = formatTradeTime(trade.timestamp);
+                    const closeTime = formatTradeTime(trade.closed_at);
+                    const entry = Number(trade.entry_price || trade.price || 0);
+                    const closePrice = trade.close_price !== undefined && trade.close_price !== null ? Number(trade.close_price) : null;
+                    const roe = Number(trade.realized_roe !== undefined ? trade.realized_roe : 0);
+                    const fee = Number(trade.fee_total || 0);
 
-                    html += `
-                        <div style="background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px; margin-bottom:10px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                                <span style="color:#fff; font-weight:600; font-size:13px;">${trade.coin || '--'}/USDT</span>
-                                <span style="color:${statusColor}; font-size:12px; font-weight:600;">${status}</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; font-size:12px; color:#9CA3AF; margin-bottom:3px;">
-                                <span>Side: <b style="color:${directionColor}; font-weight:600;">${direction || '--'}</b></span>
-                                <span>${trade.leverage || 1}x</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; font-size:12px; color:#9CA3AF; margin-bottom:3px;">
-                                <span>P/L: <b style="color:${pnlVal >= 0 ? '#2ED573' : '#FF4757'};">${pnlVal >= 0 ? '+' : ''}${pnlVal.toFixed(2)} USDT</b></span>
-                                <span>Fee: ${Number(trade.fee_total || 0).toFixed(4)} USDT</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; font-size:12px; color:#9CA3AF;">
-                                <span>Open: ${Number(trade.entry_price || trade.price || 0).toFixed(2)}</span>
-                                <span>${timeStr}</span>
-                            </div>
-                        </div>
-                    `;
+                    html += `<tr>
+                        <td>${trade.coin || '--'}/USDT</td>
+                        <td>${trade.type || '--'} (${trade.order_type || 'Market'})</td>
+                        <td class="${statusClass}">${status}</td>
+                        <td class="${isLong ? 'orders-side-long' : 'orders-side-short'}">${direction || '--'}</td>
+                        <td>${trade.leverage || 1}x</td>
+                        <td>${lots.toFixed(0)}</td>
+                        <td>${entry.toFixed(2)}</td>
+                        <td>${closePrice !== null ? closePrice.toFixed(2) : '--'}</td>
+                        <td class="${pnlVal >= 0 ? 'orders-status-win' : 'orders-status-lose'}">${pnlVal >= 0 ? '+' : ''}${pnlVal.toFixed(2)}</td>
+                        <td class="${roe >= 0 ? 'orders-status-win' : 'orders-status-lose'}">${roe >= 0 ? '+' : ''}${roe.toFixed(2)}%</td>
+                        <td>${fee.toFixed(4)}</td>
+                        <td>${openTime}</td>
+                        <td>${closeTime}</td>
+                    </tr>`;
                 });
+                html += '</tbody></table></div>';
             }
 
             container.innerHTML = html;
@@ -15319,8 +15413,6 @@ No transfer fees for account transfer / exchange</div>
             const container = document.getElementById('hist-contract-content');
             if (!container) return;
 
-            // The first two children are the "Contracts" label and the "No data" message.
-            // We want to keep the label, but replacing everything else.
             let labelHtml = '<div class="history-label" style="text-align: center; margin-bottom: 12px;">Contracts</div>';
 
             if (!window.tradeHistoryAll || window.tradeHistoryAll.length === 0) {
@@ -15328,10 +15420,8 @@ No transfer fees for account transfer / exchange</div>
                 return;
             }
 
-            let html = labelHtml;
-            window.tradeHistoryAll.forEach(trade => {
-                const color = trade.direction === 'Long' ? '#2ED573' : '#FF4757';
-
+            let rowHtml = '';
+            window.tradeHistoryAll.forEach((trade) => {
                 let displayStatus = trade.status || 'Closed';
                 if (displayStatus === 'Approved') displayStatus = 'Win';
                 if (displayStatus === 'Rejected') displayStatus = 'Lose';
@@ -15339,10 +15429,6 @@ No transfer fees for account transfer / exchange</div>
                     const pnlVal = trade.final_pnl !== undefined ? trade.final_pnl : (trade.pnl || 0);
                     displayStatus = pnlVal >= 0 ? 'Win' : 'Lose';
                 }
-
-                let statusColor = '#aaa';
-                if (displayStatus === 'Win') statusColor = '#2ED573';
-                if (displayStatus === 'Lose') statusColor = '#FF4757';
 
                 const timeStr = trade.time || (trade.timestamp ? new Date(trade.timestamp.seconds * 1000).toLocaleString() : '');
                 const badgeText = trade.type === 'Delivery' ? `${trade.direction} ${trade.delivery_time || ''}` : `${trade.direction} ${trade.leverage || 1}x`;
@@ -15357,41 +15443,37 @@ No transfer fees for account transfer / exchange</div>
                     : (Number(trade.amount) > 0 ? (Number(trade.amount) / contractUnit) : 0);
                 const closeStr = trade.closed_at && trade.closed_at.seconds ? new Date(trade.closed_at.seconds * 1000).toLocaleString() : '';
 
-                html += `
-                    <div class="history-item" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid ${statusColor}">
-                        <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
-                            <span style="color: #fff; font-weight: 500; font-size: 14px;">${trade.coin}/USDT <span style="font-size:12px; font-weight:normal; background: ${color}; padding: 2px 4px; border-radius: 4px; margin-left: 4px;">${badgeText}</span></span>
-                            <span style="color: ${statusColor}; font-weight: 500; font-size: 14px;">${displayStatus}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
-                            <span style="color: #9CA3AF; font-size: 12px;">Type: ${trade.type} (${trade.order_type || 'Market'})</span>
-                            <span style="color: #9CA3AF; font-size: 12px;">Open: ${openPrice.toFixed(2)}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
-                            <span style="color: #9CA3AF; font-size: 12px;">Lots: ${lots.toFixed(0)} (Unit ${contractUnit})</span>
-                            <span style="color: #9CA3AF; font-size: 12px;">Close: ${closePrice !== null ? closePrice.toFixed(2) : '--'}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
-                            <span style="color: #9CA3AF; font-size: 12px;">Value: ${Number(trade.amount || 0).toFixed(2)} USDT</span>
-                            <span style="color: #9CA3AF; font-size: 12px;">Open Time: ${timeStr}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
-                            <span style="color: ${pnlVal >= 0 ? '#2ED573' : '#FF4757'}; font-size: 12px;">P/L: ${pnlVal >= 0 ? '+' : ''}${pnlVal.toFixed(2)} USDT</span>
-                            <span style="color: ${roeVal >= 0 ? '#2ED573' : '#FF4757'}; font-size: 12px;">ROE: ${roeVal >= 0 ? '+' : ''}${roeVal.toFixed(2)}%</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
-                            <span style="color: #9CA3AF; font-size: 12px;">TP/SL: ${trade.take_profit ? Number(trade.take_profit).toFixed(2) : '--'} / ${trade.stop_loss ? Number(trade.stop_loss).toFixed(2) : '--'}</span>
-                            <span style="color: #9CA3AF; font-size: 12px;">Fee: ${feeVal.toFixed(4)}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
-                            <span style="color: #9CA3AF; font-size: 12px;">Close Time: ${closeStr || '--'}</span>
-                        </div>
-                        ${trade.rejection_reason ? `<div style="text-align:left; font-size:12px; color:#FF4757; margin-top:6px; background:rgba(255,71,87,0.1); padding:6px; border-radius:4px;">${trade.rejection_reason}</div>` : ''}
-                    </div>
-                `;
+                rowHtml += `<tr>
+                    <td>${trade.coin || '--'}/USDT</td>
+                    <td><span class="${trade.direction === 'Long' ? 'orders-side-long' : 'orders-side-short'}">${badgeText}</span></td>
+                    <td>${trade.type || '--'} (${trade.order_type || 'Market'})</td>
+                    <td class="${displayStatus === 'Win' ? 'orders-status-win' : (displayStatus === 'Lose' ? 'orders-status-lose' : 'orders-status-open')}">${displayStatus}</td>
+                    <td>${openPrice.toFixed(2)}</td>
+                    <td>${closePrice !== null ? closePrice.toFixed(2) : '--'}</td>
+                    <td>${lots.toFixed(0)}</td>
+                    <td>${contractUnit}</td>
+                    <td>${Number(trade.amount || 0).toFixed(2)}</td>
+                    <td class="${pnlVal >= 0 ? 'orders-status-win' : 'orders-status-lose'}">${pnlVal >= 0 ? '+' : ''}${pnlVal.toFixed(2)}</td>
+                    <td class="${roeVal >= 0 ? 'orders-status-win' : 'orders-status-lose'}">${roeVal >= 0 ? '+' : ''}${roeVal.toFixed(2)}%</td>
+                    <td>${feeVal.toFixed(4)}</td>
+                    <td>${trade.take_profit ? Number(trade.take_profit).toFixed(2) : '--'} / ${trade.stop_loss ? Number(trade.stop_loss).toFixed(2) : '--'}</td>
+                    <td>${timeStr}</td>
+                    <td>${closeStr || '--'}</td>
+                    <td style="max-width:240px; white-space:normal; color:${trade.rejection_reason ? '#FF4757' : 'rgba(255,255,255,0.6)'};">${trade.rejection_reason || '--'}</td>
+                </tr>`;
             });
 
-            container.innerHTML = html;
+            container.innerHTML = `${labelHtml}
+                <div class="orders-scroll-wrap">
+                    <table class="orders-data-table">
+                        <thead>
+                            <tr>
+                                <th>Pair</th><th>Side</th><th>Type</th><th>Status</th><th>Open</th><th>Close</th><th>Lots</th><th>Unit</th><th>Value(USDT)</th><th>P/L</th><th>ROE</th><th>Fee</th><th>TP/SL</th><th>Open Time</th><th>Close Time</th><th>Remark</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowHtml}</tbody>
+                    </table>
+                </div>`;
         }
 
         let withdrawHistoryUnsubscribe = null;

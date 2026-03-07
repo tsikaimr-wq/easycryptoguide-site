@@ -133,6 +133,43 @@
   var isFlushing = false;
   var uxReady = false;
 
+  function enforceDeviceEntryRouting() {
+    try {
+      var host = String(window.location.hostname || "").toLowerCase();
+      if (!host) return false;
+      if (host === "localhost" || host === "127.0.0.1" || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
+
+      var path = String(window.location.pathname || "").toLowerCase();
+      if (path.indexOf("admin") >= 0 || path.indexOf("support_admin") >= 0) return false;
+
+      var query = window.location.search || "";
+      if (/[?&]desktop=1(?:&|$)/i.test(query)) return false;
+
+      var hash = window.location.hash || "";
+      var isMobilePage = path.indexOf("mobile.html") >= 0 || path === "/mobile";
+      if (host.indexOf("m.") === 0) {
+        if (!isMobilePage) {
+          window.location.replace("/mobile.html" + query + hash);
+          return true;
+        }
+        return false;
+      }
+
+      var ua = navigator.userAgent || "";
+      var isMobileUA = /Android|iPhone|iPad|iPod|Windows Phone|IEMobile|BlackBerry|Opera Mini|Mobile/i.test(ua);
+      var isSmallTouch = window.matchMedia && window.matchMedia("(max-width: 900px)").matches && ((navigator.maxTouchPoints || 0) > 1);
+      if (!isMobilePage && (isMobileUA || isSmallTouch)) {
+        window.location.replace("/mobile.html" + query + hash);
+        return true;
+      }
+    } catch (e) {
+      return false;
+    }
+    return false;
+  }
+
+  if (enforceDeviceEntryRouting()) return;
+
   function normalizeLang(v) {
     if (!v) return "";
     if (SUPPORTED.indexOf(v) >= 0) return v;
