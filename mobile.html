@@ -3141,6 +3141,38 @@
             background: #6a35ff;
         }
 
+        .tb-history-btn {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            margin-top: 6px;
+            margin-right: 10px;
+            color: #8f97a9;
+            cursor: pointer;
+            border-radius: 8px;
+            border: 1px solid rgba(143, 151, 169, 0.28);
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.2s ease;
+        }
+
+        .tb-history-btn i {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .tb-history-btn:active {
+            transform: scale(0.96);
+        }
+
+        .tb-history-btn:hover {
+            color: #b3b8c5;
+            border-color: rgba(179, 184, 197, 0.45);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
         .dropdown-container {
             position: relative;
             width: 100%;
@@ -9636,7 +9668,9 @@
                         Contract
                     </div>
                 </div>
-                <span onclick="openTradeHistoryScreen()" style="cursor:pointer;">🕘</span>
+                <span onclick="openTradeHistoryScreen()" style="cursor:pointer;" aria-label="Open trade history">
+                    <i class="ri-time-line"></i>
+                </span>
             </div>
 
             <div class="scroll-area" style="flex-grow: 1; display: flex; flex-direction: column; background: #1a0b2e;">
@@ -10136,7 +10170,9 @@
                 <div id="trade-bottom-tabs-area" class="trade-bottom-tabs" style="border-bottom: 1px solid #f9f9f9;">
                     <div class="tb-tab active" onclick="switchTradeFooterTab('positions')">Hold position</div>
                     <div class="tb-tab" onclick="switchTradeFooterTab('orders')">Open orders</div>
-                    <div style="margin-left: auto; padding: 12px; color: #999;">⋯</div>
+                    <button type="button" class="tb-history-btn" onclick="openTradeHistoryScreen()" aria-label="Open USD-M history" title="USD-M History">
+                        <i class="ri-file-list-3-line"></i>
+                    </button>
                 </div>
 
                 <div id="trade-footer-content"
@@ -13984,7 +14020,7 @@ const translations = {
                     const tp = trade.take_profit ? Number(trade.take_profit).toFixed(2) : '--';
                     const sl = trade.stop_loss ? Number(trade.stop_loss).toFixed(2) : '--';
 
-                    html += `<tr>
+                    html += `<tr style="cursor:pointer;" onclick="openTradeDetailById('${trade.id}')">
                         <td>${trade.coin || '--'}/USDT</td>
                         <td>${trade.type || '--'} (${trade.order_type || 'Market'})</td>
                         <td class="${statusClass}">${status}</td>
@@ -13997,8 +14033,8 @@ const translations = {
                         <td>${timeStr}</td>
                         <td>
                             <div class="orders-inline-actions">
-                                <button class="orders-detail-btn" onclick="openTradeDetailById('${trade.id}')">Detail</button>
-                                ${isPerpOpen ? `<button class="orders-close-btn" onclick="closePosition('${trade.id}')">Close</button>` : ''}
+                                <button class="orders-detail-btn" onclick="event.stopPropagation(); openTradeDetailById('${trade.id}')">Detail</button>
+                                ${isPerpOpen ? `<button class="orders-close-btn" onclick="event.stopPropagation(); closePosition('${trade.id}')">Close</button>` : ''}
                             </div>
                         </td>
                     </tr>`;
@@ -14030,7 +14066,7 @@ const translations = {
                     const roe = Number(trade.realized_roe !== undefined ? trade.realized_roe : 0);
                     const fee = Number(trade.fee_total || 0);
 
-                    html += `<tr>
+                    html += `<tr style="cursor:pointer;" onclick="openTradeDetailById('${trade.id}')">
                         <td>${trade.coin || '--'}/USDT</td>
                         <td>${trade.type || '--'} (${trade.order_type || 'Market'})</td>
                         <td class="${statusClass}">${status}</td>
@@ -14044,7 +14080,7 @@ const translations = {
                         <td>${fee.toFixed(4)}</td>
                         <td>${openTime}</td>
                         <td>${closeTime}</td>
-                        <td><button class="orders-detail-btn" onclick="openTradeDetailById('${trade.id}')">Detail</button></td>
+                        <td><button class="orders-detail-btn" onclick="event.stopPropagation(); openTradeDetailById('${trade.id}')">Detail</button></td>
                     </tr>`;
                 });
                 html += '</tbody></table></div>';
@@ -14095,14 +14131,15 @@ const translations = {
                     : (Number(trade.amount) > 0 ? (Number(trade.amount) / contractUnit) : 0);
 
                 html += `
-                    <div style="background:#241442; border-radius:8px; padding:12px; margin-bottom:12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="background:#241442; border-radius:8px; padding:12px; margin-bottom:12px; border: 1px solid rgba(255,255,255,0.05); cursor:pointer;"
+                        onclick="openTradeDetailById('${trade.id}')">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <span style="background:${directionColor}; color:#fff; font-size:11px; font-weight:600; padding:2px 6px; border-radius:3px;">${trade.direction}</span>
                                 <b style="color:#fff; font-size:15px;">${trade.coin}/USDT ${trade.type}</b>
                                 <span style="color:#999; font-size:12px;">${trade.leverage}x</span>
                             </div>
-                            <span style="color:#999; font-size:12px;">!!!</span>
+                            <span style="color:#8f97a9; font-size:12px;">Detail</span>
                         </div>
 
                         <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
@@ -14152,8 +14189,8 @@ const translations = {
                                 <div style="color:#fff; font-size:13px;">${window.allCoinsData && window.allCoinsData[trade.coin] ? window.allCoinsData[trade.coin].price : trade.price}</div>
                             </div>
                             <div style="display:flex; gap:8px;">
-                                <button style="background:#3a2a5a; color:#fff; border:none; border-radius:4px; padding:6px 12px; font-size:12px; cursor:default;">${trade.order_type || 'Market'}</button>
-                                <button onclick="closePosition('${trade.id}')" style="background:#FF4757; color:#fff; border:none; border-radius:4px; padding:6px 12px; font-size:12px; cursor:pointer;">Close</button>
+                                <button onclick="event.stopPropagation();" style="background:#3a2a5a; color:#fff; border:none; border-radius:4px; padding:6px 12px; font-size:12px; cursor:default;">${trade.order_type || 'Market'}</button>
+                                <button onclick="event.stopPropagation(); closePosition('${trade.id}')" style="background:#FF4757; color:#fff; border:none; border-radius:4px; padding:6px 12px; font-size:12px; cursor:pointer;">Close</button>
                             </div>
                         </div>
                     </div>
