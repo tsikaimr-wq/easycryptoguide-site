@@ -842,6 +842,7 @@
             min-height: 0;
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch;
+            display: block !important;
             padding-bottom: calc(var(--ec-bottom-nav-height, 84px) + 28px + env(safe-area-inset-bottom, 0px));
         }
 
@@ -852,6 +853,20 @@
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y;
             padding-bottom: calc(var(--ec-bottom-nav-height, 84px) + 20px) !important;
+            position: relative;
+            z-index: 2;
+        }
+
+        #trade-spacer {
+            min-height: 10px;
+            flex-shrink: 0;
+        }
+
+        #trade-bottom-tabs-area {
+            position: relative;
+            z-index: 2;
+            margin-top: 8px;
+            background: #1a0b2e !important;
         }
 
         .list-container {
@@ -4199,13 +4214,22 @@
         }
 
         /* FORCE TRADE SCREEN TOP ALIGNMENT */
-        #trade-screen,
-        #trade-spot-content {
+        #trade-screen {
+            position: absolute !important;
+            inset: 0 !important;
+            z-index: 1100 !important;
             justify-content: flex-start !important;
             align-items: stretch !important;
             height: 100% !important;
             min-height: 0 !important;
             flex-grow: 1;
+        }
+
+        #trade-spot-content,
+        #trade-contract-content {
+            height: auto !important;
+            min-height: 0 !important;
+            flex-grow: 0 !important;
         }
 
         .trading-container {
@@ -5041,6 +5065,8 @@
             font-family: 'Inter', sans-serif !important;
             font-weight: 400 !important;
             min-height: 0 !important;
+            position: relative;
+            z-index: 1;
         }
 
         /* Header Area */
