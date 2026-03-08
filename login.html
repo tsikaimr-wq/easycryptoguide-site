@@ -168,6 +168,36 @@
             background: #0066cc;
         }
 
+        .btn-auth-primary.is-loading {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            opacity: 0.92;
+            cursor: wait;
+        }
+
+        .btn-auth-primary:disabled {
+            opacity: 0.75;
+            cursor: not-allowed;
+        }
+
+        .btn-spinner {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-top-color: #fff;
+            animation: btnSpin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes btnSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         .auth-footer-links {
             margin-top: 24px;
             text-align: left;
@@ -421,6 +451,58 @@
             return String(hash + 100000).padStart(6, '0');
         }
 
+        function setMainLoginLoading(isLoading) {
+            if (!mainSubmitBtn) return;
+            if (!mainSubmitBtn.dataset.defaultHtml) {
+                mainSubmitBtn.dataset.defaultHtml = mainSubmitBtn.innerHTML;
+            }
+            if (isLoading) {
+                mainSubmitBtn.disabled = true;
+                mainSubmitBtn.classList.add('is-loading');
+                mainSubmitBtn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span><span>Logging in...</span>';
+                return;
+            }
+            mainSubmitBtn.disabled = false;
+            mainSubmitBtn.classList.remove('is-loading');
+            mainSubmitBtn.innerHTML = mainSubmitBtn.dataset.defaultHtml;
+        }
+
+        async function resolveAccountIdentifierByInput(rawAccountInput) {
+            const accountInput = String(rawAccountInput || '').trim();
+            if (!accountInput) {
+                throw new Error('Please enter your account number.');
+            }
+
+            const normalizedLogin = accountInput.toLowerCase();
+            const normalizedAccount = accountInput.toUpperCase();
+            const queryJobs = [];
+
+            if (/^EC\d{6}$/.test(normalizedAccount)) {
+                queryJobs.push(getDocs(query(collection(db, 'users'), where('account', '==', normalizedAccount))));
+            } else {
+                queryJobs.push(getDocs(query(collection(db, 'users'), where('account_login', '==', normalizedLogin))));
+                queryJobs.push(getDocs(query(collection(db, 'users'), where('account', '==', normalizedAccount))));
+                if (!normalizedAccount.startsWith('EC')) {
+                    queryJobs.push(getDocs(query(collection(db, 'users'), where('account', '==', 'EC' + normalizedAccount))));
+                }
+            }
+
+            const snapshots = await Promise.all(queryJobs);
+            const firstMatched = snapshots.find((snap) => snap && !snap.empty);
+            if (!firstMatched) {
+                throw new Error('Account not found. Please check your account number.');
+            }
+
+            const accountData = firstMatched.docs[0].data() || {};
+            if (accountData.email) {
+                return String(accountData.email).toLowerCase();
+            }
+            if (accountData.phone) {
+                return String(accountData.phone) + '@mobile.local';
+            }
+            throw new Error('This account has no valid login identifier.');
+        }
+
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 tabs.forEach(t => t.classList.remove('active'));
@@ -458,40 +540,10 @@
                 return;
             }
 
+            setMainLoginLoading(true);
             try {
                 if (currentTab === 'account') {
-                    const accountLogin = accountInput.toLowerCase();
-                    let accountSnap = await getDocs(query(collection(db, 'users'), where('account_login', '==', accountLogin)));
-                    let matchedDoc = null;
-                    if (!accountSnap.empty) {
-                        matchedDoc = accountSnap.docs[0];
-                    }
-
-                    const normalizedAccount = accountInput.toUpperCase();
-                    const accountCandidates = [normalizedAccount];
-                    if (!normalizedAccount.startsWith('EC')) accountCandidates.push('EC' + normalizedAccount);
-
-                    if (!matchedDoc) {
-                        for (const candidate of accountCandidates) {
-                            if (!candidate) continue;
-                            accountSnap = await getDocs(query(collection(db, 'users'), where('account', '==', candidate)));
-                            if (!accountSnap.empty) {
-                                matchedDoc = accountSnap.docs[0];
-                                break;
-                            }
-                        }
-                    }
-                    if (!matchedDoc) {
-                        throw new Error('Account not found. Please check your account number.');
-                    }
-                    const accountData = matchedDoc.data() || {};
-                    if (accountData.email) {
-                        identifier = String(accountData.email).toLowerCase();
-                    } else if (accountData.phone) {
-                        identifier = String(accountData.phone) + '@mobile.local';
-                    } else {
-                        throw new Error('This account has no valid login identifier.');
-                    }
+                    identifier = await resolveAccountIdentifierByInput(accountInput);
                 }
 
                 // Assuming standard Email login (or a fake email mapped from phone: +1123456789@mobile.local)
@@ -553,6 +605,8 @@
                 window.location.href = 'dashboard.html';
             } catch (error) {
                 alert(getReadableLoginError(error, 'Login failed. Please try again.'));
+            } finally {
+                setMainLoginLoading(false);
             }
         });
 

@@ -570,6 +570,36 @@
             box-shadow: 0 4px 12px rgba(106, 53, 255, 0.3);
         }
 
+        .auth-btn.is-loading {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            opacity: 0.9;
+            cursor: wait;
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .auth-btn-spinner {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-top-color: #fff;
+            animation: authBtnSpin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes authBtnSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         .auth-msg {
             margin-top: 15px;
             font-size: 13px;
@@ -5288,7 +5318,7 @@
                 <div class="auth-form-group"><label data-t-key="auth_label_password">Password</label><input
                         type="password" id="login-password" class="auth-input" placeholder="Enter your password"
                         data-t-key="auth_placeholder_password"></div>
-                <button class="auth-btn" onclick="handleLogin()" data-t-key="auth_btn_login">Login</button>
+                <button id="auth-login-btn" class="auth-btn" onclick="handleLogin()" data-t-key="auth_btn_login">Login</button>
             </div>
             <div id="signup-form" class="hidden">
                 <div class="signup-sub-tabs">
@@ -10908,6 +10938,7 @@
         let currentLoginTab = 'email';
         let currentSignupTab = 'email';
         window.__mobileSignupSubmitting = false;
+        window.__mobileLoginSubmitting = false;
 
         function normalizeAccountLogin(value) {
             return String(value || '').trim().toLowerCase();
@@ -11084,13 +11115,73 @@
             }
         }
 
+        function setMobileLoginLoading(isLoading) {
+            const loginBtn = document.getElementById('auth-login-btn');
+            if (!loginBtn) return;
+            if (!loginBtn.dataset.defaultHtml) {
+                loginBtn.dataset.defaultHtml = loginBtn.innerHTML;
+            }
+            if (isLoading) {
+                loginBtn.disabled = true;
+                loginBtn.classList.add('is-loading');
+                loginBtn.innerHTML = '<span class="auth-btn-spinner" aria-hidden="true"></span><span>Logging in...</span>';
+                return;
+            }
+            loginBtn.disabled = false;
+            loginBtn.classList.remove('is-loading');
+            loginBtn.innerHTML = loginBtn.dataset.defaultHtml;
+        }
+
+        async function resolveMobileAccountIdentifier(rawInput, normalizedLogin) {
+            const { db, collection, query, where, getDocs } = window.fb;
+            const value = String(rawInput || '').trim();
+            const ecDisplay = value.toUpperCase();
+            const queries = [];
+            const seen = new Set();
+
+            const pushQuery = (field, candidate) => {
+                const val = String(candidate || '').trim();
+                if (!val) return;
+                const key = `${field}:${val}`;
+                if (seen.has(key)) return;
+                seen.add(key);
+                queries.push(getDocs(query(collection(db, 'users'), where(field, '==', val))));
+            };
+
+            pushQuery('account_login', normalizedLogin);
+            if (/^EC\d{6}$/.test(ecDisplay)) {
+                pushQuery('account', ecDisplay);
+            } else {
+                pushQuery('account', ecDisplay);
+                if (!ecDisplay.startsWith('EC')) {
+                    pushQuery('account', `EC${ecDisplay}`);
+                }
+            }
+
+            const snapshots = await Promise.all(queries);
+            const firstMatched = snapshots.find((snap) => snap && !snap.empty);
+            if (!firstMatched) {
+                if (!normalizedLogin) throw new Error('Account not found.');
+                return { email: `${normalizedLogin}@account.local`, accountLogin: normalizedLogin };
+            }
+
+            const userDoc = firstMatched.docs[0].data() || {};
+            const resolvedAccountLogin = normalizeAccountLogin(userDoc.account_login || normalizedLogin);
+            const email = String(userDoc.email || '').trim() || `${resolvedAccountLogin}@account.local`;
+            return { email, accountLogin: resolvedAccountLogin };
+        }
+
         async function handleLogin() {
+            if (window.__mobileLoginSubmitting) return;
             const rawInput = document.getElementById('login-email').value;
             let input = rawInput.trim();
             const pass = document.getElementById('login-password').value;
             const msg = document.getElementById('auth-msg');
 
             if (!input || !pass) return msg.innerHTML = '<span class="error-text">Please enter credentials</span>';
+            window.__mobileLoginSubmitting = true;
+            setMobileLoginLoading(true);
+            msg.innerHTML = '<span class="success-text">Signing in...</span>';
 
             let email = input.toLowerCase();
             let normalizedPhone = '';
@@ -11115,29 +11206,15 @@
 
                 if (isAccountMode) {
                     accountLogin = normalizeAccountLogin(input);
+                    const ecDisplay = String(input || '').trim().toUpperCase();
                     if (!/^[a-zA-Z0-9_]{4,24}$/.test(accountLogin)) {
-                        const ecDisplay = String(input || '').trim().toUpperCase();
                         if (!/^EC\d{6}$/.test(ecDisplay)) {
                             return msg.innerHTML = '<span class="error-text">Please enter a valid account.</span>';
                         }
                     }
-                    let snap = await getDocs(query(collection(db, 'users'), where('account_login', '==', accountLogin)));
-                    if (snap.empty) {
-                        const ecDisplay = String(input || '').trim().toUpperCase();
-                        if (/^EC\d{6}$/.test(ecDisplay)) {
-                            snap = await getDocs(query(collection(db, 'users'), where('account', '==', ecDisplay)));
-                        }
-                    }
-                    if (!snap.empty) {
-                        const userDoc = snap.docs[0].data() || {};
-                        if (!accountLogin) accountLogin = normalizeAccountLogin(userDoc.account_login || '');
-                        email = String(userDoc.email || '').trim() || `${accountLogin}@account.local`;
-                    } else {
-                        if (!accountLogin) {
-                            return msg.innerHTML = '<span class="error-text">Account not found.</span>';
-                        }
-                        email = `${accountLogin}@account.local`;
-                    }
+                    const resolved = await resolveMobileAccountIdentifier(input, accountLogin);
+                    accountLogin = resolved.accountLogin;
+                    email = resolved.email;
                 }
                 const userCredential = await signInWithEmailAndPassword(auth, email, pass);
                 const user = userCredential.user;
@@ -11202,6 +11279,9 @@
                 } else {
                     msg.innerHTML = `<span class="error-text">${getReadableAuthErrorMessage(error, 'Login failed. Please try again.')}</span>`;
                 }
+            } finally {
+                window.__mobileLoginSubmitting = false;
+                setMobileLoginLoading(false);
             }
         }
 
