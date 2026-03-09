@@ -1,0 +1,437 @@
+(function () {
+    const widgetEls = Array.from(document.querySelectorAll('[data-quick-widget]'));
+    if (widgetEls.length === 0) return;
+
+    const TWELVE_DATA_API_KEY = 'f5a558c730a64406839742e38b78af5e';
+    const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
+    const COINGECKO_DEMO_KEY = String(window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || '').trim();
+    const COINGECKO_PROXY_URL = (() => {
+        const manual = String(window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || '').trim();
+        if (manual) return manual;
+        const host = String(window.location.hostname || '').toLowerCase();
+        const frontendHosts = new Set(['easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com']);
+        return frontendHosts.has(host) ? '/api/coingecko/simple-price' : '';
+    })();
+
+    const FIAT_OPTIONS = [
+        { code: 'AUD', name: 'Australian dollar', icon: 'https://flagcdn.com/w80/au.png' },
+        { code: 'USD', name: 'US dollar', icon: 'https://flagcdn.com/w80/us.png' },
+        { code: 'EUR', name: 'Euro', icon: 'https://flagcdn.com/w80/eu.png' }
+    ];
+
+    const CRYPTO_OPTIONS = [
+        { code: 'BTC', name: 'Bitcoin', icon: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png' },
+        { code: 'ETH', name: 'Ethereum', icon: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
+        { code: 'USDT', name: 'Tether', icon: 'https://cryptologos.cc/logos/tether-usdt-logo.png' },
+        { code: 'WBT', name: 'WhiteBIT Coin', icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2626.png' }
+    ];
+
+    const COINGECKO_SYMBOL_TO_ID = {
+        BTC: 'bitcoin',
+        ETH: 'ethereum',
+        USDT: 'tether',
+        WBT: 'whitebit'
+    };
+
+    const FIAT_SET = new Set(FIAT_OPTIONS.map((item) => item.code));
+    const CRYPTO_SET = new Set(CRYPTO_OPTIONS.map((item) => item.code));
+    const quoteState = {
+        fiatUsd: {
+            AUD: 0.64,
+            USD: 1,
+            EUR: 1.09
+        },
+        cryptoUsd: {
+            BTC: 67000,
+            ETH: 2000,
+            USDT: 1,
+            WBT: 54
+        },
+        loaded: false
+    };
+    let coingeckoProxyUnavailable = false;
+    let refreshTimer = null;
+
+    function isFiat(code) {
+        return FIAT_SET.has(String(code || '').toUpperCase());
+    }
+
+    function isCrypto(code) {
+        return CRYPTO_SET.has(String(code || '').toUpperCase());
+    }
+
+    function getCurrencyInfo(code) {
+        const normalized = String(code || '').toUpperCase();
+        return FIAT_OPTIONS.find((item) => item.code === normalized)
+            || CRYPTO_OPTIONS.find((item) => item.code === normalized)
+            || { code: normalized, name: normalized, icon: '' };
+    }
+
+    function getAllowedOptions(mode, side) {
+        if (mode === 'buy') {
+            return side === 'from' ? FIAT_OPTIONS : CRYPTO_OPTIONS;
+        }
+        return side === 'from' ? CRYPTO_OPTIONS : FIAT_OPTIONS;
+    }
+
+    function getUsdRate(code) {
+        const normalized = String(code || '').toUpperCase();
+        if (isFiat(normalized)) return Number(quoteState.fiatUsd[normalized] || 0);
+        if (isCrypto(normalized)) return Number(quoteState.cryptoUsd[normalized] || 0);
+        return 0;
+    }
+
+    function parseNumeric(value) {
+        const raw = String(value || '').replace(/,/g, '').trim();
+        if (!raw) return NaN;
+        const numeric = Number(raw);
+        return Number.isFinite(numeric) ? numeric : NaN;
+    }
+
+    function formatInputAmount(value, code) {
+        if (!Number.isFinite(value)) return '';
+        const normalized = String(code || '').toUpperCase();
+        const maximumFractionDigits = isCrypto(normalized)
+            ? (Math.abs(value) >= 1 ? 6 : 8)
+            : 2;
+        return value.toLocaleString('en-US', {
+            useGrouping: false,
+            minimumFractionDigits: 0,
+            maximumFractionDigits
+        });
+    }
+
+    function formatMoneyAmount(value, code) {
+        if (!Number.isFinite(value)) return '--';
+        const normalized = String(code || '').toUpperCase();
+        const maximumFractionDigits = isCrypto(normalized)
+            ? (Math.abs(value) >= 1 ? 6 : 8)
+            : 2;
+        return `${value.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits
+        })} ${normalized}`;
+    }
+
+    function convertAmount(amount, fromCode, toCode) {
+        const fromRate = getUsdRate(fromCode);
+        const toRate = getUsdRate(toCode);
+        if (!(fromRate > 0) || !(toRate > 0) || !Number.isFinite(amount)) return NaN;
+        const usdValue = amount * fromRate;
+        return usdValue / toRate;
+    }
+
+    function setCurrencyElement(el, code) {
+        if (!el) return;
+        const info = getCurrencyInfo(code);
+        const icon = info.icon ? `<img src="${info.icon}" alt="${info.code}">` : '';
+        el.innerHTML = `${icon} ${info.code}`;
+    }
+
+    function setWidgetMeta(widget, text) {
+        if (widget.metaEl) widget.metaEl.textContent = text;
+    }
+
+    function updateLabels(widget) {
+        const fromInfo = getCurrencyInfo(widget.state.fromCode);
+        const toInfo = getCurrencyInfo(widget.state.toCode);
+        if (widget.fromLabelEl) {
+            widget.fromLabelEl.textContent = `From ${fromInfo.name} (${fromInfo.code})...`;
+        }
+        if (widget.toLabelEl) {
+            widget.toLabelEl.textContent = `To ${toInfo.name}...`;
+        }
+
+        setCurrencyElement(widget.fromCurrencyEl, widget.state.fromCode);
+        setCurrencyElement(widget.toCurrencyEl, widget.state.toCode);
+
+        if (widget.submitEl) {
+            widget.submitEl.textContent = widget.state.mode === 'buy' ? 'Buy now' : 'Sell now';
+        }
+        if (widget.toggleModeEl) {
+            widget.toggleModeEl.textContent = widget.state.mode === 'buy' ? '... or sell' : '... or buy';
+        }
+    }
+
+    function updateMetaWithRate(widget) {
+        const fromRate = getUsdRate(widget.state.fromCode);
+        const toRate = getUsdRate(widget.state.toCode);
+        if (!(fromRate > 0) || !(toRate > 0)) {
+            setWidgetMeta(widget, 'Live quote is temporarily unavailable. Please try again.');
+            return;
+        }
+
+        const unitAmount = widget.state.mode === 'buy'
+            ? convertAmount(1, widget.state.toCode, widget.state.fromCode)
+            : convertAmount(1, widget.state.fromCode, widget.state.toCode);
+        const unitLabel = widget.state.mode === 'buy'
+            ? `1 ${widget.state.toCode} ≈ ${formatMoneyAmount(unitAmount, widget.state.fromCode)}`
+            : `1 ${widget.state.fromCode} ≈ ${formatMoneyAmount(unitAmount, widget.state.toCode)}`;
+        const actionHint = widget.state.mode === 'buy'
+            ? 'Click currencies or the arrow to switch the quote.'
+            : 'You are now selling crypto into fiat.';
+        setWidgetMeta(widget, `${unitLabel}. ${actionHint}`);
+    }
+
+    function recalculate(widget, sourceSide, shouldFormatSource) {
+        const sourceEl = sourceSide === 'from' ? widget.fromInputEl : widget.toInputEl;
+        const targetEl = sourceSide === 'from' ? widget.toInputEl : widget.fromInputEl;
+        const sourceCode = sourceSide === 'from' ? widget.state.fromCode : widget.state.toCode;
+        const targetCode = sourceSide === 'from' ? widget.state.toCode : widget.state.fromCode;
+        const rawValue = parseNumeric(sourceEl.value);
+
+        if (!Number.isFinite(rawValue) || rawValue < 0) {
+            targetEl.value = '';
+            updateMetaWithRate(widget);
+            return;
+        }
+
+        const converted = convertAmount(rawValue, sourceCode, targetCode);
+        if (!Number.isFinite(converted)) {
+            targetEl.value = '';
+            setWidgetMeta(widget, 'Live quote is temporarily unavailable. Please try again.');
+            return;
+        }
+
+        if (shouldFormatSource) {
+            sourceEl.value = formatInputAmount(rawValue, sourceCode);
+        }
+        targetEl.value = formatInputAmount(converted, targetCode);
+        updateMetaWithRate(widget);
+    }
+
+    function cycleCurrency(widget, side) {
+        const options = getAllowedOptions(widget.state.mode, side);
+        const key = side === 'from' ? 'fromCode' : 'toCode';
+        const currentCode = widget.state[key];
+        const currentIndex = options.findIndex((item) => item.code === currentCode);
+        const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % options.length : 0;
+        widget.state[key] = options[nextIndex].code;
+        updateLabels(widget);
+        recalculate(widget, widget.state.lastEdited, false);
+    }
+
+    function toggleWidgetMode(widget) {
+        const previousFromValue = parseNumeric(widget.fromInputEl.value);
+        const previousToValue = parseNumeric(widget.toInputEl.value);
+        const nextMode = widget.state.mode === 'buy' ? 'sell' : 'buy';
+        const nextFromCode = widget.state.toCode;
+        const nextToCode = widget.state.fromCode;
+
+        widget.state.mode = nextMode;
+        widget.state.fromCode = nextFromCode;
+        widget.state.toCode = nextToCode;
+        widget.state.lastEdited = 'from';
+        updateLabels(widget);
+
+        widget.fromInputEl.value = Number.isFinite(previousToValue)
+            ? formatInputAmount(previousToValue, widget.state.fromCode)
+            : '';
+        widget.toInputEl.value = Number.isFinite(previousFromValue)
+            ? formatInputAmount(previousFromValue, widget.state.toCode)
+            : '';
+
+        recalculate(widget, 'from', false);
+    }
+
+    function persistDraft(widget) {
+        const fromAmount = parseNumeric(widget.fromInputEl.value);
+        const toAmount = parseNumeric(widget.toInputEl.value);
+        if (!(fromAmount > 0) || !(toAmount > 0)) return null;
+
+        const draft = {
+            mode: widget.state.mode,
+            fromCode: widget.state.fromCode,
+            toCode: widget.state.toCode,
+            fromAmount,
+            toAmount,
+            createdAt: new Date().toISOString()
+        };
+
+        try {
+            localStorage.setItem('ec_quick_trade_draft', JSON.stringify(draft));
+        } catch (err) {
+            console.warn('Failed to store quick trade draft:', err);
+        }
+        return draft;
+    }
+
+    function handleSubmit(widget) {
+        const draft = persistDraft(widget);
+        if (!draft) {
+            setWidgetMeta(widget, 'Enter a valid amount before continuing.');
+            widget.fromInputEl.focus();
+            return;
+        }
+
+        const url = new URL('buy-sell.html', window.location.href);
+        url.searchParams.set('mode', draft.mode);
+        url.searchParams.set('from', draft.fromCode);
+        url.searchParams.set('to', draft.toCode);
+        url.searchParams.set('fromAmount', formatInputAmount(draft.fromAmount, draft.fromCode));
+        url.searchParams.set('toAmount', formatInputAmount(draft.toAmount, draft.toCode));
+        window.location.href = url.toString();
+    }
+
+    function createWidget(widgetEl) {
+        const widget = {
+            el: widgetEl,
+            state: {
+                mode: 'buy',
+                fromCode: 'AUD',
+                toCode: 'BTC',
+                lastEdited: 'from'
+            },
+            fromLabelEl: widgetEl.querySelector('[data-role="from-label"]'),
+            toLabelEl: widgetEl.querySelector('[data-role="to-label"]'),
+            fromInputEl: widgetEl.querySelector('[data-role="from-input"]'),
+            toInputEl: widgetEl.querySelector('[data-role="to-input"]'),
+            fromCurrencyEl: widgetEl.querySelector('[data-role="from-currency"]'),
+            toCurrencyEl: widgetEl.querySelector('[data-role="to-currency"]'),
+            swapEl: widgetEl.querySelector('[data-role="swap"]'),
+            submitEl: widgetEl.querySelector('[data-role="submit"]'),
+            metaEl: widgetEl.querySelector('[data-role="meta"]'),
+            toggleModeEl: widgetEl.querySelector('[data-role="toggle-mode"]')
+        };
+
+        updateLabels(widget);
+        updateMetaWithRate(widget);
+
+        if (widget.fromInputEl) {
+            widget.fromInputEl.addEventListener('input', () => {
+                widget.state.lastEdited = 'from';
+                recalculate(widget, 'from', false);
+            });
+            widget.fromInputEl.addEventListener('blur', () => {
+                recalculate(widget, 'from', true);
+            });
+        }
+
+        if (widget.toInputEl) {
+            widget.toInputEl.addEventListener('input', () => {
+                widget.state.lastEdited = 'to';
+                recalculate(widget, 'to', false);
+            });
+            widget.toInputEl.addEventListener('blur', () => {
+                recalculate(widget, 'to', true);
+            });
+        }
+
+        if (widget.fromCurrencyEl) {
+            widget.fromCurrencyEl.addEventListener('click', () => cycleCurrency(widget, 'from'));
+        }
+
+        if (widget.toCurrencyEl) {
+            widget.toCurrencyEl.addEventListener('click', () => cycleCurrency(widget, 'to'));
+        }
+
+        if (widget.swapEl) {
+            widget.swapEl.addEventListener('click', () => toggleWidgetMode(widget));
+        }
+
+        if (widget.toggleModeEl) {
+            widget.toggleModeEl.addEventListener('click', (event) => {
+                event.preventDefault();
+                toggleWidgetMode(widget);
+            });
+        }
+
+        if (widget.submitEl) {
+            widget.submitEl.addEventListener('click', () => handleSubmit(widget));
+        }
+
+        return widget;
+    }
+
+    async function fetchTwelveDataRates() {
+        const symbols = ['AUD/USD', 'EUR/USD', 'BTC/USD', 'ETH/USD', 'WBT/USDT'];
+        const url = `https://api.twelvedata.com/quote?symbol=${symbols.map(encodeURIComponent).join(',')}&apikey=${TWELVE_DATA_API_KEY}`;
+        const response = await fetch(url);
+        const payload = await response.json();
+        const results = symbols.length === 1 && !payload[symbols[0]] ? { [symbols[0]]: payload } : payload;
+
+        if (results['AUD/USD'] && !results['AUD/USD'].status) {
+            quoteState.fiatUsd.AUD = Number(results['AUD/USD'].close || quoteState.fiatUsd.AUD);
+        }
+        if (results['EUR/USD'] && !results['EUR/USD'].status) {
+            quoteState.fiatUsd.EUR = Number(results['EUR/USD'].close || quoteState.fiatUsd.EUR);
+        }
+        if (results['BTC/USD'] && !results['BTC/USD'].status) {
+            quoteState.cryptoUsd.BTC = Number(results['BTC/USD'].close || quoteState.cryptoUsd.BTC);
+        }
+        if (results['ETH/USD'] && !results['ETH/USD'].status) {
+            quoteState.cryptoUsd.ETH = Number(results['ETH/USD'].close || quoteState.cryptoUsd.ETH);
+        }
+        if (results['WBT/USDT'] && !results['WBT/USDT'].status) {
+            quoteState.cryptoUsd.WBT = Number(results['WBT/USDT'].close || quoteState.cryptoUsd.WBT);
+        }
+    }
+
+    async function fetchCoinGeckoSimplePrice(idsCsv) {
+        const params = new URLSearchParams({
+            ids: idsCsv,
+            vs_currencies: 'usd',
+            include_24hr_change: 'true',
+            include_24hr_vol: 'true',
+            include_last_updated_at: 'true'
+        });
+
+        if (COINGECKO_PROXY_URL && !coingeckoProxyUnavailable) {
+            const glue = COINGECKO_PROXY_URL.includes('?') ? '&' : '?';
+            const proxyUrl = `${COINGECKO_PROXY_URL}${glue}${params.toString()}`;
+            const proxyResponse = await fetch(proxyUrl, { headers: { accept: 'application/json' } });
+            if (proxyResponse.ok) return await proxyResponse.json();
+            if (proxyResponse.status === 404 || proxyResponse.status === 502 || proxyResponse.status === 530) {
+                coingeckoProxyUnavailable = true;
+            }
+        }
+
+        const headers = { accept: 'application/json' };
+        if (COINGECKO_DEMO_KEY) headers['x-cg-demo-api-key'] = COINGECKO_DEMO_KEY;
+        const directResponse = await fetch(`${COINGECKO_BASE_URL}/simple/price?${params.toString()}`, { headers });
+        if (!directResponse.ok) {
+            throw new Error(`CoinGecko HTTP ${directResponse.status}`);
+        }
+        return await directResponse.json();
+    }
+
+    async function fetchCoinGeckoRates() {
+        const ids = Object.values(COINGECKO_SYMBOL_TO_ID);
+        const payload = await fetchCoinGeckoSimplePrice(ids.join(','));
+
+        Object.keys(COINGECKO_SYMBOL_TO_ID).forEach((code) => {
+            const id = COINGECKO_SYMBOL_TO_ID[code];
+            const entry = payload[id];
+            if (!entry || !Number.isFinite(Number(entry.usd))) return;
+            quoteState.cryptoUsd[code] = Number(entry.usd);
+        });
+    }
+
+    const widgets = widgetEls.map(createWidget);
+
+    async function refreshRates() {
+        try {
+            await fetchTwelveDataRates();
+        } catch (err) {
+            console.warn('Quick converter TwelveData fetch failed:', err.message || err);
+        }
+
+        try {
+            await fetchCoinGeckoRates();
+        } catch (err) {
+            console.warn('Quick converter CoinGecko fetch failed:', err.message || err);
+        }
+
+        quoteState.loaded = true;
+        widgets.forEach((widget) => {
+            updateLabels(widget);
+            recalculate(widget, widget.state.lastEdited, false);
+        });
+    }
+
+    refreshRates();
+    refreshTimer = window.setInterval(refreshRates, 15000);
+    window.addEventListener('beforeunload', () => {
+        if (refreshTimer) window.clearInterval(refreshTimer);
+    });
+})();
