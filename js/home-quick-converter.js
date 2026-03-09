@@ -49,8 +49,15 @@
         },
         loaded: false
     };
+
     let coingeckoProxyUnavailable = false;
     let refreshTimer = null;
+    let activeMenu = null;
+
+    const dropdownEl = document.createElement('div');
+    dropdownEl.className = 'quick-currency-dropdown';
+    dropdownEl.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(dropdownEl);
 
     function isFiat(code) {
         return FIAT_SET.has(String(code || '').toUpperCase());
@@ -117,8 +124,7 @@
         const fromRate = getUsdRate(fromCode);
         const toRate = getUsdRate(toCode);
         if (!(fromRate > 0) || !(toRate > 0) || !Number.isFinite(amount)) return NaN;
-        const usdValue = amount * fromRate;
-        return usdValue / toRate;
+        return (amount * fromRate) / toRate;
     }
 
     function setCurrencyElement(el, code) {
@@ -132,9 +138,43 @@
         if (widget.metaEl) widget.metaEl.textContent = text;
     }
 
+    function closeCurrencyMenu() {
+        if (activeMenu && activeMenu.triggerEl) {
+            activeMenu.triggerEl.classList.remove('is-open');
+            activeMenu.triggerEl.setAttribute('aria-expanded', 'false');
+        }
+        activeMenu = null;
+        dropdownEl.classList.remove('active');
+        dropdownEl.setAttribute('aria-hidden', 'true');
+        dropdownEl.innerHTML = '';
+    }
+
+    function positionCurrencyMenu(triggerEl) {
+        const rect = triggerEl.getBoundingClientRect();
+        const menuWidth = Math.max(dropdownEl.offsetWidth, 220);
+        const menuHeight = dropdownEl.offsetHeight || 0;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        let left = rect.left;
+        if (left + menuWidth > viewportWidth - 12) {
+            left = viewportWidth - menuWidth - 12;
+        }
+        left = Math.max(12, left);
+
+        let top = rect.bottom + 8;
+        if (top + menuHeight > viewportHeight - 12) {
+            top = Math.max(12, rect.top - menuHeight - 8);
+        }
+
+        dropdownEl.style.left = `${left}px`;
+        dropdownEl.style.top = `${top}px`;
+    }
+
     function updateLabels(widget) {
         const fromInfo = getCurrencyInfo(widget.state.fromCode);
         const toInfo = getCurrencyInfo(widget.state.toCode);
+
         if (widget.fromLabelEl) {
             widget.fromLabelEl.textContent = `From ${fromInfo.name} (${fromInfo.code})...`;
         }
@@ -165,10 +205,10 @@
             ? convertAmount(1, widget.state.toCode, widget.state.fromCode)
             : convertAmount(1, widget.state.fromCode, widget.state.toCode);
         const unitLabel = widget.state.mode === 'buy'
-            ? `1 ${widget.state.toCode} ≈ ${formatMoneyAmount(unitAmount, widget.state.fromCode)}`
-            : `1 ${widget.state.fromCode} ≈ ${formatMoneyAmount(unitAmount, widget.state.toCode)}`;
+            ? `1 ${widget.state.toCode} ~ ${formatMoneyAmount(unitAmount, widget.state.fromCode)}`
+            : `1 ${widget.state.fromCode} ~ ${formatMoneyAmount(unitAmount, widget.state.toCode)}`;
         const actionHint = widget.state.mode === 'buy'
-            ? 'Click currencies or the arrow to switch the quote.'
+            ? 'Use the dropdown to choose currencies.'
             : 'You are now selling crypto into fiat.';
         setWidgetMeta(widget, `${unitLabel}. ${actionHint}`);
     }
@@ -200,18 +240,55 @@
         updateMetaWithRate(widget);
     }
 
-    function cycleCurrency(widget, side) {
-        const options = getAllowedOptions(widget.state.mode, side);
+    function selectCurrency(widget, side, code) {
         const key = side === 'from' ? 'fromCode' : 'toCode';
-        const currentCode = widget.state[key];
-        const currentIndex = options.findIndex((item) => item.code === currentCode);
-        const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % options.length : 0;
-        widget.state[key] = options[nextIndex].code;
+        widget.state[key] = code;
         updateLabels(widget);
         recalculate(widget, widget.state.lastEdited, false);
     }
 
+    function openCurrencyMenu(widget, side, triggerEl) {
+        const options = getAllowedOptions(widget.state.mode, side);
+        const selectedCode = side === 'from' ? widget.state.fromCode : widget.state.toCode;
+
+        dropdownEl.innerHTML = options.map((option) => `
+            <button type="button" class="quick-currency-option${option.code === selectedCode ? ' active' : ''}" data-code="${option.code}">
+                <img src="${option.icon}" alt="${option.code}">
+                <span class="quick-currency-option-code">${option.code}</span>
+                <span class="quick-currency-option-name">${option.name}</span>
+            </button>
+        `).join('');
+
+        dropdownEl.querySelectorAll('[data-code]').forEach((optionEl) => {
+            optionEl.addEventListener('click', () => {
+                selectCurrency(widget, side, optionEl.getAttribute('data-code'));
+                closeCurrencyMenu();
+            });
+        });
+
+        if (activeMenu && activeMenu.triggerEl && activeMenu.triggerEl !== triggerEl) {
+            activeMenu.triggerEl.classList.remove('is-open');
+            activeMenu.triggerEl.setAttribute('aria-expanded', 'false');
+        }
+
+        activeMenu = { widget, side, triggerEl };
+        triggerEl.classList.add('is-open');
+        triggerEl.setAttribute('aria-expanded', 'true');
+        dropdownEl.classList.add('active');
+        dropdownEl.setAttribute('aria-hidden', 'false');
+        positionCurrencyMenu(triggerEl);
+    }
+
+    function toggleCurrencyMenu(widget, side, triggerEl) {
+        if (activeMenu && activeMenu.triggerEl === triggerEl) {
+            closeCurrencyMenu();
+            return;
+        }
+        openCurrencyMenu(widget, side, triggerEl);
+    }
+
     function toggleWidgetMode(widget) {
+        closeCurrencyMenu();
         const previousFromValue = parseNumeric(widget.fromInputEl.value);
         const previousToValue = parseNumeric(widget.toInputEl.value);
         const nextMode = widget.state.mode === 'buy' ? 'sell' : 'buy';
@@ -273,6 +350,24 @@
         window.location.href = url.toString();
     }
 
+    function bindCurrencyTrigger(widget, triggerEl, side) {
+        if (!triggerEl) return;
+        triggerEl.setAttribute('aria-haspopup', 'listbox');
+        triggerEl.setAttribute('aria-expanded', 'false');
+        triggerEl.tabIndex = 0;
+        triggerEl.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleCurrencyMenu(widget, side, triggerEl);
+        });
+        triggerEl.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                toggleCurrencyMenu(widget, side, triggerEl);
+            }
+        });
+    }
+
     function createWidget(widgetEl) {
         const widget = {
             el: widgetEl,
@@ -317,13 +412,8 @@
             });
         }
 
-        if (widget.fromCurrencyEl) {
-            widget.fromCurrencyEl.addEventListener('click', () => cycleCurrency(widget, 'from'));
-        }
-
-        if (widget.toCurrencyEl) {
-            widget.toCurrencyEl.addEventListener('click', () => cycleCurrency(widget, 'to'));
-        }
+        bindCurrencyTrigger(widget, widget.fromCurrencyEl, 'from');
+        bindCurrencyTrigger(widget, widget.toCurrencyEl, 'to');
 
         if (widget.swapEl) {
             widget.swapEl.addEventListener('click', () => toggleWidgetMode(widget));
@@ -398,7 +488,6 @@
     async function fetchCoinGeckoRates() {
         const ids = Object.values(COINGECKO_SYMBOL_TO_ID);
         const payload = await fetchCoinGeckoSimplePrice(ids.join(','));
-
         Object.keys(COINGECKO_SYMBOL_TO_ID).forEach((code) => {
             const id = COINGECKO_SYMBOL_TO_ID[code];
             const entry = payload[id];
@@ -427,11 +516,31 @@
             updateLabels(widget);
             recalculate(widget, widget.state.lastEdited, false);
         });
+        if (activeMenu && activeMenu.triggerEl) {
+            positionCurrencyMenu(activeMenu.triggerEl);
+        }
     }
 
     refreshRates();
     refreshTimer = window.setInterval(refreshRates, 15000);
+
+    document.addEventListener('click', (event) => {
+        if (!activeMenu) return;
+        if (dropdownEl.contains(event.target)) return;
+        if (activeMenu.triggerEl && activeMenu.triggerEl.contains(event.target)) return;
+        closeCurrencyMenu();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeCurrencyMenu();
+        }
+    });
+
+    window.addEventListener('resize', closeCurrencyMenu);
+    window.addEventListener('scroll', closeCurrencyMenu, true);
     window.addEventListener('beforeunload', () => {
         if (refreshTimer) window.clearInterval(refreshTimer);
+        closeCurrencyMenu();
     });
 })();
