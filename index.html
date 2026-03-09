@@ -457,6 +457,95 @@
             color: rgba(17, 24, 39, 0.72);
         }
 
+        .news-card {
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .news-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 34px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .social-link {
+            width: 32px;
+            height: 32px;
+            background: #1e293b;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .info-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(9, 8, 17, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 12000;
+        }
+
+        .info-modal-overlay.active {
+            display: flex;
+        }
+
+        .info-modal-box {
+            width: min(760px, 100%);
+            max-height: min(82vh, 900px);
+            overflow: auto;
+            background: #fff;
+            color: #111827;
+            border-radius: 18px;
+            box-shadow: 0 28px 70px rgba(17, 16, 35, 0.28);
+        }
+
+        .info-modal-head {
+            padding: 22px 26px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        .info-modal-head h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            color: #181331;
+        }
+
+        .info-modal-close {
+            border: none;
+            background: #f2f4fa;
+            width: 38px;
+            height: 38px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 1.25rem;
+            color: #3d345f;
+        }
+
+        .info-modal-body {
+            padding: 24px 26px 28px;
+            line-height: 1.72;
+            color: #4b5563;
+        }
+
+        .info-modal-body p:first-child {
+            margin-top: 0;
+        }
+
+        .info-modal-body a {
+            color: #5b3df5;
+        }
+
         .market-preview-section {
             background: #ffffff !important;
             padding: 4.6rem 0 5.25rem !important;
@@ -698,15 +787,15 @@
                                 <a href="buy-sell.html#swap"><span></span> Swap</a>
                             </li>
                             <li class="l-dropdown-item">
-                                <a href="#"><span></span> Institutional</a>
+                                <a href="#institutional" data-home-info="institutional"><span></span> Institutional</a>
                             </li>
                             <li class="l-dropdown-item">
-                                <a href="#"><span></span> OTC</a>
+                                <a href="#otc" data-home-info="otc"><span></span> OTC</a>
                             </li>
                         </ul>
                     </div>
-                    <a href="#" class="l-nav-link">Rates</a>
-                    <a href="#" class="l-nav-link">Tracker</a>
+                    <a href="markets.html" class="l-nav-link">Rates</a>
+                    <a href="markets.html" class="l-nav-link">Tracker</a>
                     <a href="login.html" class="l-nav-link">Sign In</a>
                     <a href="signup.html" class="btn-signup">Sign up</a>
                 </div>
@@ -771,7 +860,7 @@
         </div>
 
         <!-- SECTION 2: MARKET PREVIEW -->
-        <section class="market-preview-section landing-section">
+        <section id="market-preview" class="market-preview-section landing-section">
             <div class="container">
                 <h2 style="text-align: center; margin-bottom: 3rem; font-size: 1.85rem;">Track the Market and Watch Your
                     Portfolio Grow</h2>
@@ -806,7 +895,7 @@
         </section>
 
         <!-- SECTION 3: HOW TO USE -->
-        <section class="how-it-works landing-section" style="padding: 6rem 0; background: var(--primary-bg);">
+        <section id="learn-start" class="how-it-works landing-section" style="padding: 6rem 0; background: var(--primary-bg);">
             <div class="container">
                 <h2 style="font-size: 2.2rem; margin-bottom: 1rem; text-align: center; color: white;">How to Use
                     EASYCRYPTO?</h2>
@@ -874,7 +963,7 @@
         </section>
 
         <!-- SECTION 4: HORIZONTAL STEP CARDS -->
-        <section class="how-it-works-alt landing-section" style="padding: 6rem 0; background: var(--primary-bg);">
+        <section id="learn-guide" class="how-it-works-alt landing-section" style="padding: 6rem 0; background: var(--primary-bg);">
             <div class="container">
                 <h2 style="font-size: 2.2rem; margin-bottom: 1rem; text-align: center; color: white;">How to Use Easy
                     Crypto?</h2>
@@ -925,7 +1014,7 @@
         </section>
 
         <!-- SECTION 5: TESTIMONIALS -->
-        <section class="testimonials-section landing-section"
+        <section id="reviews" class="testimonials-section landing-section"
             style="padding: 6rem 0; background: #f9f9fb; color: #1e293b;">
             <div class="container">
                 <h2 style="font-size: 2rem; text-align: center; margin-bottom: 1rem; color: #111;">Trusted by +100K
@@ -982,7 +1071,7 @@
                 </div>
             </div>
             <!-- SECTION 6: CRYPTO NEWS -->
-            <section class="news-section landing-section" style="padding: 6rem 0; background: #fff; color: #1e293b;">
+            <section id="crypto-news" class="news-section landing-section" style="padding: 6rem 0; background: #fff; color: #1e293b;">
                 <div class="container">
                     <h2 style="font-size: 2rem; text-align: center; margin-bottom: 1rem; color: #111;">Crypto News</h2>
                     <p
@@ -992,7 +1081,7 @@
                     <div
                         style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px;">
                         <!-- NEWS CARD 1 -->
-                        <div class="card"
+                        <div class="card news-card" data-home-news="news1" role="button" tabindex="0"
                             style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: auto;">
                             <div class="card-image">
                                 <img src="assets/images/home/news1.png" alt="News 1"
@@ -1004,13 +1093,13 @@
                                     "Not my keys, not my crypto?" Maybe it's time for an upgrade?</h3>
                                 <p class="date" style="font-size: 14px; color: #777; margin-bottom: 12px;">October 21,
                                     2025</p>
-                                <a href="#" class="read-more"
+                                <a href="#news1" class="read-more" data-home-news="news1"
                                     style="color: #5b3df5; text-decoration: none; font-weight: 600; font-size: 14px;">Read
                                     more</a>
                             </div>
                         </div>
                         <!-- NEWS CARD 2 -->
-                        <div class="card"
+                        <div class="card news-card" data-home-news="news2" role="button" tabindex="0"
                             style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: auto;">
                             <div class="card-image">
                                 <img src="assets/images/home/news2.png" alt="News 2"
@@ -1022,13 +1111,13 @@
                                     Weekly Crypto Market Update: Whale Games & Speculation</h3>
                                 <p class="date" style="font-size: 14px; color: #777; margin-bottom: 12px;">October 15,
                                     2025</p>
-                                <a href="#" class="read-more"
+                                <a href="#news2" class="read-more" data-home-news="news2"
                                     style="color: #5b3df5; text-decoration: none; font-weight: 600; font-size: 14px;">Read
                                     more</a>
                             </div>
                         </div>
                         <!-- NEWS CARD 3 -->
-                        <div class="card"
+                        <div class="card news-card" data-home-news="news3" role="button" tabindex="0"
                             style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: auto;">
                             <div class="card-image">
                                 <img src="assets/images/home/news3.png" alt="News 3"
@@ -1040,13 +1129,13 @@
                                     Institutions Set to Benefit from New Sponsorship Deal</h3>
                                 <p class="date" style="font-size: 14px; color: #777; margin-bottom: 12px;">October 13,
                                     2025</p>
-                                <a href="#" class="read-more"
+                                <a href="#news3" class="read-more" data-home-news="news3"
                                     style="color: #5b3df5; text-decoration: none; font-weight: 600; font-size: 14px;">Read
                                     more</a>
                             </div>
                         </div>
                         <!-- NEWS CARD 4 -->
-                        <div class="card"
+                        <div class="card news-card" data-home-news="news4" role="button" tabindex="0"
                             style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: auto;">
                             <div class="card-image">
                                 <img src="assets/images/home/news1.png" alt="News 4"
@@ -1058,13 +1147,13 @@
                                     Blockchain Set for Multimillion-Dollar Investment Industry-First</h3>
                                 <p class="date" style="font-size: 14px; color: #777; margin-bottom: 12px;">October 9,
                                     2025</p>
-                                <a href="#" class="read-more"
+                                <a href="#news4" class="read-more" data-home-news="news4"
                                     style="color: #5b3df5; text-decoration: none; font-weight: 600; font-size: 14px;">Read
                                     more</a>
                             </div>
                         </div>
                         <!-- NEWS CARD 5 -->
-                        <div class="card"
+                        <div class="card news-card" data-home-news="news5" role="button" tabindex="0"
                             style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: auto;">
                             <div class="card-image">
                                 <img src="assets/images/home/news2.png" alt="News 5"
@@ -1076,13 +1165,13 @@
                                     Weekly Market Update: Let the Good Times Roll</h3>
                                 <p class="date" style="font-size: 14px; color: #777; margin-bottom: 12px;">October 8,
                                     2025</p>
-                                <a href="#" class="read-more"
+                                <a href="#news5" class="read-more" data-home-news="news5"
                                     style="color: #5b3df5; text-decoration: none; font-weight: 600; font-size: 14px;">Read
                                     more</a>
                             </div>
                         </div>
                         <!-- NEWS CARD 6 -->
-                        <div class="card"
+                        <div class="card news-card" data-home-news="news6" role="button" tabindex="0"
                             style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; height: auto;">
                             <div class="card-image">
                                 <img src="assets/images/home/news3.png" alt="News 6"
@@ -1094,7 +1183,7 @@
                                     AI Agents Meet Stablecoins.. When Money Gets Interesting!</h3>
                                 <p class="date" style="font-size: 14px; color: #777; margin-bottom: 12px;">October 2,
                                     2025</p>
-                                <a href="#" class="read-more"
+                                <a href="#news6" class="read-more" data-home-news="news6"
                                     style="color: #5b3df5; text-decoration: none; font-weight: 600; font-size: 14px;">Read
                                     more</a>
                             </div>
@@ -1146,7 +1235,7 @@
             </section>
 
             <!-- FOOTER -->
-            <footer style="background: #111; color: #94a3b8; padding: 6rem 0 3rem;">
+            <footer id="site-footer" style="background: #111; color: #94a3b8; padding: 6rem 0 3rem;">
                 <div class="container">
                     <div
                         style="display: flex; justify-content: space-between; gap: 4rem; flex-wrap: wrap; margin-bottom: 4rem;">
@@ -1166,7 +1255,7 @@
                             <p style="line-height: 1.6; margin-bottom: 1.5rem; max-width: 400px;">Easy Crypto wants to
                                 make it easy for anyone to get into the crypto market - no matter how much they have to
                                 invest.</p>
-                            <a href="#"
+                            <a href="markets.html"
                                 style="color: white; text-decoration: none; font-size: 0.9rem; display: block; margin-bottom: 2rem;">See
                                 the full list of coins we trade</a>
 
@@ -1177,15 +1266,10 @@
                             </div>
 
                             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                                <!-- Icons placeholder -->
-                                <span
-                                    style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">f</span>
-                                <span
-                                    style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">t</span>
-                                <span
-                                    style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">i</span>
-                                <span
-                                    style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">l</span>
+                                <a class="social-link" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Feasycryptoguide.com%2F" target="_blank" rel="noopener noreferrer">f</a>
+                                <a class="social-link" href="https://x.com/intent/tweet?url=https%3A%2F%2Feasycryptoguide.com%2F&text=Trade%20crypto%20with%20EasyCrypto" target="_blank" rel="noopener noreferrer">x</a>
+                                <a class="social-link" href="https://wa.me/?text=Trade%20crypto%20with%20EasyCrypto%20https%3A%2F%2Feasycryptoguide.com%2F" target="_blank" rel="noopener noreferrer">w</a>
+                                <a class="social-link" href="https://t.me/share/url?url=https%3A%2F%2Feasycryptoguide.com%2F&text=Trade%20crypto%20with%20EasyCrypto" target="_blank" rel="noopener noreferrer">t</a>
                             </div>
                         </div>
 
@@ -1198,8 +1282,8 @@
                                 </li>
                                 <li><a href="buy-sell.html" style="color: inherit; text-decoration: none;">Buy &
                                         Sell</a></li>
-                                <li><a href="#" style="color: inherit; text-decoration: none;">Our Rates</a></li>
-                                <li><a href="#" style="color: inherit; text-decoration: none;">Portfolio Tracker</a>
+                                <li><a href="markets.html" style="color: inherit; text-decoration: none;">Our Rates</a></li>
+                                <li><a href="markets.html" style="color: inherit; text-decoration: none;">Portfolio Tracker</a>
                                 </li>
                             </ul>
                         </div>
@@ -1207,21 +1291,21 @@
                             <h4 style="color: white; margin-bottom: 1.5rem;">Useful Links</h4>
                             <ul
                                 style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
-                                <li><a href="#" style="color: inherit; text-decoration: none;">Get Help</a></li>
-                                <li><a href="#" style="color: inherit; text-decoration: none;">Learn About Crypto</a>
+                                <li><a href="mailto:support@easycryptoguide.com?subject=EasyCrypto%20Support" style="color: inherit; text-decoration: none;">Get Help</a></li>
+                                <li><a href="#learn-start" style="color: inherit; text-decoration: none;">Learn About Crypto</a>
                                 </li>
-                                <li><a href="#" style="color: inherit; text-decoration: none;">Blog</a></li>
-                                <li><a href="#" style="color: inherit; text-decoration: none;">Careers</a></li>
+                                <li><a href="#crypto-news" style="color: inherit; text-decoration: none;">Blog</a></li>
+                                <li><a href="#careers" data-home-info="careers" style="color: inherit; text-decoration: none;">Careers</a></li>
                             </ul>
                         </div>
                         <div style="flex: 1; min-width: 150px;">
                             <h4 style="color: white; margin-bottom: 1.5rem;">About Us</h4>
                             <ul
                                 style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
-                                <li><a href="#" style="color: inherit; text-decoration: none;">About Us</a></li>
-                                <li><a href="#" style="color: inherit; text-decoration: none;">Stats</a></li>
-                                <li><a href="#" style="color: inherit; text-decoration: none;">Terms of Service</a></li>
-                                <li><a href="#" style="color: inherit; text-decoration: none;">Privacy Policy</a></li>
+                                <li><a href="#about" data-home-info="about" style="color: inherit; text-decoration: none;">About Us</a></li>
+                                <li><a href="#stats" data-home-info="stats" style="color: inherit; text-decoration: none;">Stats</a></li>
+                                <li><a href="#terms" data-home-info="terms" style="color: inherit; text-decoration: none;">Terms of Service</a></li>
+                                <li><a href="#privacy" data-home-info="privacy" style="color: inherit; text-decoration: none;">Privacy Policy</a></li>
                             </ul>
                         </div> <!-- End About Us Column -->
                     </div> <!-- End Columns Row -->
@@ -1236,6 +1320,16 @@
                 </div> <!-- End Container -->
             </footer>
     </div> <!-- End Landing Page -->
+
+    <div class="info-modal-overlay" id="home-info-modal">
+        <div class="info-modal-box">
+            <div class="info-modal-head">
+                <h3 id="home-info-modal-title">Information</h3>
+                <button type="button" class="info-modal-close" id="home-info-modal-close">&times;</button>
+            </div>
+            <div class="info-modal-body" id="home-info-modal-body"></div>
+        </div>
+    </div>
 
     <!-- QUICK BUY/SELL MODAL -->
     <div class="modal-overlay" id="quick-buy-modal">
@@ -1268,6 +1362,7 @@
 
     <script src="js/home-market-preview.js"></script>
     <script src="js/home-quick-converter.js"></script>
+    <script src="js/home-info-actions.js"></script>
 
     <script type="module">
         import {
