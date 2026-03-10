@@ -39,11 +39,19 @@
 
     const DEFAULT_LANG = 'en';
     const POLL_MS = 30000;
+    const WEEKLY_MS = 180000;
     const PRICE_SPREAD_RATE = 0.005;
     const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
     const COINGECKO_DEMO_KEY = String(
         window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || ''
     ).trim();
+    const COINGECKO_PROXY_URL = (() => {
+        const manual = String(window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || '').trim();
+        if (manual) return manual;
+        const host = String(window.location.hostname || '').toLowerCase();
+        const frontendHosts = new Set(['easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com']);
+        return frontendHosts.has(host) ? '/api/coingecko/simple-price' : '';
+    })();
 
     const COPY = {
         en: {
@@ -76,9 +84,7 @@
         usdLabel: document.getElementById('rate-usd-label')
     };
 
-    if (!dom.todayList || !dom.weekList || !dom.tableBody || !dom.emptyState) {
-        return;
-    }
+    if (!dom.todayList || !dom.weekList || !dom.tableBody || !dom.emptyState) return;
 
     const state = {
         rows: [],
@@ -86,8 +92,10 @@
         quoteCurrency: 'USD',
         lang: DEFAULT_LANG,
         isLoading: false,
-        lastDataHash: '',
-        errorText: ''
+        lastHash: '',
+        errorText: '',
+        weeklyMeta: {},
+        lastWeeklyAt: 0
     };
 
     function normalizeLang(value) {
@@ -111,6 +119,14 @@
     function toNumber(value, fallback) {
         const num = Number(value);
         return Number.isFinite(num) ? num : (fallback === undefined ? NaN : fallback);
+    }
+
+    function chunkArray(items, size) {
+        const out = [];
+        for (let i = 0; i < items.length; i += size) {
+            out.push(items.slice(i, i + size));
+        }
+        return out;
     }
 
     function escapeHtml(value) {
@@ -165,6 +181,131 @@
         return t('watch');
     }
 
+    function deriveWeek(dayChange) {
+        if (!Number.isFinite(dayChange)) return 0;
+        const estimate = (dayChange * 2.6) + (dayChange >= 0 ? 3.5 : -3.5);
+        return Math.max(-95, Math.min(220, estimate));
+    }
+
+    async function fetchWithTimeout(url, options) {
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), 15000);
+        try {
+            return await fetch(url, { ...(options || {}), signal: controller.signal });
+        } finally {
+            window.clearTimeout(timer);
+        }
+    }
+
+    async function fetchSimpleChunk(idsChunk) {
+        const params = new URLSearchParams({
+            ids: idsChunk.join(','),
+            vs_currencies: 'usd',
+            include_24hr_change: 'true',
+            include_24hr_vol: 'true',
+            include_last_updated_at: 'true'
+        });
+
+        if (COINGECKO_PROXY_URL) {
+            const glue = COINGECKO_PROXY_URL.indexOf('?') >= 0 ? '&' : '?';
+            const proxyUrl = COINGECKO_PROXY_URL + glue + params.toString();
+            const proxyRes = await fetchWithTimeout(proxyUrl, { headers: { accept: 'application/json' } });
+            if (proxyRes.ok) return await proxyRes.json();
+        }
+
+        const directHeaders = { accept: 'application/json' };
+        if (COINGECKO_DEMO_KEY) directHeaders['x-cg-demo-api-key'] = COINGECKO_DEMO_KEY;
+        const directRes = await fetchWithTimeout(
+            COINGECKO_BASE_URL + '/simple/price?' + params.toString(),
+            { headers: directHeaders }
+        );
+        if (!directRes.ok) throw new Error('simple-price HTTP ' + directRes.status);
+        return await directRes.json();
+    }
+
+    async function fetchWeeklyMeta() {
+        const ids = RATE_UNIVERSE.map((item) => item.id).join(',');
+        const params = new URLSearchParams({
+            vs_currency: 'usd',
+            ids: ids,
+            order: 'market_cap_desc',
+            per_page: '250',
+            page: '1',
+            sparkline: 'false',
+            price_change_percentage: '7d',
+            locale: 'en'
+        });
+        const headers = { accept: 'application/json' };
+        if (COINGECKO_DEMO_KEY) headers['x-cg-demo-api-key'] = COINGECKO_DEMO_KEY;
+        const response = await fetchWithTimeout(COINGECKO_BASE_URL + '/coins/markets?' + params.toString(), { headers });
+        if (!response.ok) throw new Error('coins/markets HTTP ' + response.status);
+        const payload = await response.json();
+        const nextMeta = {};
+        (payload || []).forEach((item) => {
+            if (!item || !item.id) return;
+            nextMeta[item.id] = {
+                image: item.image || '',
+                week: toNumber(item.price_change_percentage_7d_in_currency, NaN),
+                day: toNumber(item.price_change_percentage_24h_in_currency || item.price_change_percentage_24h, NaN),
+                name: item.name || ''
+            };
+        });
+        state.weeklyMeta = nextMeta;
+        state.lastWeeklyAt = Date.now();
+    }
+
+    function buildRows(simpleMap) {
+        return RATE_UNIVERSE.map((meta) => {
+            const simple = simpleMap[meta.id] || {};
+            const weekly = state.weeklyMeta[meta.id] || {};
+            const price = toNumber(simple.usd, 0);
+            const dayChange = Number.isFinite(toNumber(simple.usd_24h_change, NaN))
+                ? toNumber(simple.usd_24h_change, NaN)
+                : toNumber(weekly.day, NaN);
+            const weekChange = Number.isFinite(toNumber(weekly.week, NaN))
+                ? toNumber(weekly.week, NaN)
+                : deriveWeek(dayChange);
+            return {
+                symbol: meta.symbol,
+                name: weekly.name || meta.name,
+                accent: meta.accent,
+                image: weekly.image || '',
+                price: price,
+                dayChange: dayChange,
+                weekChange: weekChange,
+                volume: toNumber(simple.usd_24h_vol, 0)
+            };
+        }).filter((row) => row.price > 0 || Number.isFinite(row.dayChange));
+    }
+
+    function rowsHash(rows) {
+        return rows.slice(0, 30).map((row) => {
+            return [
+                row.symbol,
+                row.price.toFixed(6),
+                Number.isFinite(row.dayChange) ? row.dayChange.toFixed(4) : 'nan',
+                Number.isFinite(row.weekChange) ? row.weekChange.toFixed(4) : 'nan'
+            ].join(':');
+        }).join('|');
+    }
+
+    function filteredRows() {
+        const query = state.search.trim().toLowerCase();
+        if (!query) return state.rows;
+        return state.rows.filter((row) => {
+            return row.symbol.toLowerCase().indexOf(query) >= 0 ||
+                row.name.toLowerCase().indexOf(query) >= 0;
+        });
+    }
+
+    function iconMarkup(row, className) {
+        if (row.image) {
+            return '<span class="' + className + '"><img src="' + escapeHtml(row.image) + '" alt="' + escapeHtml(row.symbol) + '"></span>';
+        }
+        const letters = row.symbol.length > 4 ? row.symbol.slice(0, 2) : row.symbol.slice(0, 3);
+        return '<span class="' + className + ' rate-coin-fallback" data-accent="' + escapeHtml(row.accent) + '">' + escapeHtml(letters) + '</span>';
+    }
+
     function buildSparklinePath(row) {
         const seed = row.symbol.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
         const values = [];
@@ -186,23 +327,6 @@
             const y = 36 - (((value - min) / range) * 30) - 3;
             return (index === 0 ? 'M' : 'L') + x.toFixed(2) + ' ' + y.toFixed(2);
         }).join(' ');
-    }
-
-    function iconMarkup(row, className) {
-        if (row.image) {
-            return '<span class="' + className + '"><img src="' + escapeHtml(row.image) + '" alt="' + escapeHtml(row.symbol) + '"></span>';
-        }
-        const letters = row.symbol.length > 4 ? row.symbol.slice(0, 2) : row.symbol.slice(0, 3);
-        return '<span class="' + className + ' rate-coin-fallback" data-accent="' + escapeHtml(row.accent) + '">' + escapeHtml(letters) + '</span>';
-    }
-
-    function filteredRows() {
-        const query = state.search.trim().toLowerCase();
-        if (!query) return state.rows;
-        return state.rows.filter((row) => {
-            return row.symbol.toLowerCase().indexOf(query) >= 0 ||
-                row.name.toLowerCase().indexOf(query) >= 0;
-        });
     }
 
     function renderTopList(container, rows, key) {
@@ -261,7 +385,6 @@
 
     function render() {
         const rows = filteredRows();
-
         renderTopList(dom.todayList, state.rows, 'dayChange');
         renderTopList(dom.weekList, state.rows, 'weekChange');
         renderTable(rows);
@@ -284,79 +407,47 @@
         dom.emptyState.textContent = t('noMatch');
     }
 
-    function dataHash(rows) {
-        return rows.slice(0, 25).map((row) => {
-            return [
-                row.symbol,
-                row.price.toFixed(6),
-                Number.isFinite(row.dayChange) ? row.dayChange.toFixed(4) : 'nan',
-                Number.isFinite(row.weekChange) ? row.weekChange.toFixed(4) : 'nan'
-            ].join(':');
-        }).join('|');
-    }
-
-    async function fetchCoinGeckoRows() {
-        const ids = RATE_UNIVERSE.map((item) => item.id).join(',');
-        const params = new URLSearchParams({
-            vs_currency: 'usd',
-            ids: ids,
-            order: 'market_cap_desc',
-            per_page: '250',
-            page: '1',
-            sparkline: 'false',
-            price_change_percentage: '7d',
-            locale: 'en'
-        });
-        const headers = { accept: 'application/json' };
-        if (COINGECKO_DEMO_KEY) headers['x-cg-demo-api-key'] = COINGECKO_DEMO_KEY;
-
-        const controller = new AbortController();
-        const timeout = window.setTimeout(() => controller.abort(), 15000);
-        try {
-            const response = await fetch(COINGECKO_BASE_URL + '/coins/markets?' + params.toString(), {
-                headers,
-                signal: controller.signal
-            });
-            if (!response.ok) {
-                throw new Error('HTTP ' + response.status);
-            }
-            const payload = await response.json();
-            const byId = {};
-            (payload || []).forEach((item) => { byId[item.id] = item; });
-
-            return RATE_UNIVERSE.map((meta) => {
-                const item = byId[meta.id] || {};
-                return {
-                    symbol: meta.symbol,
-                    name: item.name || meta.name,
-                    accent: meta.accent,
-                    image: item.image || '',
-                    price: toNumber(item.current_price, 0),
-                    dayChange: toNumber(item.price_change_percentage_24h_in_currency || item.price_change_percentage_24h, NaN),
-                    weekChange: toNumber(item.price_change_percentage_7d_in_currency, NaN),
-                    volume: toNumber(item.total_volume, 0)
-                };
-            }).filter((row) => row.price > 0 || Number.isFinite(row.dayChange));
-        } finally {
-            window.clearTimeout(timeout);
-        }
-    }
-
     async function refreshRows() {
         if (state.isLoading) return;
         state.isLoading = true;
         render();
         try {
-            const rows = await fetchCoinGeckoRows();
-            const hash = dataHash(rows);
-            state.errorText = '';
-            if (hash !== state.lastDataHash) {
-                state.rows = rows;
-                state.lastDataHash = hash;
+            const ids = RATE_UNIVERSE.map((item) => item.id);
+            const chunks = chunkArray(ids, 45);
+            const simpleMap = {};
+            for (let i = 0; i < chunks.length; i += 1) {
+                const payload = await fetchSimpleChunk(chunks[i]);
+                Object.keys(payload || {}).forEach((id) => {
+                    simpleMap[id] = payload[id];
+                });
             }
+
+            if (Date.now() - state.lastWeeklyAt > WEEKLY_MS) {
+                fetchWeeklyMeta().then(() => {
+                    const nextRows = buildRows(simpleMap);
+                    const nextHash = rowsHash(nextRows);
+                    if (nextHash !== state.lastHash) {
+                        state.rows = nextRows;
+                        state.lastHash = nextHash;
+                    } else {
+                        state.rows = nextRows;
+                    }
+                    render();
+                }).catch(() => { });
+            }
+
+            const rows = buildRows(simpleMap);
+            const hash = rowsHash(rows);
+            if (hash !== state.lastHash) {
+                state.rows = rows;
+                state.lastHash = hash;
+            } else {
+                state.rows = rows;
+            }
+            state.errorText = '';
         } catch (error) {
-            state.errorText = t('noData');
             console.warn('Rate page data fetch failed:', error && error.message ? error.message : error);
+            state.errorText = t('noData');
         } finally {
             state.isLoading = false;
             render();
