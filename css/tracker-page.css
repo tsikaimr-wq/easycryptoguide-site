@@ -202,8 +202,8 @@ img {
     margin: 0;
     text-align: center;
     font-family: "Outfit", "Inter", sans-serif;
-    font-size: 42px;
-    font-weight: 700;
+    font-size: 30px;
+    font-weight: 500;
     letter-spacing: -0.02em;
 }
 
@@ -211,7 +211,7 @@ img {
     margin: 14px 0 20px;
     text-align: center;
     color: #9ea1ad;
-    font-size: 15px;
+    font-size: 13px;
 }
 
 .tracker-networth-wrap {
@@ -245,7 +245,8 @@ img {
     margin: 0 0 14px;
     text-align: center;
     font-family: "Outfit", "Inter", sans-serif;
-    font-size: 36px;
+    font-size: 28px;
+    font-weight: 500;
     line-height: 1.02;
     letter-spacing: -0.015em;
 }
@@ -259,18 +260,19 @@ img {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 16px 24px;
+    padding: 13px 20px;
     border-bottom: 1px solid #ececf4;
 }
 
 .tracker-stats-row span {
     color: #1b1d2a;
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 500;
 }
 
 .tracker-stats-row strong {
-    font-size: 30px;
+    font-size: 16px;
+    font-weight: 500;
     font-family: "Outfit", "Inter", sans-serif;
     letter-spacing: -0.01em;
 }
@@ -307,8 +309,8 @@ img {
     z-index: 1;
     text-align: center;
     color: #24273a;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 500;
     line-height: 1.2;
 }
 
@@ -348,7 +350,7 @@ img {
 }
 
 .tracker-donut-pct {
-    font-weight: 700;
+    font-weight: 500;
     color: #1f2231;
 }
 
@@ -391,7 +393,8 @@ img {
 .tracker-section-title {
     margin: 0;
     font-family: "Outfit", "Inter", sans-serif;
-    font-size: 32px;
+    font-size: 24px;
+    font-weight: 500;
     line-height: 1.1;
     letter-spacing: -0.02em;
 }
@@ -416,7 +419,8 @@ img {
 .tracker-balance-row strong {
     display: block;
     margin-top: 4px;
-    font-size: 19px;
+    font-size: 16px;
+    font-weight: 500;
     letter-spacing: -0.01em;
 }
 
@@ -439,7 +443,7 @@ img {
     justify-content: space-between;
     gap: 10px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .tracker-allocation-meta {
@@ -494,7 +498,7 @@ img {
     display: grid;
     place-items: center;
     color: #fff;
-    font-weight: 700;
+    font-weight: 500;
     font-size: 12px;
     flex: 0 0 auto;
 }
@@ -514,7 +518,7 @@ img {
 
 .tracker-mover-name strong {
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -531,7 +535,8 @@ img {
 
 .tracker-mover-side b {
     display: block;
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 500;
 }
 
 .tracker-mover-side span {
@@ -542,7 +547,7 @@ img {
     padding: 2px 8px;
     border-radius: 999px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .tracker-pill-up {
@@ -618,7 +623,7 @@ img {
     background: #fff;
     color: var(--tracker-muted);
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .tracker-sort-field select {
@@ -627,7 +632,7 @@ img {
     background: transparent;
     color: var(--tracker-text);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .tracker-refresh-btn {
@@ -636,7 +641,7 @@ img {
     padding: 10px 14px;
     background: linear-gradient(135deg, var(--tracker-purple-1), var(--tracker-purple-3));
     color: #fff;
-    font-weight: 700;
+    font-weight: 500;
     font-size: 13px;
     display: inline-flex;
     align-items: center;
@@ -675,7 +680,7 @@ img {
     text-align: left;
     padding: 14px 14px;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 500;
     color: #6f6a84;
     border-bottom: 1px solid rgba(111, 92, 167, 0.15);
     letter-spacing: 0.02em;
@@ -706,7 +711,7 @@ img {
 .tracker-asset-copy strong {
     display: block;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -724,6 +729,7 @@ img {
 .tracker-pnl-cell b {
     display: block;
     font-size: 13px;
+    font-weight: 500;
 }
 
 .tracker-pnl-cell span {
@@ -741,6 +747,7 @@ img {
     display: block;
     margin-bottom: 6px;
     font-size: 12px;
+    font-weight: 500;
 }
 
 .tracker-allocation-cell .tracker-progress {
@@ -867,7 +874,7 @@ img {
     }
 
     .tracker-worth-title {
-        font-size: 30px;
+        font-size: 24px;
     }
 
     .tracker-worth-note {
@@ -875,7 +882,7 @@ img {
     }
 
     .tracker-stats-title {
-        font-size: 28px;
+        font-size: 22px;
     }
 
     .tracker-stats-row {
@@ -887,7 +894,7 @@ img {
     }
 
     .tracker-stats-row strong {
-        font-size: 22px;
+        font-size: 15px;
     }
 
     .tracker-donut-ring {
