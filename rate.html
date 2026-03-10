@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rates - EASYCRYPTO</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/brand/favicon-16x16.png">
+    <link rel="shortcut icon" href="/assets/brand/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+    <meta name="description" content="EasyCrypto live rates page with top gainers and real-time crypto pricing.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="EasyCrypto Exchange">
+    <meta property="og:title" content="EasyCrypto Exchange | Crypto Live Rates">
+    <meta property="og:description" content="Track top crypto gainers and live rates on EasyCrypto Exchange.">
+    <meta property="og:image" content="https://easycryptoguide.com/assets/brand/og-preview.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="https://easycryptoguide.com/rate.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EasyCrypto Exchange | Crypto Live Rates">
+    <meta name="twitter:description" content="Track top crypto gainers and live rates on EasyCrypto Exchange.">
+    <meta name="twitter:image" content="https://easycryptoguide.com/assets/brand/og-preview.png">
+    <script>
+        (function () {
+            const forceDesktop = /[?&]desktop=1(?:&|$)/i.test(window.location.search);
+            if (forceDesktop) return;
+            const ua = navigator.userAgent || '';
+            const isMobileUA = /Android|iPhone|iPad|iPod|Windows Phone|IEMobile|BlackBerry|Opera Mini|Mobile/i.test(ua);
+            const isSmallTouch = window.matchMedia('(max-width: 900px)').matches && ((navigator.maxTouchPoints || 0) > 1);
+            if (isMobileUA || isSmallTouch) {
+                window.location.replace('mobile.html');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/rate-page.css">
+</head>
+
+<body>
+    <div class="rate-page-shell">
+        <header class="rate-hero">
+            <div class="rate-topbar rate-container">
+                <a href="index.html" class="rate-logo">
+                    <img src="/assets/brand/logo-new.png" alt="EasyCrypto">
+                </a>
+                <nav class="rate-nav">
+                    <a href="buy-sell.html" data-rate-i18n="buySell">Buy & Sell</a>
+                    <a href="rate.html" class="active" data-rate-i18n="rates">Rates</a>
+                    <a href="markets.html" data-rate-i18n="tracker">Tracker</a>
+                    <a href="index.html#smsf">SMSF</a>
+                    <a href="index.html#learn" data-rate-i18n="learn">Learn</a>
+                    <a href="index.html#about" data-rate-i18n="about">About Us</a>
+                    <a href="login.html" data-rate-i18n="signIn">Sign In</a>
+                    <a href="signup.html" class="rate-signup-btn" data-rate-i18n="signUp">Sign up</a>
+                </nav>
+            </div>
+            <div class="rate-hero-copy rate-container">
+                <h1 id="rate-hero-title" data-rate-i18n="heroTitle">Crypto Live Rates</h1>
+            </div>
+        </header>
+
+        <main class="rate-main">
+            <section class="rate-gainers-section rate-container">
+                <div class="rate-gainers-grid">
+                    <article class="rate-gainers-panel">
+                        <div class="rate-section-title" id="rate-today-title" data-rate-i18n="topGainersToday">Top Gainers Today</div>
+                        <div id="rate-today-list" class="rate-list-stack"></div>
+                    </article>
+                    <article class="rate-gainers-panel">
+                        <div class="rate-section-title" id="rate-week-title" data-rate-i18n="topGainersWeek">Top Gainers This Week</div>
+                        <div id="rate-week-list" class="rate-list-stack"></div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="rate-table-section">
+                <div class="rate-container">
+                    <div class="rate-table-heading">
+                        <div>
+                            <div class="rate-section-title" id="rate-all-title" data-rate-i18n="allRates">All Rates</div>
+                            <div class="rate-subnote" id="rate-subnote" data-rate-i18n="voteListing">Vote for a new listing</div>
+                        </div>
+                        <div class="rate-controls">
+                            <label class="rate-search-field">
+                                <i class="ri-search-line"></i>
+                                <input type="text" id="rate-search-input" placeholder="Filter list">
+                            </label>
+                            <label class="rate-toggle">
+                                <input type="checkbox" id="rate-usd-toggle">
+                                <span id="rate-usd-label">USD</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="rate-table-card">
+                        <table class="rate-live-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 52px;"></th>
+                                    <th id="rate-col-name" data-rate-i18n="name">Name</th>
+                                    <th id="rate-col-symbol" data-rate-i18n="symbol">Symbol</th>
+                                    <th id="rate-col-sell" data-rate-i18n="sell">Sell</th>
+                                    <th id="rate-col-buy" data-rate-i18n="buy">Buy</th>
+                                    <th id="rate-col-24h" data-rate-i18n="change24h">24h</th>
+                                    <th id="rate-col-48h" data-rate-i18n="last48h">Last 48 hours</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rate-table-body"></tbody>
+                        </table>
+                        <div id="rate-empty-state" class="rate-empty-state" data-rate-i18n="loadingRates">Loading live rates...</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="rate-footer">
+            <div class="rate-container rate-footer-grid">
+                <div class="rate-footer-brand">
+                    <img src="/assets/brand/logo-new.png" alt="EasyCrypto">
+                    <p id="rate-footer-copy" data-rate-i18n="footerCopy">
+                        EasyCrypto wants to make it easy for anyone to get into the crypto market.
+                    </p>
+                    <div class="rate-footer-meta">
+                        <div>ACN: 624780409</div>
+                        <div>ABN: 17624780409</div>
+                        <div>AUSTRAC Registration: DCE100581366-001</div>
+                    </div>
+                </div>
+                <div class="rate-footer-links">
+                    <h4 data-rate-i18n="startHere">Start Here</h4>
+                    <a href="signup.html" data-rate-i18n="signUp">Sign Up</a>
+                    <a href="buy-sell.html" data-rate-i18n="buySell">Buy & Sell</a>
+                    <a href="rate.html" data-rate-i18n="ourRates">Our Rates</a>
+                    <a href="markets.html" data-rate-i18n="portfolioTracker">Portfolio Tracker</a>
+                </div>
+                <div class="rate-footer-links">
+                    <h4 data-rate-i18n="usefulLinks">Useful Links</h4>
+                    <a href="mobile.html" data-rate-i18n="getHelp">Get Help</a>
+                    <a href="index.html#learn" data-rate-i18n="learnCrypto">Learn About Crypto</a>
+                    <a href="index.html#blog">Blog</a>
+                    <a href="index.html#careers" data-rate-i18n="careers">Careers</a>
+                </div>
+                <div class="rate-footer-links">
+                    <h4 data-rate-i18n="about">About Us</h4>
+                    <a href="index.html#about" data-rate-i18n="about">About Us</a>
+                    <a href="index.html#stats">Stats</a>
+                    <a href="mobile.html#terms" data-rate-i18n="terms">Terms of Service</a>
+                    <a href="mobile.html#privacy" data-rate-i18n="privacy">Privacy Policy</a>
+                    <div class="rate-footer-version">v9.0.0</div>
+                </div>
+            </div>
+            <div class="rate-footer-bottom rate-container" id="rate-footer-rights" data-rate-i18n="rights">
+                Copyright 2026 EasyCrypto Exchange. All rights reserved.
+            </div>
+        </footer>
+
+        <a class="rate-support-fab" href="mobile.html" aria-label="Support">
+            <i class="ri-message-3-line"></i>
+        </a>
+
+        <iframe id="rate-data-bridge" src="markets.html?desktop=1&embed=1" title="Live market data bridge" aria-hidden="true" tabindex="-1"></iframe>
+    </div>
+
+    <script src="/js/rate-page.js"></script>
+    <script src="/js/site-language.js"></script>
+</body>
+
+</html>
