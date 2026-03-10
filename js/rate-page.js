@@ -58,7 +58,7 @@
         }
     };
 
-    const BRIDGE_POLL_MS = 2000;
+    const BRIDGE_POLL_MS = 15000;
     const SIMPLE_REFRESH_MS = 10000;
     const WEEKLY_REFRESH_MS = 180000;
     const PRICE_SPREAD_RATE = 0.005;
@@ -77,6 +77,8 @@
         return frontendHosts.has(host) ? '/api/coingecko/simple-price' : '';
     })();
 
+    const ENABLE_IFRAME_BRIDGE = /[?&]bridge=1(?:&|$)/i.test(window.location.search);
+
     const dom = {
         bridge: document.getElementById('rate-data-bridge'),
         todayList: document.getElementById('rate-today-list'),
@@ -88,7 +90,7 @@
         usdLabel: document.getElementById('rate-usd-label')
     };
 
-    if (!dom.bridge || !dom.todayList || !dom.weekList || !dom.tableBody || !dom.emptyState) {
+    if (!dom.todayList || !dom.weekList || !dom.tableBody || !dom.emptyState) {
         return;
     }
 
@@ -102,7 +104,8 @@
         liveReady: false,
         hasAnyData: false,
         simpleOk: false,
-        simpleError: ''
+        simpleError: '',
+        lastRenderKey: ''
     };
 
     function toNumber(value, fallback) {
@@ -353,6 +356,7 @@
     }
 
     function readBridgeStore() {
+        if (!dom.bridge) return null;
         try {
             if (!dom.bridge.contentWindow || !dom.bridge.contentWindow.marketDataStore) return null;
             return dom.bridge.contentWindow.marketDataStore;
@@ -362,6 +366,7 @@
     }
 
     function pollBridge() {
+        if (!ENABLE_IFRAME_BRIDGE) return;
         const bridgeStore = readBridgeStore();
         if (!bridgeStore) return;
         state.liveStore = normalizeLiveStore(bridgeStore);
@@ -523,11 +528,26 @@
     function render() {
         const dataset = getDataset();
         state.hasAnyData = dataset.length > 0;
-        renderTopList(dom.todayList, dataset, 'dayChange');
-        renderTopList(dom.weekList, dataset, 'weekChange');
-
         const filteredRows = getFilteredDataset();
-        renderTable(filteredRows);
+        const renderKey = [
+            state.quoteCurrency,
+            state.search,
+            state.currentLang,
+            filteredRows.length,
+            filteredRows.slice(0, 20).map((row) => [
+                row.symbol,
+                row.price.toFixed(6),
+                Number.isFinite(row.dayChange) ? row.dayChange.toFixed(4) : 'nan',
+                Number.isFinite(row.weekChange) ? row.weekChange.toFixed(4) : 'nan'
+            ].join(':')).join('|')
+        ].join('||');
+
+        if (renderKey !== state.lastRenderKey) {
+            renderTopList(dom.todayList, dataset, 'dayChange');
+            renderTopList(dom.weekList, dataset, 'weekChange');
+            renderTable(filteredRows);
+            state.lastRenderKey = renderKey;
+        }
 
         if (filteredRows.length > 0) {
             dom.emptyState.classList.remove('visible');
@@ -563,17 +583,20 @@
                 render();
             });
         }
-        dom.bridge.addEventListener('load', pollBridge);
+        if (dom.bridge) dom.bridge.addEventListener('load', pollBridge);
         document.addEventListener('ec-language-changed', () => {
             applyDynamicCopy();
+            state.lastRenderKey = '';
             render();
         });
     }
 
     function startTimers() {
-        window.setInterval(() => {
-            pollBridge();
-        }, BRIDGE_POLL_MS);
+        if (ENABLE_IFRAME_BRIDGE) {
+            window.setInterval(() => {
+                pollBridge();
+            }, BRIDGE_POLL_MS);
+        }
 
         window.setInterval(() => {
             refreshSimpleMeta().catch((error) => {
@@ -591,7 +614,11 @@
     applyDynamicCopy();
     syncToggleState();
     attachEvents();
-    pollBridge();
+    if (ENABLE_IFRAME_BRIDGE && dom.bridge) {
+        const deferredSrc = dom.bridge.getAttribute('data-src');
+        if (deferredSrc) dom.bridge.setAttribute('src', deferredSrc);
+        pollBridge();
+    }
     render();
 
     refreshSimpleMeta().catch((error) => {

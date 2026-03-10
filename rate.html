@@ -71,11 +71,11 @@
                 <div class="rate-gainers-grid">
                     <article class="rate-gainers-panel">
                         <div class="rate-section-title" id="rate-today-title" data-rate-i18n="topGainersToday">Top Gainers Today</div>
-                        <div id="rate-today-list" class="rate-list-stack"></div>
+                        <div id="rate-today-list" class="rate-list-stack" data-no-translate="1"></div>
                     </article>
                     <article class="rate-gainers-panel">
                         <div class="rate-section-title" id="rate-week-title" data-rate-i18n="topGainersWeek">Top Gainers This Week</div>
-                        <div id="rate-week-list" class="rate-list-stack"></div>
+                        <div id="rate-week-list" class="rate-list-stack" data-no-translate="1"></div>
                     </article>
                 </div>
             </section>
@@ -112,7 +112,7 @@
                                     <th id="rate-col-48h" data-rate-i18n="last48h">Last 48 hours</th>
                                 </tr>
                             </thead>
-                            <tbody id="rate-table-body"></tbody>
+                            <tbody id="rate-table-body" data-no-translate="1"></tbody>
                         </table>
                         <div id="rate-empty-state" class="rate-empty-state" data-rate-i18n="loadingRates">Loading live rates...</div>
                     </div>
@@ -165,7 +165,7 @@
             <i class="ri-message-3-line"></i>
         </a>
 
-        <iframe id="rate-data-bridge" src="markets.html?desktop=1&embed=1" title="Live market data bridge" aria-hidden="true" tabindex="-1"></iframe>
+        <iframe id="rate-data-bridge" src="about:blank" data-src="markets.html?desktop=1&embed=1" title="Live market data bridge" aria-hidden="true" tabindex="-1"></iframe>
     </div>
 
     <script src="/js/rate-page.js"></script>
