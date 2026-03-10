@@ -354,6 +354,35 @@ img {
     color: #1f2231;
 }
 
+/* Fine-tune only the typography area shown in the screenshot */
+.tracker-worth-title {
+    font-size: 24px !important;
+    font-weight: 400 !important;
+    font-family: "Inter", "Segoe UI", Arial, sans-serif !important;
+}
+
+.tracker-worth-note {
+    font-size: 12px !important;
+    font-weight: 400 !important;
+}
+
+.tracker-stats-title {
+    font-size: 24px !important;
+    font-weight: 400 !important;
+    font-family: "Inter", "Segoe UI", Arial, sans-serif !important;
+}
+
+.tracker-stats-row span {
+    font-size: 13px !important;
+    font-weight: 400 !important;
+}
+
+.tracker-stats-row strong {
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    font-family: "Inter", "Segoe UI", Arial, sans-serif !important;
+}
+
 .tracker-positive {
     color: var(--tracker-green);
 }
