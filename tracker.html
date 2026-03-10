@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Tracker - EASYCRYPTO</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/brand/favicon-16x16.png">
+    <link rel="shortcut icon" href="/assets/brand/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+    <meta name="description"
+        content="EasyCrypto portfolio tracker with live market pricing, allocation analytics, and open position performance.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="EasyCrypto Exchange">
+    <meta property="og:title" content="EasyCrypto Exchange | Portfolio Tracker">
+    <meta property="og:description"
+        content="Monitor holdings, allocation and live crypto performance with EasyCrypto portfolio tracker.">
+    <meta property="og:image" content="https://easycryptoguide.com/assets/brand/og-preview.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="https://easycryptoguide.com/tracker.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EasyCrypto Exchange | Portfolio Tracker">
+    <meta name="twitter:description"
+        content="Monitor holdings, allocation and live crypto performance with EasyCrypto portfolio tracker.">
+    <meta name="twitter:image" content="https://easycryptoguide.com/assets/brand/og-preview.png">
+    <script>
+        (function () {
+            const forceDesktop = /[?&]desktop=1(?:&|$)/i.test(window.location.search);
+            if (forceDesktop) return;
+            const ua = navigator.userAgent || '';
+            const isMobileUA = /Android|iPhone|iPad|iPod|Windows Phone|IEMobile|BlackBerry|Opera Mini|Mobile/i.test(ua);
+            const isSmallTouch = window.matchMedia('(max-width: 900px)').matches && ((navigator.maxTouchPoints || 0) > 1);
+            if (isMobileUA || isSmallTouch) {
+                window.location.replace('mobile.html');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/tracker-page.css?v=20260310a">
+</head>
+
+<body>
+    <div class="tracker-page-shell">
+        <header class="tracker-hero">
+            <div class="tracker-topbar tracker-container">
+                <a href="index.html" class="tracker-logo">
+                    <img src="/assets/brand/logo-new.png" alt="EasyCrypto">
+                </a>
+                <nav class="tracker-nav">
+                    <a href="buy-sell.html" data-tracker-i18n="buySell">Buy & Sell</a>
+                    <a href="rate.html" data-tracker-i18n="rates">Rates</a>
+                    <a href="tracker.html" class="active" data-tracker-i18n="tracker">Tracker</a>
+                    <a href="login.html" data-tracker-i18n="signIn">Sign In</a>
+                    <a href="signup.html" class="tracker-signup-btn" data-tracker-i18n="signUp">Sign up</a>
+                </nav>
+            </div>
+            <div class="tracker-hero-copy tracker-container">
+                <h1 data-tracker-i18n="heroTitle">Portfolio Tracker</h1>
+                <p data-tracker-i18n="heroSubtitle">
+                    Live allocation, P/L, and asset trend monitoring with market refresh every 10 seconds.
+                </p>
+            </div>
+        </header>
+
+        <main class="tracker-main">
+            <section class="tracker-summary-section tracker-container">
+                <div class="tracker-summary-grid">
+                    <article class="tracker-summary-card">
+                        <span class="tracker-summary-label" data-tracker-i18n="totalValue">Total Value</span>
+                        <strong id="tracker-total-value">$--</strong>
+                        <small id="tracker-updated-at" data-tracker-i18n="loading">Loading...</small>
+                    </article>
+                    <article class="tracker-summary-card">
+                        <span class="tracker-summary-label" data-tracker-i18n="dayPnl">24h P/L</span>
+                        <strong id="tracker-day-pnl">$--</strong>
+                        <small id="tracker-day-pnl-rate">--</small>
+                    </article>
+                    <article class="tracker-summary-card">
+                        <span class="tracker-summary-label" data-tracker-i18n="openPositions">Open Positions</span>
+                        <strong id="tracker-open-count">0</strong>
+                        <small id="tracker-open-split">--</small>
+                    </article>
+                    <article class="tracker-summary-card">
+                        <span class="tracker-summary-label" data-tracker-i18n="avgVolatility">Avg. Volatility</span>
+                        <strong id="tracker-volatility">--</strong>
+                        <small id="tracker-market-depth" data-tracker-i18n="liveAcrossAssets">Live across assets</small>
+                    </article>
+                </div>
+            </section>
+
+            <section class="tracker-grid-section tracker-container">
+                <article class="tracker-panel tracker-allocation-panel">
+                    <div class="tracker-panel-head">
+                        <h2 data-tracker-i18n="allocationTitle">Allocation</h2>
+                    </div>
+                    <div class="tracker-balance-row">
+                        <div>
+                            <span data-tracker-i18n="invested">Invested</span>
+                            <strong id="tracker-invested-value">$--</strong>
+                        </div>
+                        <div>
+                            <span data-tracker-i18n="current">Current</span>
+                            <strong id="tracker-current-value">$--</strong>
+                        </div>
+                        <div>
+                            <span data-tracker-i18n="unrealized">Unrealized</span>
+                            <strong id="tracker-unrealized-value">$--</strong>
+                        </div>
+                    </div>
+                    <div id="tracker-allocation-list" class="tracker-allocation-list" data-no-translate="1"></div>
+                </article>
+
+                <article class="tracker-panel tracker-movers-panel">
+                    <div class="tracker-panel-head">
+                        <h2 data-tracker-i18n="moversTitle">Top Movers</h2>
+                    </div>
+                    <div id="tracker-movers-list" class="tracker-movers-list" data-no-translate="1"></div>
+                </article>
+            </section>
+
+            <section class="tracker-table-section">
+                <div class="tracker-container">
+                    <div class="tracker-table-heading">
+                        <div>
+                            <h2 class="tracker-section-title" data-tracker-i18n="holdingsTitle">Portfolio Holdings</h2>
+                            <div class="tracker-subnote" data-tracker-i18n="subnote">
+                                Live market pricing from CoinGecko compatible API source.
+                            </div>
+                        </div>
+                        <div class="tracker-controls">
+                            <label class="tracker-search-field">
+                                <i class="ri-search-line"></i>
+                                <input type="text" id="tracker-search-input" placeholder="Search asset">
+                            </label>
+                            <label class="tracker-sort-field">
+                                <span data-tracker-i18n="sortBy">Sort</span>
+                                <select id="tracker-sort-select">
+                                    <option value="value" data-tracker-i18n="sortValue">Value</option>
+                                    <option value="pnl" data-tracker-i18n="sortPnl">P/L</option>
+                                    <option value="change" data-tracker-i18n="sortChange">24h Change</option>
+                                    <option value="name" data-tracker-i18n="sortName">Name</option>
+                                </select>
+                            </label>
+                            <button id="tracker-refresh-btn" class="tracker-refresh-btn" type="button">
+                                <i class="ri-refresh-line"></i>
+                                <span data-tracker-i18n="refresh">Refresh</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tracker-table-card">
+                        <div class="tracker-table-wrap">
+                            <table class="tracker-live-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 54px;"></th>
+                                        <th data-tracker-i18n="asset">Asset</th>
+                                        <th data-tracker-i18n="quantity">Quantity</th>
+                                        <th data-tracker-i18n="avgCost">Avg Cost</th>
+                                        <th data-tracker-i18n="marketPrice">Market Price</th>
+                                        <th data-tracker-i18n="positionValue">Value</th>
+                                        <th data-tracker-i18n="change24h">24h</th>
+                                        <th data-tracker-i18n="unrealizedPnl">Unrealized P/L</th>
+                                        <th data-tracker-i18n="allocation">Allocation</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tracker-holdings-body" data-no-translate="1"></tbody>
+                            </table>
+                        </div>
+                        <div id="tracker-empty-state" class="tracker-empty-state" data-tracker-i18n="loading">
+                            Loading...
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="tracker-footer">
+            <div class="tracker-container tracker-footer-grid">
+                <div class="tracker-footer-brand">
+                    <img src="/assets/brand/logo-new.png" alt="EasyCrypto">
+                    <p data-tracker-i18n="footerCopy">
+                        EasyCrypto wants to make it easy for anyone to get into the crypto market.
+                    </p>
+                    <div class="tracker-footer-meta">
+                        <div>ACN: 624780409</div>
+                        <div>ABN: 17624780409</div>
+                        <div>AUSTRAC Registration: DCE100581366-001</div>
+                    </div>
+                </div>
+                <div class="tracker-footer-links">
+                    <h4 data-tracker-i18n="startHere">Start Here</h4>
+                    <a href="signup.html" data-tracker-i18n="signUp">Sign Up</a>
+                    <a href="buy-sell.html" data-tracker-i18n="buySell">Buy & Sell</a>
+                    <a href="rate.html" data-tracker-i18n="ourRates">Our Rates</a>
+                    <a href="tracker.html" data-tracker-i18n="portfolioTracker">Portfolio Tracker</a>
+                </div>
+                <div class="tracker-footer-links">
+                    <h4 data-tracker-i18n="usefulLinks">Useful Links</h4>
+                    <a href="mobile.html" data-tracker-i18n="getHelp">Get Help</a>
+                    <a href="index.html#learn" data-tracker-i18n="learnCrypto">Learn About Crypto</a>
+                    <a href="index.html#blog">Blog</a>
+                    <a href="index.html#careers" data-tracker-i18n="careers">Careers</a>
+                </div>
+                <div class="tracker-footer-links">
+                    <h4 data-tracker-i18n="about">About Us</h4>
+                    <a href="index.html#about" data-tracker-i18n="about">About Us</a>
+                    <a href="index.html#stats">Stats</a>
+                    <a href="mobile.html#terms" data-tracker-i18n="terms">Terms of Service</a>
+                    <a href="mobile.html#privacy" data-tracker-i18n="privacy">Privacy Policy</a>
+                    <div class="tracker-footer-version">v9.0.0</div>
+                </div>
+            </div>
+            <div class="tracker-footer-bottom tracker-container" data-tracker-i18n="rights">
+                Copyright 2026 EasyCrypto Exchange. All rights reserved.
+            </div>
+        </footer>
+
+        <a class="tracker-support-fab" href="mobile.html" aria-label="Support">
+            <i class="ri-message-3-line"></i>
+        </a>
+    </div>
+
+    <script src="/js/site-language.js"></script>
+    <script src="/js/tracker-page.js?v=20260310a"></script>
+</body>
+
+</html>
