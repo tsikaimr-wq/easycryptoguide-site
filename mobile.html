@@ -9636,7 +9636,7 @@
                             <div class="order-detail-pair" id="order-detail-pair">BTC/USDT</div>
                         </div>
                         <div class="order-detail-profit-wrap">
-                            <div class="order-detail-profit-label">Profit and Loss Amount</div>
+                            <div class="order-detail-profit-label">Net Profit and Loss Amount</div>
                             <div class="order-detail-profit-value" id="order-detail-profit">+0.00 (0.00%)</div>
                         </div>
                         <div class="order-detail-grid" id="order-detail-grid"></div>
@@ -14185,6 +14185,11 @@ const translations = {
                     : (trade.pnl_amount !== undefined && trade.pnl_amount !== null ? trade.pnl_amount : (trade.pnl || 0))
             );
             let roe = Number(trade.realized_roe !== undefined && trade.realized_roe !== null ? trade.realized_roe : 0);
+            let rawPnlValue = Number(
+                trade.raw_pnl !== undefined && trade.raw_pnl !== null
+                    ? trade.raw_pnl
+                    : (pnl + (Number.isFinite(fee) ? fee : 0))
+            );
             const entryPrice = Number(trade.entry_price || trade.price || 0);
             let closePrice = getTradeDetailClosePrice(trade);
             const contractUnit = Number(trade.contract_unit) > 0 ? Number(trade.contract_unit) : getContractUnitValue();
@@ -14217,11 +14222,13 @@ const translations = {
                         : ((entryPrice - livePrice) / entryPrice) * amount;
                     const paidFee = Number(trade.fee_open || 0);
                     pnl = rawPnl - (Number.isFinite(paidFee) ? paidFee : 0);
+                    rawPnlValue = rawPnl;
                     roe = margin > 0 ? (pnl / margin) * 100 : 0;
                 }
             }
             else if (shouldUseTargetSettlementDisplay(trade, targetMetrics)) {
                 pnl = targetMetrics.pnl;
+                rawPnlValue = targetMetrics.rawPnl;
                 roe = targetMetrics.roe;
                 closePrice = targetMetrics.closePrice;
                 fee = targetMetrics.totalFee;
@@ -14229,6 +14236,7 @@ const translations = {
 
             if (!Number.isFinite(pnl)) pnl = 0;
             if (!Number.isFinite(roe)) roe = 0;
+            if (!Number.isFinite(rawPnlValue)) rawPnlValue = pnl + (Number.isFinite(fee) ? fee : 0);
 
             const buyPrice = isLongPosition ? entryPrice : closePrice;
             const sellPrice = isLongPosition ? closePrice : entryPrice;
@@ -14246,7 +14254,9 @@ const translations = {
                 { label: 'Amount', value: `${formatOrderDetailNumber(amount, 2)} USDT` },
                 { label: 'Closable Amount', value: `${formatOrderDetailNumber(closableAmount, 2)} USDT` },
                 { label: 'Margin', value: `${formatOrderDetailNumber(margin, 2)} USDT` },
+                { label: 'Gross P/L (Before Fee)', value: `${formatOrderDetailSigned(rawPnlValue, 2)} USDT` },
                 { label: 'Handling Fee', value: `${formatOrderDetailNumber(fee, 4)} USDT` },
+                { label: 'Net P/L (After Fee)', value: `${formatOrderDetailSigned(pnl, 2)} USDT` },
                 { label: 'Average Price', value: formatOrderDetailNumber(entryPrice, 4) },
                 { label: 'Closing Price', value: closePrice === null ? '--' : formatOrderDetailNumber(closePrice, 4) },
                 { label: 'Target ROE', value: adminTargetRoe === null ? '--' : `${formatOrderDetailNumber(adminTargetRoe, 2)}%` },
