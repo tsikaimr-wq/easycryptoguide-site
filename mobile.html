@@ -5642,7 +5642,7 @@
         <div class="p3"></div>
     </div>
 
-    <a id="page-back-button" href="markets.html">&lt;&lt; Back</a>
+    <a id="page-back-button" href="javascript:void(0)" onclick="goBack(); return false;">&lt;&lt; Back</a>
     <div class="mobile-frame">
 
         <div id="auth-screen" class="screen">
@@ -12768,6 +12768,12 @@ const translations = {
             return target;
         }
 
+        function isNavigableScreenTarget(target) {
+            const normalized = normalizeScreenTarget(target);
+            if (!normalized) return false;
+            return !!(document.getElementById(`${normalized}-screen`) || document.getElementById(normalized));
+        }
+
         function showScreen(target, isPush = true) {
             target = normalizeScreenTarget(target);
             updateViewportInsets();
@@ -12780,7 +12786,14 @@ const translations = {
             }
             console.log("Navigating to: " + target);
             if (isPush && currentScreen && currentScreen !== target) {
-                navigationStack.push(currentScreen);
+                const last = navigationStack.length > 0 ? navigationStack[navigationStack.length - 1] : '';
+                if (last !== currentScreen) {
+                    navigationStack.push(currentScreen);
+                }
+            }
+
+            if (target === 'order-detail' && currentScreen && currentScreen !== 'order-detail') {
+                window.__orderDetailBackTarget = currentScreen;
             }
 
             currentScreen = target;
@@ -13682,12 +13695,42 @@ const translations = {
             renderHistoryContractList();
         }
 
+        let goBackLock = false;
         function goBack() {
-            if (navigationStack.length > 0) {
-                const prev = navigationStack.pop();
+            if (goBackLock) return;
+            goBackLock = true;
+            setTimeout(() => { goBackLock = false; }, 180);
+
+            const current = normalizeScreenTarget(currentScreen);
+            let prev = '';
+
+            // Pop until we find a valid, different target.
+            while (navigationStack.length > 0) {
+                const candidate = normalizeScreenTarget(navigationStack.pop());
+                if (!isNavigableScreenTarget(candidate)) continue;
+                if (candidate === current) continue;
+                prev = candidate;
+                break;
+            }
+
+            // Dedicated fallback for order detail screen.
+            if (!prev && current === 'order-detail') {
+                const detailFallback = normalizeScreenTarget(window.__orderDetailBackTarget);
+                if (isNavigableScreenTarget(detailFallback) && detailFallback !== current) {
+                    prev = detailFallback;
+                }
+            }
+
+            // Generic safe fallback.
+            if (!prev && current !== 'homeScreen') {
+                prev = 'homeScreen';
+            }
+
+            if (prev) {
                 showScreen(prev, false);
             }
         }
+        window.goBack = goBack;
 
         function switchList(type, origin) {
             currentActiveTab = type;
