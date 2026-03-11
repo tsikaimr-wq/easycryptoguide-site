@@ -2532,6 +2532,7 @@
         </div>
     </div>
 
+    <script src="/js/perpetual-symbols.js"></script>
     <script type="module">
         import { auth, signOut, checkSession, db, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, setDoc, query, orderBy, addDoc, serverTimestamp, increment } from '../firebase-config.js';
 
@@ -3138,6 +3139,27 @@
                 }
             };
 
+            window.normalizeContractTypeForAdmin = function (value) {
+                const raw = String(value || '').trim();
+                const lower = raw.toLowerCase();
+                if (!lower) return 'Perpetual';
+                if (lower.includes('delivery')) return 'Delivery';
+                if (lower.includes('perpetual') || lower.includes('perp')) return 'Perpetual';
+                return raw;
+            };
+
+            window.normalizeContractStatusForAdmin = function (value) {
+                const raw = String(value || '').trim();
+                const lower = raw.toLowerCase();
+                if (!lower) return 'Pending';
+                if (lower === 'open' || lower.includes('open')) return 'Open';
+                if (lower === 'pending' || lower === 'processing') return 'Pending';
+                if (lower === 'approved' || lower === 'win' || lower.includes('profit')) return 'Approved';
+                if (lower === 'rejected' || lower === 'lose' || lower === 'loss' || lower === 'failed') return 'Rejected';
+                if (lower === 'closed' || lower === 'completed' || lower.includes('close')) return 'Closed';
+                return raw.charAt(0).toUpperCase() + raw.slice(1);
+            };
+
             window.renderContractsTable = function (snapshot) {
                 window.lastTradesSnapshot = snapshot;
                 let totalVolume = 0;
@@ -3148,33 +3170,68 @@
                 let rejectedCount = 0;
 
                 const contractsTable = document.getElementById('contractsTable');
-                window.tradeDataMap = window.tradeDataMap || {};
+                window.tradeDataMap = {};
+                const rows = [];
 
                 snapshot.forEach(doc => {
-                    const data = doc.data();
-                    window.tradeDataMap[doc.id] = { ...data, id: doc.id };
+                    if (doc.id === 'INITIAL_SETUP') return;
+                    const data = doc.data() || {};
+                    const normalizedStatus = window.normalizeContractStatusForAdmin(data.status);
+                    const normalizedType = window.normalizeContractTypeForAdmin(data.type);
                     const amount = parseFloat(data.amount) || 0;
-                    totalVolume += amount;
-
-                    const status = data.status || 'Pending';
-                    const type = data.type || 'Perpetual';
+                    const timeMs = window.getRecordTimeMs(data);
                     const targetSettlementMetrics = buildAdminPerpetualSettlementMetrics(data);
                     const useTargetSettlementDisplay = shouldUseAdminTargetSettlementDisplay(data, targetSettlementMetrics);
                     const effectiveClosedPnl = useTargetSettlementDisplay
                         ? Number(targetSettlementMetrics.finalPnl)
                         : Number(data.final_pnl);
 
-                    // Statistical counts (independent of filter)
-                    if (status === 'Open') openCount++;
-                    else if (status === 'Pending') pendingCount++;
-                    else if (status === 'Approved') approvedCount++;
-                    else if (status === 'Rejected') rejectedCount++;
-                    else if (status === 'Closed') {
-                        if (effectiveClosedPnl >= 0) approvedCount++;
+                    rows.push({
+                        id: doc.id,
+                        data,
+                        amount,
+                        timeMs,
+                        status: normalizedStatus,
+                        type: normalizedType,
+                        effectiveClosedPnl,
+                        targetSettlementMetrics,
+                        useTargetSettlementDisplay
+                    });
+                    totalVolume += amount;
+                    window.tradeDataMap[doc.id] = {
+                        ...data,
+                        id: doc.id,
+                        status: normalizedStatus,
+                        type: normalizedType
+                    };
+                });
+
+                rows.sort((a, b) => {
+                    const rank = (row) => (row.status === 'Open' ? 0 : (row.status === 'Pending' ? 1 : 2));
+                    const rankDiff = rank(a) - rank(b);
+                    if (rankDiff !== 0) return rankDiff;
+                    return (b.timeMs || 0) - (a.timeMs || 0);
+                });
+
+                rows.forEach((row) => {
+                    if (row.status === 'Open') openCount++;
+                    else if (row.status === 'Pending') pendingCount++;
+                    else if (row.status === 'Approved') approvedCount++;
+                    else if (row.status === 'Rejected') rejectedCount++;
+                    else if (row.status === 'Closed') {
+                        if (row.effectiveClosedPnl >= 0) approvedCount++;
                         else rejectedCount++;
                     }
+                });
 
-                    // Filtering Logic
+                rows.forEach((row) => {
+                    const data = row.data;
+                    const status = row.status;
+                    const type = row.type;
+                    const targetSettlementMetrics = row.targetSettlementMetrics;
+                    const useTargetSettlementDisplay = row.useTargetSettlementDisplay;
+                    const effectiveClosedPnl = row.effectiveClosedPnl;
+
                     let show = false;
                     const f = window.currentContractFilter;
                     if (f === 'All') show = true;
@@ -3184,7 +3241,6 @@
                     else if (f === 'Open' && status === 'Open') show = true;
                     else if (f === 'Win' && (status === 'Approved' || (status === 'Closed' && effectiveClosedPnl >= 0))) show = true;
                     else if (f === 'Lose' && (status === 'Rejected' || (status === 'Closed' && effectiveClosedPnl < 0))) show = true;
-
                     if (!show) return;
 
                     let displayStatus = status;
@@ -3204,6 +3260,7 @@
                     const sideClass = isLong ? 'text-green-600' : 'text-red-600';
                     const entryPrice = window.toSafeNumber(data.entry_price || data.price);
                     const coin = data.coin || (data.pair ? String(data.pair).split('/')[0] : '');
+                    const pairText = data.pair || (coin ? `${coin}/USDT` : '---');
                     const livePrice = window.toSafeNumber(window.allCoinsData && window.allCoinsData[coin] ? window.allCoinsData[coin].price : 0);
                     const closePrice = window.toSafeNumber(data.close_price);
                     const markPrice = useTargetSettlementDisplay
@@ -3224,13 +3281,13 @@
 
                     html += `
                         <tr class="border-b border-gray-100 hover:bg-gray-50">
-                            <td class="font-mono text-sm">#${doc.id.substring(0, 8)}</td>
+                            <td class="font-mono text-sm">#${row.id.substring(0, 8)}</td>
                             <td>
                                 <p class="font-medium text-gray-800">${data.user_email || window.getDisplayUserId(window.allUsersData && data.user_uid ? window.allUsersData[data.user_uid] : null, data.user_uid)}</p>
                             </td>
-                            <td class="font-bold text-gray-800">${data.pair || data.coin}</td>
+                            <td class="font-bold text-gray-800">${pairText}</td>
                             <td class="font-semibold ${sideClass}">${side}</td>
-                            <td>${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</td>
+                            <td>${row.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</td>
                             <td>$${entryPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</td>
                             <td>$${markPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</td>
                             <td class="${pnlClass}">
@@ -3244,7 +3301,7 @@
                             <td>
                                 <div class="flex gap-2">
                                     <button class="action-btn text-purple-600 hover:bg-purple-50 flex items-center gap-1 text-xs font-bold border border-purple-100 px-3 py-1.5" 
-                                            onclick="openOperateModal('${doc.id}')">
+                                            onclick="openOperateModal('${row.id}')">
                                         <i class="ri-settings-4-line text-sm"></i>
                                         OPERATE
                                     </button>
@@ -3520,12 +3577,14 @@
             }
         };
 
-        const PERPETUAL_CONTROL_SYMBOLS = [
-            'BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'LTC', 'BCH',
-            'LINK', 'AVAX', 'MATIC', 'UNI', 'ATOM', 'ETC', 'HBAR', 'IP', 'WBT', 'XMR',
-            'ALGO', 'NEO', 'IOTA', 'XTZ', 'AXS', 'SAND', 'MANA', 'USDC', 'CHZ', 'HYPE',
-            'SUI', 'TON', 'TRX', 'XLM', 'USDE', 'ICP', 'DAI', 'VET', 'YFI', 'OKB'
-        ];
+        const PERPETUAL_CONTROL_SYMBOLS = Array.isArray(window.EC_PERPETUAL_SYMBOLS) && window.EC_PERPETUAL_SYMBOLS.length > 0
+            ? window.EC_PERPETUAL_SYMBOLS.slice()
+            : [
+                'BTC', 'ETH', 'HBAR', 'IP', 'WBT', 'XMR', 'ALGO', 'ADA', 'DOT', 'NEO',
+                'IOTA', 'XTZ', 'ETC', 'XRP', 'AXS', 'SAND', 'LTC', 'MANA', 'USDC', 'SOL',
+                'LINK', 'CHZ', 'AVAX', 'BCH', 'BNB', 'DOGE', 'HYPE', 'SUI', 'TON', 'TRX',
+                'XLM', 'USDE', 'ICP', 'DAI', 'VET', 'YFI'
+            ];
 
         function normalizePerpetualCoinSymbol(value) {
             return String(value || '')
