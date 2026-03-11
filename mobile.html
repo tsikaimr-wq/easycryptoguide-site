@@ -13951,6 +13951,128 @@ const translations = {
             return Number.isFinite(fallback) && fallback > 0 ? fallback : 0;
         }
 
+        const PERP_DISPLAY_DURATION_SEC = 60 * 45;
+        const PERP_DISPLAY_STATE_KEY = '__perpDisplayStateMap';
+
+        function clampNumber(value, min, max) {
+            if (!Number.isFinite(value)) return min;
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
+        }
+
+        function getPerpDisplayStateMap() {
+            if (!window[PERP_DISPLAY_STATE_KEY]) {
+                window[PERP_DISPLAY_STATE_KEY] = {};
+            }
+            return window[PERP_DISPLAY_STATE_KEY];
+        }
+
+        function buildPerpDisplayStateKey(trade) {
+            return String(
+                (trade && trade.id)
+                || `${trade && trade.coin ? trade.coin : 'COIN'}-${trade && trade.direction ? trade.direction : ''}-${trade && trade.price ? trade.price : ''}-${trade && trade.amount ? trade.amount : ''}`
+            );
+        }
+
+        function getTradeOpenTimestampMs(trade) {
+            const ts = trade && (trade.timestamp || trade.open_time || trade.created_at);
+            const date = normalizePlatformDateInput(ts);
+            if (date) return date.getTime();
+            if (typeof ts === 'object' && typeof ts.nanoseconds === 'number' && typeof ts.seconds === 'number') {
+                return (ts.seconds * 1000) + Math.round(ts.nanoseconds / 1e6);
+            }
+            return null;
+        }
+
+        function hashTradeSeed(value) {
+            const text = String(value || '');
+            let hash = 2166136261;
+            for (let i = 0; i < text.length; i += 1) {
+                hash ^= text.charCodeAt(i);
+                hash = Math.imul(hash, 16777619);
+            }
+            return hash >>> 0;
+        }
+
+        function computeSmoothWave(seed, seconds) {
+            const a = (seed % 997) / 997;
+            const b = (seed % 313) / 313;
+            const c = (seed % 173) / 173;
+            const wave = (
+                Math.sin(seconds * (0.34 + a * 0.3) + (a * Math.PI * 2)) +
+                0.52 * Math.sin(seconds * (0.16 + b * 0.22) + (b * Math.PI * 2)) +
+                0.26 * Math.cos(seconds * (0.08 + c * 0.18) + (c * Math.PI * 2))
+            );
+            return clampNumber(wave / 1.78, -1, 1);
+        }
+
+        function getPerpetualDisplayPrice(trade, fallbackPrice) {
+            const marketPrice = getTradeLivePrice(trade, fallbackPrice);
+            const entryPrice = Number(trade && (trade.entry_price || trade.price || fallbackPrice));
+            const isPerpetual = String((trade && trade.type) || '').toLowerCase() === 'perpetual';
+            const isOpen = String((trade && trade.status) || '').toLowerCase() === 'open';
+            const stateMap = getPerpDisplayStateMap();
+            const stateKey = buildPerpDisplayStateKey(trade);
+            const prevState = stateMap[stateKey];
+
+            if (!(marketPrice > 0)) {
+                return entryPrice > 0 ? entryPrice : 0;
+            }
+            if (!isPerpetual || !isOpen) {
+                return marketPrice;
+            }
+
+            const nowMs = Date.now();
+            const resolvedOpenMs = getTradeOpenTimestampMs(trade);
+            const openMs = Number.isFinite(resolvedOpenMs)
+                ? resolvedOpenMs
+                : (prevState && Number.isFinite(prevState.openMs) ? prevState.openMs : nowMs);
+            const elapsedSec = Math.max(0, (nowMs - openMs) / 1000);
+            const progress = clampNumber(elapsedSec / PERP_DISPLAY_DURATION_SEC, 0, 0.98);
+            const targetMetrics = getTradeTargetSettlementMetrics(trade, { entryPrice });
+            const targetClose = targetMetrics && Number(targetMetrics.closePrice) > 0
+                ? Number(targetMetrics.closePrice)
+                : null;
+
+            let desiredPrice = marketPrice;
+            if (entryPrice > 0 && targetClose !== null) {
+                const trendCurve = 1 - Math.pow(1 - progress, 1.35);
+                const trendPrice = entryPrice + ((targetClose - entryPrice) * trendCurve);
+                const seed = hashTradeSeed(trade && trade.id ? trade.id : `${trade.coin || ''}-${openMs}`);
+                const wave = computeSmoothWave(seed, elapsedSec);
+                const marketGap = Math.abs(marketPrice - entryPrice) / entryPrice;
+                const jitterPct = clampNumber(0.0018 + (marketGap * 0.2), 0.0018, 0.0105);
+                const jitterPrice = trendPrice * jitterPct * wave;
+                desiredPrice = trendPrice + jitterPrice;
+
+                const boundsPad = entryPrice * (0.01 + (jitterPct * 3.8));
+                const lowerBound = Math.max(0.00000001, Math.min(entryPrice, targetClose) - boundsPad);
+                const upperBound = Math.max(entryPrice, targetClose) + boundsPad;
+                desiredPrice = clampNumber(desiredPrice, lowerBound, upperBound);
+
+                const marketBlend = 0.12;
+                desiredPrice = (desiredPrice * (1 - marketBlend)) + (marketPrice * marketBlend);
+
+                const convergence = clampNumber((progress - 0.72) / 0.28, 0, 1);
+                if (convergence > 0) {
+                    desiredPrice = (desiredPrice * (1 - convergence * 0.52)) + (targetClose * convergence * 0.52);
+                }
+            }
+
+            if (prevState && Number.isFinite(prevState.price) && prevState.price > 0 && Number.isFinite(prevState.ts)) {
+                const dtSec = clampNumber((nowMs - prevState.ts) / 1000, 0.06, 6);
+                const maxStepPct = clampNumber(0.0022 * dtSec, 0.0008, 0.014);
+                const maxStep = prevState.price * maxStepPct;
+                const stepped = prevState.price + clampNumber(desiredPrice - prevState.price, -maxStep, maxStep);
+                stateMap[stateKey] = { price: stepped, ts: nowMs, openMs };
+                return stepped;
+            }
+
+            stateMap[stateKey] = { price: desiredPrice, ts: nowMs, openMs };
+            return desiredPrice;
+        }
+
         let holdPositionsRefreshTimer = null;
 
         function scheduleLiveTradePanelRefresh(symbol) {
@@ -14101,7 +14223,7 @@ const translations = {
 
             // For open/pending perpetual positions, calculate live P/L and ROE from market price.
             if (statusTone === 'open' && String(trade.type || '').toLowerCase() === 'perpetual') {
-                const livePrice = getTradeLivePrice(trade, entryPrice);
+                const livePrice = getPerpetualDisplayPrice(trade, entryPrice);
                 if (entryPrice > 0 && livePrice > 0 && amount > 0) {
                     const rawPnl = isLongPosition
                         ? ((livePrice - entryPrice) / entryPrice) * amount
@@ -14305,6 +14427,20 @@ const translations = {
             const container = document.getElementById('trade-footer-content');
             if (!container) return;
 
+            const stateMap = getPerpDisplayStateMap();
+            const activePerpKeys = new Set(
+                (window.activeOpenTrades || [])
+                    .filter((trade) => trade
+                        && String(trade.status || '').toLowerCase() === 'open'
+                        && String(trade.type || '').toLowerCase() === 'perpetual')
+                    .map((trade) => buildPerpDisplayStateKey(trade))
+            );
+            Object.keys(stateMap).forEach((key) => {
+                if (!activePerpKeys.has(key)) {
+                    delete stateMap[key];
+                }
+            });
+
             if (!window.activeOpenTrades || window.activeOpenTrades.length === 0) {
                 container.innerHTML = '<div style="padding:20px; text-align:center; color:rgba(255,255,255,0.4);">No data available</div>';
                 return;
@@ -14322,7 +14458,7 @@ const translations = {
                 let roe = 0;
                 let markPrice = parseFloat(trade.price || 0);
                 if (isPerp) {
-                    const curPrice = getTradeLivePrice(trade, trade.price || 0);
+                    const curPrice = getPerpetualDisplayPrice(trade, trade.price || 0);
                     const entryPrice = parseFloat(trade.price || 0);
                     const amount = parseFloat(trade.amount || 0);
                     const margin = parseFloat(trade.margin) || (amount / (parseFloat(trade.leverage) || 1)) || 1;
