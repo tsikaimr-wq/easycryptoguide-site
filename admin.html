@@ -2378,13 +2378,6 @@
                         <p class="text-xs text-gray-400 mt-2 leading-relaxed">Setting this price will override the
                             market price when the user or system closes the position. Leave blank (or click Restore Market Price) to use live market settlement.</p>
                     </div>
-                    <div class="form-group border-t pt-2">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Target Profit Rate (ROE %)</label>
-                        <input type="number" id="operateCustomRoe" step="0.01"
-                            placeholder="Example: 25 means +25% net ROE, -10 means -10%"
-                            class="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#6a35ff] focus:border-transparent outline-none text-gray-800 transition-all shadow-sm">
-                        <p class="text-xs text-gray-400 mt-2 leading-relaxed">If close price is empty, settlement derives final close price from this ROE target.</p>
-                    </div>
                 </div>
 
                 <!-- Delivery Section (Matches Picture 3 style) -->
@@ -3293,7 +3286,6 @@
                             <td class="${pnlClass}">
                                 ${pnlText}
                                 ${data.customClosePrice ? `<br><span class="text-[10px] text-orange-600 font-bold bg-orange-50 px-1 rounded border border-orange-100 uppercase">Fixed @ ${data.customClosePrice}</span>` : ''}
-                                ${Number.isFinite(Number(data.customRoePct)) ? `<br><span class="text-[10px] text-blue-600 font-bold bg-blue-50 px-1 rounded border border-blue-100 uppercase">Target ROE ${Number(data.customRoePct).toFixed(2)}%</span>` : ''}
                                 ${data.admin_outcome === 'win' ? `<br><span class="text-[10px] text-green-600 font-bold bg-green-50 px-1 rounded border border-green-100 uppercase">Forced Win</span>` : ''}
                                 ${data.admin_outcome === 'loss' ? `<br><span class="text-[10px] text-red-600 font-bold bg-red-50 px-1 rounded border border-red-100 uppercase">Forced Loss</span>` : ''}
                             </td>
@@ -3821,12 +3813,6 @@
                                     placeholder="Set price for this specific trade"
                                     class="trade-custom-price-input w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#6a35ff] outline-none text-sm shadow-sm">
                             </div>
-                            <div class="form-group mt-2">
-                                <label class="block text-sm font-bold text-gray-700 mb-1">Target Profit Rate (ROE %)</label>
-                                <input type="number" step="0.01" value="${trade.customRoePct ?? ''}"
-                                    placeholder="Optional, used when close price is blank"
-                                    class="trade-custom-roe-input w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#6a35ff] outline-none text-sm shadow-sm">
-                            </div>
                         ` : `
                             <div class="form-group">
                                 <label class="block text-sm font-bold text-gray-700 mb-1">Force Outcome</label>
@@ -3899,20 +3885,13 @@
                 for (const item of tradeItems) {
                     const tid = item.getAttribute('data-trade-id');
                     const priceInput = item.querySelector('.trade-custom-price-input');
-                    const roeInput = item.querySelector('.trade-custom-roe-input');
                     const outcomeSelect = item.querySelector('.trade-outcome-select');
 
                     const tradeUpdate = {};
                     if (priceInput) {
                         const parsedPrice = parseFloat(priceInput.value);
                         tradeUpdate.customClosePrice = Number.isFinite(parsedPrice) && parsedPrice > 0 ? parsedPrice : null;
-                    }
-                    if (roeInput) {
-                        const parsedRoe = parseFloat(roeInput.value);
-                        tradeUpdate.customRoePct = Number.isFinite(parsedRoe) ? parsedRoe : null;
-                    }
-                    if (tradeUpdate.customClosePrice !== null && tradeUpdate.customRoePct !== null) {
-                        throw new Error(`Trade ${tid}: use either custom close price or target ROE, not both.`);
+                        tradeUpdate.customRoePct = null;
                     }
                     if (outcomeSelect) {
                         tradeUpdate.admin_outcome = outcomeSelect.value === 'normal' ? null : outcomeSelect.value;
@@ -4314,7 +4293,6 @@
             const sideText = String(overrides.direction !== undefined ? overrides.direction : (trade.direction || trade.side || '')).toLowerCase();
             const isLong = sideText.includes('long') || sideText === 'buy';
             const customClosePrice = Number(overrides.customClosePrice !== undefined ? overrides.customClosePrice : trade.customClosePrice);
-            const customRoePct = Number(overrides.customRoePct !== undefined ? overrides.customRoePct : trade.customRoePct);
             const feeRate = getAdminTradeFeeRate(trade);
             const feeOpen = Math.max(0, window.toSafeNumber(trade.fee_open || 0));
 
@@ -4323,17 +4301,6 @@
             let finalClosePrice = null;
             if (Number.isFinite(customClosePrice) && customClosePrice > 0) {
                 finalClosePrice = customClosePrice;
-            } else if (Number.isFinite(customRoePct)) {
-                const targetNetPnl = margin * (customRoePct / 100);
-                const totalFeeForTarget = notional * feeRate;
-                const rawPnlNeeded = targetNetPnl + totalFeeForTarget;
-                const moveRatio = rawPnlNeeded / notional;
-                const derivedPrice = isLong
-                    ? (entryPrice * (1 + moveRatio))
-                    : (entryPrice * (1 - moveRatio));
-                if (Number.isFinite(derivedPrice) && derivedPrice > 0) {
-                    finalClosePrice = derivedPrice;
-                }
             } else {
                 const storedClosePrice = window.toSafeNumber(trade.close_price);
                 if (storedClosePrice > 0) finalClosePrice = storedClosePrice;
@@ -4361,9 +4328,6 @@
         function shouldUseAdminTargetSettlementDisplay(trade, targetMetrics) {
             if (!trade || !targetMetrics) return false;
             if (String(trade.type || '').toLowerCase() !== 'perpetual') return false;
-
-            const fixedClose = Number(trade.customClosePrice);
-            if (Number.isFinite(fixedClose) && fixedClose > 0) return false;
 
             const storedClosePrice = window.toSafeNumber(trade.close_price);
             const storedPnl = Number(trade.final_pnl);
@@ -4398,7 +4362,7 @@
             document.getElementById('operateEntryPrice').innerText = `Entry: ${formattedEntry}`;
 
             if (category === 'Perpetual') {
-                titleEl.innerText = "Set Custom Close Price / ROE";
+                titleEl.innerText = "Set Custom Close Price";
                 applyBtnText.innerText = "Apply Override";
                 viewP.classList.remove('hidden');
                 viewD.classList.add('hidden');
@@ -4406,20 +4370,8 @@
 
                 // Populate data
                 const priceInput = document.getElementById('operateCustomPrice');
-                const roeInput = document.getElementById('operateCustomRoe');
                 priceInput.value = trade.customClosePrice ?? '';
-                roeInput.value = trade.customRoePct ?? '';
-
-                priceInput.oninput = () => {
-                    if (String(priceInput.value || '').trim()) {
-                        roeInput.value = '';
-                    }
-                };
-                roeInput.oninput = () => {
-                    if (String(roeInput.value || '').trim()) {
-                        priceInput.value = '';
-                    }
-                };
+                priceInput.oninput = null;
             } else {
                 titleEl.innerText = "Set Win/Loss Outcome";
                 applyBtnText.innerText = "Save Changes";
@@ -4440,11 +4392,9 @@
 
             let strategy = 'normal';
             let customPrice = null;
-            let customRoe = null;
 
             if (category === 'Perpetual') {
                 customPrice = String(document.getElementById('operateCustomPrice').value || '').trim();
-                customRoe = String(document.getElementById('operateCustomRoe').value || '').trim();
                 if (customPrice) {
                     const parsed = parseFloat(customPrice);
                     if (!Number.isFinite(parsed) || parsed <= 0) {
@@ -4454,19 +4404,6 @@
                 } else {
                     customPrice = null;
                 }
-                if (customRoe) {
-                    const parsedRoe = parseFloat(customRoe);
-                    if (!Number.isFinite(parsedRoe)) {
-                        return alert("Please enter a valid target ROE.");
-                    }
-                    customRoe = parsedRoe;
-                } else {
-                    customRoe = null;
-                }
-
-                if (customPrice !== null && customRoe !== null) {
-                    return alert("Use either a custom closing price or a target ROE, not both.");
-                }
             } else {
                 strategy = document.getElementById('operateDeliveryStrategy').value;
             }
@@ -4474,7 +4411,7 @@
             const updateData = {
                 admin_outcome: strategy === 'normal' ? null : strategy,
                 customClosePrice: (category === 'Perpetual') ? customPrice : null,
-                customRoePct: (category === 'Perpetual') ? customRoe : null
+                customRoePct: null
             };
 
             try {
@@ -4489,11 +4426,10 @@
 
                 if (String(category).toLowerCase() === 'perpetual' && String(tradeData.status || '').toLowerCase() === 'closed') {
                     const settlementMetrics = buildAdminPerpetualSettlementMetrics(tradeData, {
-                        customClosePrice: customPrice,
-                        customRoePct: customRoe
+                        customClosePrice: customPrice
                     });
 
-                    if (settlementMetrics && (customPrice !== null || customRoe !== null)) {
+                    if (settlementMetrics && customPrice !== null) {
                         const previousPnl = Number(tradeData.final_pnl || 0);
                         balanceDelta = settlementMetrics.finalPnl - (Number.isFinite(previousPnl) ? previousPnl : 0);
                         Object.assign(updateData, {
@@ -4503,7 +4439,7 @@
                             fee_close: settlementMetrics.feeClose,
                             fee_total: settlementMetrics.totalFee,
                             realized_roe: settlementMetrics.realizedRoe,
-                            settlement_source: customPrice !== null ? 'admin_custom_price' : 'admin_target_roe'
+                            settlement_source: 'admin_custom_price'
                         });
                     }
                 }
@@ -4535,7 +4471,6 @@
                     customRoePct: null
                 });
                 document.getElementById('operateCustomPrice').value = '';
-                document.getElementById('operateCustomRoe').value = '';
                 alert("Market price restored for this perpetual contract.");
                 closeModal('contractOperateModal');
             } catch (e) {
