@@ -207,6 +207,15 @@
       || host === "easycryptoguide.pages.dev";
   }
 
+  var MOBILE_BUILD_ID = "20260318b";
+
+  function buildMobileEntryUrl(query, hash) {
+    var params = new URLSearchParams(query || "");
+    params.set("v", MOBILE_BUILD_ID);
+    var queryString = params.toString();
+    return "/mobile.html" + (queryString ? "?" + queryString : "") + (hash || "");
+  }
+
   function enforceDeviceEntryRouting() {
     try {
       var host = String(window.location.hostname || "").toLowerCase();
@@ -224,7 +233,7 @@
       var isMobilePage = path.indexOf("mobile.html") >= 0 || path === "/mobile";
       if (host.indexOf("m.") === 0) {
         if (!isMobilePage) {
-          window.location.replace("/mobile.html" + query + hash);
+          window.location.replace(buildMobileEntryUrl(query, hash));
           return true;
         }
         return false;
@@ -234,7 +243,7 @@
       var isMobileUA = /Android|iPhone|iPad|iPod|Windows Phone|IEMobile|BlackBerry|Opera Mini|Mobile/i.test(ua);
       var isSmallTouch = window.matchMedia && window.matchMedia("(max-width: 900px)").matches && ((navigator.maxTouchPoints || 0) > 1);
       if (!isMobilePage && (isMobileUA || isSmallTouch)) {
-        window.location.replace("/mobile.html" + query + hash);
+        window.location.replace(buildMobileEntryUrl(query, hash));
         return true;
       }
     } catch (e) {

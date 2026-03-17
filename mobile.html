@@ -38,6 +38,22 @@
             });
         }
     </script>
+    <script>
+        (function () {
+            const mobileBuildId = '20260318b';
+            window.EC_MOBILE_BUILD_ID = mobileBuildId;
+            try {
+                const host = String(window.location.hostname || '').toLowerCase();
+                if (!host || host === 'localhost' || host === '127.0.0.1' || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return;
+                const currentUrl = new URL(window.location.href);
+                if (currentUrl.searchParams.get('v') === mobileBuildId) return;
+                currentUrl.searchParams.set('v', mobileBuildId);
+                window.location.replace(currentUrl.toString());
+            } catch (e) {
+                console.warn('Mobile build normalization skipped:', e.message);
+            }
+        })();
+    </script>
     <script type="module">
         import { auth, db, doc, onSnapshot, onAuthStateChanged, signOut, getDoc, signInWithEmailAndPassword, createUserWithEmailAndPassword, setDoc, updateDoc, RecaptchaVerifier, signInWithPhoneNumber, sendPasswordResetEmail, checkSession, collection, addDoc, serverTimestamp, increment, query, where, getDocs } from './firebase-config.js';
 
