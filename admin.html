@@ -2628,8 +2628,16 @@
             if (submittedAt) return submittedAt.getTime();
             const createdAt = window.normalizeAdminDateInput(data.created_at);
             if (createdAt) return createdAt.getTime();
+            const updatedAt = window.normalizeAdminDateInput(data.updatedAt);
+            if (updatedAt) return updatedAt.getTime();
+            const lastUpdated = window.normalizeAdminDateInput(data.lastUpdated);
+            if (lastUpdated) return lastUpdated.getTime();
             const joinedAt = window.normalizeAdminDateInput(data.joined);
             if (joinedAt) return joinedAt.getTime();
+            const closedAt = window.normalizeAdminDateInput(data.closed_at);
+            if (closedAt) return closedAt.getTime();
+            const openTime = window.normalizeAdminDateInput(data.open_time);
+            if (openTime) return openTime.getTime();
             return 0;
         };
 
@@ -3006,6 +3014,7 @@
                 let html = '';
                 let totalUsers = 0;
                 let pendingKYC = 0;
+                const rows = [];
 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
@@ -3014,12 +3023,21 @@
 
                     totalUsers++;
                     if (data.kyc_status === 'Pending') pendingKYC++;
+                    rows.push({
+                        uid: data.uid || doc.id,
+                        data,
+                        timeMs: window.getRecordTimeMs(data)
+                    });
+                });
 
+                rows.sort((a, b) => (b.timeMs || 0) - (a.timeMs || 0));
+
+                rows.forEach(({ uid, data }) => {
                     const joinedDate = data.joined ? window.formatAdminDate(data.joined) : '---';
 
                     html += `
                         <tr>
-                            <td class="font-mono text-xs">#${window.getDisplayUserId(data, data.uid)}</td>
+                            <td class="font-mono text-xs">#${window.getDisplayUserId(data, uid)}</td>
                             <td><span class="platform-badge platform-${data.platform ? data.platform.toLowerCase() : 'unknown'}">${data.platform || '??'}</span></td>
                             <td>
                                 <div class="flex items-center gap-2">
@@ -3035,8 +3053,8 @@
                             <td class="text-gray-500">${joinedDate}</td>
                             <td>
                                 <div class="flex gap-2">
-                                    <button class="action-btn text-blue-600 hover:bg-blue-50" title="Edit" onclick="editUser('${data.uid}')"><i class="ri-edit-line"></i></button>
-                                    <button class="action-btn text-red-600 hover:bg-red-50" title="Delete" onclick="deleteUser('${data.uid}')"><i class="ri-delete-bin-line"></i></button>
+                                    <button class="action-btn text-blue-600 hover:bg-blue-50" title="Edit" onclick="editUser('${uid}')"><i class="ri-edit-line"></i></button>
+                                    <button class="action-btn text-red-600 hover:bg-red-50" title="Delete" onclick="deleteUser('${uid}')"><i class="ri-delete-bin-line"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -3340,6 +3358,7 @@
                 let rejectedCount = 0;
 
                 window.kycDataMap = window.kycDataMap || {};
+                const rows = [];
 
                 snapshot.forEach(doc => {
                     const data = doc.data();
@@ -3349,6 +3368,16 @@
                     if (data.status === 'Approved') verifiedCount++;
                     if (data.status === 'Rejected') rejectedCount++;
 
+                    rows.push({
+                        uid: data.uid,
+                        data,
+                        timeMs: window.getRecordTimeMs(data)
+                    });
+                });
+
+                rows.sort((a, b) => (b.timeMs || 0) - (a.timeMs || 0));
+
+                rows.forEach(({ uid, data }) => {
                     const submitDate = data.submitted_at ? window.formatAdminDateTime(data.submitted_at) : '---';
                     const name = data.real_name || 'Unknown';
                     const nat = data.nationality || '---';
@@ -3366,7 +3395,7 @@
                                     </div>
                                     <div>
                                         <p class="font-medium text-gray-800">${name}</p>
-                                        <p class="text-xs text-gray-500">UID: #${window.getDisplayUserId(window.allUsersData ? window.allUsersData[data.uid] : null, data.uid)}</p>
+                                        <p class="text-xs text-gray-500">UID: #${window.getDisplayUserId(window.allUsersData ? window.allUsersData[uid] : null, uid)}</p>
                                     </div>
                                 </div>
                             </td>
@@ -3379,10 +3408,10 @@
                             <td><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">${data.status}</span></td>
                             <td>
                                 <div class="flex gap-2">
-                                    <button class="action-btn text-blue-600 hover:bg-blue-50" title="View Documents" onclick="viewKYC('${data.uid}')"><i class="ri-eye-line"></i></button>
+                                    <button class="action-btn text-blue-600 hover:bg-blue-50" title="View Documents" onclick="viewKYC('${uid}')"><i class="ri-eye-line"></i></button>
                                     ${data.status === 'Pending' ? `
-                                        <button class="action-btn text-green-600 hover:bg-green-50" title="Approve" onclick="approveKYC('${data.uid}')"><i class="ri-check-line"></i></button>
-                                        <button class="action-btn text-red-600 hover:bg-red-50" title="Reject" onclick="rejectKYC('${data.uid}')"><i class="ri-close-line"></i></button>
+                                        <button class="action-btn text-green-600 hover:bg-green-50" title="Approve" onclick="approveKYC('${uid}')"><i class="ri-check-line"></i></button>
+                                        <button class="action-btn text-red-600 hover:bg-red-50" title="Reject" onclick="rejectKYC('${uid}')"><i class="ri-close-line"></i></button>
                                     ` : ''}
                                 </div>
                             </td>
@@ -3413,17 +3442,28 @@
                 const messagesList = document.getElementById('messagesList');
                 let html = '';
                 let totalUnread = 0;
+                const rows = [];
 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     if (doc.id === 'INITIAL_SETUP') return;
 
                     totalUnread += (data.unread_count_admin || 0);
+                    rows.push({
+                        id: doc.id,
+                        data,
+                        timeMs: window.getRecordTimeMs(data)
+                    });
+                });
+
+                rows.sort((a, b) => (b.timeMs || 0) - (a.timeMs || 0));
+
+                rows.forEach(({ id, data }) => {
                     const timeStr = window.formatAdminTime(data.timestamp || new Date());
-                    const isActive = window.currentChatUserId === doc.id;
+                    const isActive = window.currentChatUserId === id;
 
                     html += `
-                        <div class="message-item ${data.unread_count_admin > 0 ? 'unread' : ''} ${isActive ? 'active' : ''}" onclick="selectMessage('${doc.id}')">
+                        <div class="message-item ${data.unread_count_admin > 0 ? 'unread' : ''} ${isActive ? 'active' : ''}" onclick="selectMessage('${id}')">
                             <div class="message-item-header">
                                 <span class="message-item-name">${data.user_name || 'User'}</span>
                                 <span class="message-item-time">${timeStr}</span>
@@ -4280,6 +4320,7 @@
                 let activeCount = 0;
                 let inactiveCount = 0;
                 let pendingCount = 0;
+                const rows = [];
 
                 snapshot.forEach(docSnap => {
                     const data = docSnap.data();
@@ -4292,13 +4333,27 @@
                     if (status === 'Active') activeCount++;
                     else if (status === 'Pending') pendingCount++;
                     else inactiveCount++;
-                    const updatedDate = netData.updatedAt
-                        ? window.formatAdminDateTime(netData.updatedAt)
-                        : (data.lastUpdated ? window.formatAdminDateTime(data.lastUpdated) : '---');
+                    rows.push({
+                        symbol: data.symbol,
+                        networkName,
+                        netData,
+                        status,
+                        updatedDisplayValue: netData.updatedAt || data.lastUpdated || null,
+                        timeMs: window.getRecordTimeMs({
+                            updatedAt: netData.updatedAt,
+                            lastUpdated: data.lastUpdated
+                        })
+                    });
+                });
+
+                rows.sort((a, b) => (b.timeMs || 0) - (a.timeMs || 0));
+
+                rows.forEach(({ symbol, networkName, netData, status, updatedDisplayValue }) => {
+                    const updatedDate = updatedDisplayValue ? window.formatAdminDateTime(updatedDisplayValue) : '---';
                     const tr = document.createElement('tr');
                     tr.className = 'border-b border-gray-100 hover:bg-gray-50';
                     tr.innerHTML = `
-                        <td class="py-4 px-4 font-bold text-gray-800">${data.symbol}</td>
+                        <td class="py-4 px-4 font-bold text-gray-800">${symbol}</td>
                         <td class="py-4 px-4 text-gray-600">${networkName}</td>
                         <td class="py-4 px-4 font-mono text-sm text-gray-500">${netData.address}</td>
                         <td class="py-4 px-4 text-center">
@@ -4312,10 +4367,10 @@
                         <td class="py-4 px-4 text-sm text-gray-500">${updatedDate}</td>
                         <td class="py-4 px-4 text-right">
                             <div class="flex justify-end gap-2">
-                                <button onclick="viewQRCode('${data.symbol}', '${networkName}', '${netData.address}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded" title="View QR">
+                                <button onclick="viewQRCode('${symbol}', '${networkName}', '${netData.address}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded" title="View QR">
                                     <i class="ri-qr-code-line"></i>
                                 </button>
-                                <button onclick="deleteDepositAddress('${data.symbol}', '${networkName}')" class="p-2 text-red-600 hover:bg-red-50 rounded" title="Delete">
+                                <button onclick="deleteDepositAddress('${symbol}', '${networkName}')" class="p-2 text-red-600 hover:bg-red-50 rounded" title="Delete">
                                     <i class="ri-delete-bin-line"></i>
                                 </button>
                             </div>
@@ -5006,6 +5061,7 @@
             let pendingCount = 0;
             let approvedCount = 0;
             let rejectedCount = 0;
+            const rows = [];
 
             snapshot.forEach(docSnap => {
                 const data = docSnap.data();
@@ -5032,6 +5088,17 @@
                     }
                 }
 
+                rows.push({
+                    id,
+                    data,
+                    status,
+                    timeMs: window.getRecordTimeMs(data)
+                });
+            });
+
+            rows.sort((a, b) => (b.timeMs || 0) - (a.timeMs || 0));
+
+            rows.forEach(({ id, data, status }) => {
                 const date = data.timestamp ? window.formatAdminDateTime(data.timestamp) : '---';
 
                 html += `
@@ -5099,6 +5166,7 @@
             let processingCount = 0;
             let completedCount = 0;
             let rejectedCount = 0;
+            const rows = [];
 
             snapshot.forEach(docSnap => {
                 const data = docSnap.id === 'INITIAL_SETUP' ? null : docSnap.data();
@@ -5126,6 +5194,19 @@
 
                 if (status === 'Completed') totalWithdrawals += amount;
 
+                rows.push({
+                    id,
+                    data,
+                    amount,
+                    status,
+                    platform,
+                    timeMs: window.getRecordTimeMs(data)
+                });
+            });
+
+            rows.sort((a, b) => (b.timeMs || 0) - (a.timeMs || 0));
+
+            rows.forEach(({ id, data, amount, status, platform }) => {
                 const date = data.timestamp ? window.formatAdminDateTime(data.timestamp) : '---';
 
                 html += `
