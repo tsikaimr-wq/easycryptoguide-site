@@ -11729,7 +11729,11 @@ const translations = {
             };
             if (map[code]) return map[code];
             const raw = String(error && error.message || '').trim();
-            if (raw && !/firebase/i.test(raw)) return raw;
+            if (raw) {
+                const looksInternal = /firebase/i.test(raw)
+                    || /referenceerror|typeerror|syntaxerror|is not defined|cannot read properties|undefined/i.test(raw);
+                if (!looksInternal) return raw;
+            }
             return fallbackMessage || 'Request failed. Please try again.';
         }
 
@@ -14803,6 +14807,66 @@ const translations = {
                     }
                 }
             }, 120);
+        }
+
+        function parsePerpetualYieldValue(value) {
+            const parsed = parseFloat(value);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function normalizePerpetualControlEntry(value) {
+            if (value === null || value === undefined || value === '') return null;
+
+            if (typeof value === 'object' && !Array.isArray(value)) {
+                const closePrice = parseFloat(value.closePrice ?? value.price ?? value.customClosePrice);
+                const yieldRate = parsePerpetualYieldValue(value.yieldRate ?? value.targetYieldPct ?? value.customYieldPct ?? value.customRoePct);
+                return {
+                    closePrice: Number.isFinite(closePrice) && closePrice > 0 ? closePrice : null,
+                    yieldRate
+                };
+            }
+
+            const legacyPrice = parseFloat(value);
+            return Number.isFinite(legacyPrice) && legacyPrice > 0
+                ? { closePrice: legacyPrice, yieldRate: null }
+                : null;
+        }
+
+        function getNormalizedPerpetualControlMap(source) {
+            const priceMap = source && typeof source === 'object' ? source : {};
+            const normalized = {};
+            Object.entries(priceMap).forEach(([coin, rawValue]) => {
+                const symbol = String(coin || '').trim().toUpperCase();
+                const entry = normalizePerpetualControlEntry(rawValue);
+                if (symbol && entry) {
+                    normalized[symbol] = entry;
+                }
+            });
+            return normalized;
+        }
+
+        function getCurrentUserPerpetualControl(coin) {
+            const normalizedCoin = String(coin || '').trim().toUpperCase();
+            const controlMap = getNormalizedPerpetualControlMap(window.currentUserPerpetualControlMap);
+            if (normalizedCoin && controlMap[normalizedCoin]) {
+                return controlMap[normalizedCoin];
+            }
+            const fallbackPrice = parseFloat(window.currentUserPerpetualFallbackPrice);
+            return Number.isFinite(fallbackPrice) && fallbackPrice > 0
+                ? { closePrice: fallbackPrice, yieldRate: null }
+                : null;
+        }
+
+        function computePerpetualClosePriceFromYield(entryPrice, targetYieldPct, feeRate, isLong) {
+            const safeEntry = parseFloat(entryPrice);
+            const safeYield = parsePerpetualYieldValue(targetYieldPct);
+            const safeFeeRate = Number.isFinite(Number(feeRate)) ? Number(feeRate) : getTradeFeeRate();
+            if (!(safeEntry > 0) || safeYield === null) return null;
+            const moveRatio = (safeYield / 100) + safeFeeRate;
+            const multiplier = isLong ? (1 + moveRatio) : (1 - moveRatio);
+            if (!Number.isFinite(multiplier) || multiplier <= 0) return null;
+            const closePrice = safeEntry * multiplier;
+            return Number.isFinite(closePrice) && closePrice > 0 ? closePrice : null;
         }
 
         function getTradeTargetSettlementMetrics(trade, overrides = {}) {
