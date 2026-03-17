@@ -39,10 +39,10 @@
         }
     </script>
     <script type="module">
-        import { auth, db, doc, onSnapshot, onAuthStateChanged, signOut, getDoc, signInWithEmailAndPassword, createUserWithEmailAndPassword, setDoc, updateDoc, RecaptchaVerifier, signInWithPhoneNumber, checkSession, collection, addDoc, serverTimestamp, increment, query, where, getDocs } from './firebase-config.js';
+        import { auth, db, doc, onSnapshot, onAuthStateChanged, signOut, getDoc, signInWithEmailAndPassword, createUserWithEmailAndPassword, setDoc, updateDoc, RecaptchaVerifier, signInWithPhoneNumber, sendPasswordResetEmail, checkSession, collection, addDoc, serverTimestamp, increment, query, where, getDocs } from './firebase-config.js';
 
         // Expose to global window for legacy scripts
-        window.fb = { auth, db, doc, onSnapshot, onAuthStateChanged, signOut, getDoc, signInWithEmailAndPassword, createUserWithEmailAndPassword, setDoc, updateDoc, RecaptchaVerifier, signInWithPhoneNumber, collection, addDoc, serverTimestamp, query, where, getDocs };
+        window.fb = { auth, db, doc, onSnapshot, onAuthStateChanged, signOut, getDoc, signInWithEmailAndPassword, createUserWithEmailAndPassword, setDoc, updateDoc, RecaptchaVerifier, signInWithPhoneNumber, sendPasswordResetEmail, collection, addDoc, serverTimestamp, query, where, getDocs };
         window.checkSession = checkSession;
         window.onSnapshot = onSnapshot;
         window.db = db;
@@ -623,6 +623,20 @@
             font-size: 13px;
             text-align: center;
             min-height: 20px;
+        }
+
+        .auth-secondary-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            width: 100%;
+            margin-top: 4px;
+            background: transparent;
+            border: 0;
+            color: #0081ff;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 0;
         }
 
         .otp-row {
@@ -5713,6 +5727,8 @@
                 <div class="auth-form-group"><label data-t-key="auth_label_password">Password</label><input
                         type="password" id="login-password" class="auth-input" placeholder="Enter your password"
                         data-t-key="auth_placeholder_password"></div>
+                <button type="button" id="forgot-password-btn" class="auth-secondary-action"
+                    onclick="handleForgotPassword()" data-t-key="auth_forgot_password">Forgot password?</button>
                 <button id="auth-login-btn" class="auth-btn" onclick="handleLogin()" data-t-key="auth_btn_login">Login</button>
             </div>
             <div id="signup-form" class="hidden">
@@ -11414,6 +11430,7 @@ const translations = {
         const chineseTranslationKey = Object.keys(translations).find((name) => !['English', 'Deutsch', '\u65e5\u672c\u8a9e', '\ud55c\uad6d\uc5b4'].includes(name));
 
         Object.assign(translations['English'], {
+            auth_forgot_password: 'Forgot password?',
             cert_id_number_placeholder: 'Enter your driver license number, e.g. A1234567',
             cert_id_number_hint: 'Format: 1 letter + 7 digits, for example A1234567',
             cert_shooting_example: 'Example',
@@ -11423,6 +11440,7 @@ const translations = {
 
         if (chineseTranslationKey && translations[chineseTranslationKey]) {
             Object.assign(translations[chineseTranslationKey], {
+                auth_forgot_password: '\u5fd8\u8bb0\u5bc6\u7801\uff1f',
                 cert_id_number_placeholder: '\u8bf7\u8f93\u5165\u9a7e\u7167\u53f7\u7801\uff0c\u4f8b\u5982 A1234567',
                 cert_id_number_hint: '\u683c\u5f0f\uff1a1 \u4e2a\u5b57\u6bcd + 7 \u4f4d\u6570\u5b57\uff0c\u4f8b\u5982 A1234567',
                 cert_shooting_example: '\u793a\u4f8b',
@@ -11432,6 +11450,7 @@ const translations = {
         }
 
         Object.assign(translations['Deutsch'], {
+            auth_forgot_password: 'Passwort vergessen?',
             cert_id_number_placeholder: 'Geben Sie Ihre Fuehrerscheinnummer ein, z. B. A1234567',
             cert_id_number_hint: 'Format: 1 Buchstabe + 7 Ziffern, zum Beispiel A1234567',
             cert_shooting_example: 'Beispiel',
@@ -11440,6 +11459,7 @@ const translations = {
         });
 
         Object.assign(translations['\u65e5\u672c\u8a9e'], {
+            auth_forgot_password: '\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u304a\u5fd8\u308c\u3067\u3059\u304b\uff1f',
             cert_id_number_placeholder: '\u904b\u8ee2\u514d\u8a31\u8a3c\u756a\u53f7\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\uff08\u4f8b: A1234567\uff09',
             cert_id_number_hint: '\u5f62\u5f0f\uff1a\u82f1\u5b57 1 \u6587\u5b57 + \u6570\u5b57 7 \u6841\uff08\u4f8b: A1234567\uff09',
             cert_shooting_example: '\u4f8b',
@@ -11448,6 +11468,7 @@ const translations = {
         });
 
         Object.assign(translations['\ud55c\uad6d\uc5b4'], {
+            auth_forgot_password: '\ube44\ubc00\ubc88\ud638\ub97c \uc78a\uc73c\uc168\ub098\uc694?',
             cert_id_number_placeholder: '\uc6b4\uc804\uba74\ud5c8\uc99d \ubc88\ud638\ub97c \uc785\ub825\ud558\uc138\uc694. \uc608: A1234567',
             cert_id_number_hint: '\ud615\uc2dd: \uc601\ubb38 1\uc790 + \uc22b\uc790 7\uc790\ub9ac. \uc608: A1234567',
             cert_shooting_example: '\uc608\uc2dc',
@@ -11971,13 +11992,17 @@ const translations = {
         async function signInWithMobileFallback(auth, primaryIdentifier, password, rawInput, currentMode, loginCountryCode) {
             let lastCredentialError = null;
             const tried = new Set();
+            const signInFn = window.fb && window.fb.signInWithEmailAndPassword;
 
             const tryIdentifier = async (identifier) => {
                 const normalized = String(identifier || '').trim().toLowerCase();
                 if (!normalized || tried.has(normalized)) return null;
                 tried.add(normalized);
+                if (typeof signInFn !== 'function') {
+                    throw new Error('Login service unavailable. Please refresh and try again.');
+                }
                 try {
-                    return await signInWithEmailAndPassword(auth, normalized, password);
+                    return await signInFn(auth, normalized, password);
                 } catch (error) {
                     if (isLoginCredentialError(error)) {
                         lastCredentialError = error;
@@ -12182,6 +12207,83 @@ const translations = {
             return { email, accountLogin: resolvedAccountLogin };
         }
 
+        function isResettableInboxEmail(value) {
+            const email = String(value || '').trim().toLowerCase();
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                && !/@account\.local$/i.test(email)
+                && !/@mobile\.local$/i.test(email);
+        }
+
+        async function resolveMobilePasswordResetEmail(rawInput, currentMode, loginCountryCode) {
+            const input = String(rawInput || '').trim();
+            if (!input) {
+                throw new Error('Please enter your email, mobile number, or account first.');
+            }
+
+            if (currentMode === 'email') {
+                const email = input.toLowerCase();
+                if (!isResettableInboxEmail(email)) {
+                    throw new Error('Please enter a valid email address.');
+                }
+                return email;
+            }
+
+            if (currentMode === 'account') {
+                const normalizedLogin = normalizeAccountLogin(input);
+                const resolved = await resolveMobileAccountIdentifier(input, normalizedLogin);
+                if (!isResettableInboxEmail(resolved.email)) {
+                    throw new Error('This account is not linked to a real email inbox. Please contact support to reset the password.');
+                }
+                return String(resolved.email).trim().toLowerCase();
+            }
+
+            const phone = buildInternationalPhone(input, loginCountryCode);
+            if (!phone) {
+                throw new Error('Please enter a valid mobile number.');
+            }
+
+            const { db, collection, query, where, getDocs } = window.fb;
+            const snapshot = await getDocs(query(collection(db, 'users'), where('phone', '==', phone)));
+            if (snapshot.empty) {
+                throw new Error('No account was found for this mobile number.');
+            }
+
+            const userData = snapshot.docs[0].data() || {};
+            const email = String(userData.email || '').trim().toLowerCase();
+            if (!isResettableInboxEmail(email)) {
+                throw new Error('This mobile account is not linked to a real email inbox. Please contact support to reset the password.');
+            }
+            return email;
+        }
+
+        async function handleForgotPassword() {
+            if (window.__mobileResetSubmitting) return;
+            const msg = document.getElementById('auth-msg');
+            const rawInput = (document.getElementById('login-email') || {}).value || '';
+            const loginCountryCode = (document.getElementById('login-country-code') || {}).value || readSavedCountryCodePrefix() || detectCountryCodePrefix();
+
+            window.__mobileResetSubmitting = true;
+            msg.innerHTML = '<span class="success-text">Preparing password reset...</span>';
+
+            try {
+                const { auth, sendPasswordResetEmail } = window.fb || {};
+                if (typeof sendPasswordResetEmail !== 'function') {
+                    throw new Error('Password reset service unavailable. Please refresh and try again.');
+                }
+                const resetEmail = await resolveMobilePasswordResetEmail(rawInput, currentLoginTab, loginCountryCode);
+                await sendPasswordResetEmail(auth, resetEmail);
+                msg.innerHTML = '<span class="success-text">Password reset email sent. Please check your inbox.</span>';
+                if (typeof window.showMobileToast === 'function') {
+                    window.showMobileToast('Password reset email sent.');
+                }
+            } catch (error) {
+                console.error('Password reset error:', error);
+                msg.innerHTML = `<span class="error-text">${getReadableAuthErrorMessage(error, 'Failed to start password reset. Please try again later.')}</span>`;
+            } finally {
+                window.__mobileResetSubmitting = false;
+            }
+        }
+
         async function handleLogin() {
             if (window.__mobileLoginSubmitting) return;
             const rawInput = document.getElementById('login-email').value;
@@ -12303,6 +12405,7 @@ const translations = {
 
         // Expose functions to window for HTML onclick handlers
         window.handleLogin = handleLogin;
+        window.handleForgotPassword = handleForgotPassword;
         window.handleSignup = handleSignup;
         window.handleLogout = handleLogout;
 
