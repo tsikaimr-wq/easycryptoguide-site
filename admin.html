@@ -4153,9 +4153,66 @@
         }
 
         // Deposit Address Functions
+        const ADMIN_SINGLE_CHAIN_RULES = {
+            USDT: { primary: 'TRC20', aliases: ['TRC20'] },
+            BTC: { primary: 'Bitcoin', aliases: ['Bitcoin', 'Bitcoin Mainnet'] },
+            ETH: { primary: 'ERC20', aliases: ['ERC20', 'ERC-20'] },
+            USDC: { primary: 'ERC20', aliases: ['ERC20', 'ERC-20'] },
+            SOL: { primary: 'SOL', aliases: ['SOL', 'Solana'] },
+            DOGE: { primary: 'Dogecoin Mainnet', aliases: ['Dogecoin Mainnet', 'Dogecoin'] },
+            BNB: { primary: 'BEP', aliases: ['BEP', 'BEP20', 'BEP2'] },
+            XRP: { primary: 'XRP Ledger', aliases: ['XRP Ledger'] },
+            TRX: { primary: 'TRC20', aliases: ['TRC20'] }
+        };
+
+        function getAdminDepositRule(symbol) {
+            return ADMIN_SINGLE_CHAIN_RULES[String(symbol || '').trim().toUpperCase()] || null;
+        }
+
+        function getAdminPrimaryDepositNetwork(symbol) {
+            const rule = getAdminDepositRule(symbol);
+            return rule ? rule.primary : '';
+        }
+
+        function getAdminDepositNetworkAliases(symbol) {
+            const rule = getAdminDepositRule(symbol);
+            if (!rule) return [];
+            return Array.from(new Set([rule.primary, ...(rule.aliases || [])]));
+        }
+
+        function populateDepositNetworkOptions(symbol) {
+            const select = document.getElementById('depositNetwork');
+            const primary = getAdminPrimaryDepositNetwork(symbol);
+            if (!select || !primary) return;
+            select.innerHTML = `<option value="${primary}">${primary}</option>`;
+            select.value = primary;
+        }
+
+        function resolveAdminDepositNetworkEntry(symbol, networks) {
+            const source = networks && typeof networks === 'object' ? networks : {};
+            const primary = getAdminPrimaryDepositNetwork(symbol);
+            const aliases = getAdminDepositNetworkAliases(symbol);
+
+            for (const alias of aliases) {
+                const entry = source[alias];
+                if (entry && typeof entry === 'object' && entry.status === 'Active') {
+                    return { networkName: primary || alias, netData: entry };
+                }
+            }
+
+            for (const alias of aliases) {
+                const entry = source[alias];
+                if (entry && typeof entry === 'object') {
+                    return { networkName: primary || alias, netData: entry };
+                }
+            }
+
+            return null;
+        }
+
         window.openAddDepositModal = function () {
             document.getElementById('depositCrypto').value = 'USDT';
-            document.getElementById('depositNetwork').value = 'Solana';
+            populateDepositNetworkOptions('USDT');
             document.getElementById('depositAddress').value = '';
             document.getElementById('depositStatus').checked = true;
             document.getElementById('qrPreviewImage').src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=EnterAddress';
@@ -4174,7 +4231,7 @@
 
         window.saveDepositAddress = async function () {
             const crypto = document.getElementById('depositCrypto').value;
-            const network = document.getElementById('depositNetwork').value;
+            const network = getAdminPrimaryDepositNetwork(crypto);
             const address = document.getElementById('depositAddress').value.trim();
             const isActive = document.getElementById('depositStatus').checked;
 
@@ -4189,12 +4246,7 @@
 
             try {
                 const coinRef = doc(db, 'deposit_addresses', crypto);
-                const coinSnap = await getDoc(coinRef);
-
-                let networks = {};
-                if (coinSnap.exists()) {
-                    networks = coinSnap.data().networks || {};
-                }
+                const networks = {};
 
                 networks[network] = {
                     address: address,
@@ -4231,45 +4283,45 @@
 
                 snapshot.forEach(docSnap => {
                     const data = docSnap.data();
-                    const networks = data.networks || {};
+                    const resolvedEntry = resolveAdminDepositNetworkEntry(data.symbol, data.networks || {});
+                    if (!resolvedEntry) return;
 
-                    Object.entries(networks).forEach(([networkName, netData]) => {
-                        count++;
-                        const status = netData.status || 'Inactive';
-                        if (status === 'Active') activeCount++;
-                        else if (status === 'Pending') pendingCount++;
-                        else inactiveCount++;
-                        const updatedDate = netData.updatedAt
-                            ? window.formatAdminDateTime(netData.updatedAt)
-                            : (data.lastUpdated ? window.formatAdminDateTime(data.lastUpdated) : '---');
-                        const tr = document.createElement('tr');
-                        tr.className = 'border-b border-gray-100 hover:bg-gray-50';
-                        tr.innerHTML = `
-                            <td class="py-4 px-4 font-bold text-gray-800">${data.symbol}</td>
-                            <td class="py-4 px-4 text-gray-600">${networkName}</td>
-                            <td class="py-4 px-4 font-mono text-sm text-gray-500">${netData.address}</td>
-                            <td class="py-4 px-4 text-center">
-                                ${netData.qrCode ? `<img src="${netData.qrCode}" alt="QR" class="w-10 h-10 object-contain inline-block rounded border border-gray-200 bg-white p-1">` : '<span class="text-gray-400 text-xs">N/A</span>'}
-                            </td>
-                            <td class="py-4 px-4 text-center">
-                                <span class="px-2 py-1 rounded-full text-xs font-semibold ${status === 'Active' ? 'bg-green-100 text-green-600' : (status === 'Pending' ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600')}">
-                                    ${status}
-                                </span>
-                            </td>
-                            <td class="py-4 px-4 text-sm text-gray-500">${updatedDate}</td>
-                            <td class="py-4 px-4 text-right">
-                                <div class="flex justify-end gap-2">
-                                    <button onclick="viewQRCode('${data.symbol}', '${networkName}', '${netData.address}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded" title="View QR">
-                                        <i class="ri-qr-code-line"></i>
-                                    </button>
-                                    <button onclick="deleteDepositAddress('${data.symbol}', '${networkName}')" class="p-2 text-red-600 hover:bg-red-50 rounded" title="Delete">
-                                        <i class="ri-delete-bin-line"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        `;
-                        tableBody.appendChild(tr);
-                    });
+                    const { networkName, netData } = resolvedEntry;
+                    count++;
+                    const status = netData.status || 'Inactive';
+                    if (status === 'Active') activeCount++;
+                    else if (status === 'Pending') pendingCount++;
+                    else inactiveCount++;
+                    const updatedDate = netData.updatedAt
+                        ? window.formatAdminDateTime(netData.updatedAt)
+                        : (data.lastUpdated ? window.formatAdminDateTime(data.lastUpdated) : '---');
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-gray-100 hover:bg-gray-50';
+                    tr.innerHTML = `
+                        <td class="py-4 px-4 font-bold text-gray-800">${data.symbol}</td>
+                        <td class="py-4 px-4 text-gray-600">${networkName}</td>
+                        <td class="py-4 px-4 font-mono text-sm text-gray-500">${netData.address}</td>
+                        <td class="py-4 px-4 text-center">
+                            ${netData.qrCode ? `<img src="${netData.qrCode}" alt="QR" class="w-10 h-10 object-contain inline-block rounded border border-gray-200 bg-white p-1">` : '<span class="text-gray-400 text-xs">N/A</span>'}
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold ${status === 'Active' ? 'bg-green-100 text-green-600' : (status === 'Pending' ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600')}">
+                                ${status}
+                            </span>
+                        </td>
+                        <td class="py-4 px-4 text-sm text-gray-500">${updatedDate}</td>
+                        <td class="py-4 px-4 text-right">
+                            <div class="flex justify-end gap-2">
+                                <button onclick="viewQRCode('${data.symbol}', '${networkName}', '${netData.address}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded" title="View QR">
+                                    <i class="ri-qr-code-line"></i>
+                                </button>
+                                <button onclick="deleteDepositAddress('${data.symbol}', '${networkName}')" class="p-2 text-red-600 hover:bg-red-50 rounded" title="Delete">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
                 });
 
                 if (count === 0) {
@@ -4296,7 +4348,14 @@
 
                 if (coinSnap.exists()) {
                     const networks = coinSnap.data().networks || {};
-                    delete networks[network];
+                    const aliases = getAdminDepositNetworkAliases(symbol);
+                    Object.keys(networks).forEach((storedNetwork) => {
+                        const matchesCanonical = String(storedNetwork).toLowerCase() === String(network).toLowerCase();
+                        const matchesAlias = aliases.some((alias) => alias.toLowerCase() === String(storedNetwork).toLowerCase());
+                        if (matchesCanonical || matchesAlias) {
+                            delete networks[storedNetwork];
+                        }
+                    });
 
                     if (Object.keys(networks).length === 0) {
                         await deleteDoc(coinRef);
@@ -5218,12 +5277,17 @@
 
             const prefixes = {
                 'Solana': 'solana:',
+                'SOL': 'solana:',
                 'TRC20': 'tron:',
                 'ERC20': 'ethereum:',
+                'ERC-20': 'ethereum:',
+                'BEP': '',
                 'BEP20': 'ethereum:',
                 'BEP2': 'binance:',
                 'Bitcoin': 'bitcoin:',
+                'Bitcoin Mainnet': 'bitcoin:',
                 'Dogecoin': 'dogecoin:',
+                'Dogecoin Mainnet': 'dogecoin:',
                 'XRP Ledger': 'ripple:'
             };
             const prefix = prefixes[network] || '';
@@ -5261,6 +5325,10 @@
             }
         };
         document.getElementById('depositAddress')?.addEventListener('input', updatePreview);
+        document.getElementById('depositCrypto')?.addEventListener('change', function (event) {
+            populateDepositNetworkOptions(event.target.value);
+            updatePreview();
+        });
         document.getElementById('depositNetwork')?.addEventListener('change', updatePreview);
         document.getElementById('qrFormat')?.addEventListener('change', updatePreview);
     </script>

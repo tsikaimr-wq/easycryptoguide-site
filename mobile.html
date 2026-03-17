@@ -16016,28 +16016,94 @@ No transfer fees for account transfer / exchange</div>
         }
 
         // DEPOSIT SYSTEM LOGIC
-        let selectedDepositCoin = 'USDT';
-        let selectedDepositChain = 'Solana';
-        let depositVoucherImage = null;
-        window.defaultDepositData = {
-            'USDT': { 'ERC20': { qrCode: null, walletAddress: null }, 'TRC20': { qrCode: null, walletAddress: null }, 'BEP20': { qrCode: null, walletAddress: null }, 'Solana': { qrCode: null, walletAddress: null } },
-            'BTC': { 'Bitcoin': { qrCode: null, walletAddress: null }, 'BEP20': { qrCode: null, walletAddress: null }, 'TRC20': { qrCode: null, walletAddress: null } },
-            'ETH': { 'ERC20': { qrCode: null, walletAddress: null }, 'BEP20': { qrCode: null, walletAddress: null }, 'TRC20': { qrCode: null, walletAddress: null } },
-            'USDC': { 'ERC20': { qrCode: null, walletAddress: null }, 'Solana': { qrCode: null, walletAddress: null }, 'BEP20': { qrCode: null, walletAddress: null }, 'TRC20': { qrCode: null, walletAddress: null } },
-            'SOL': { 'Solana': { qrCode: null, walletAddress: null } },
-            'DOGE': { 'Dogecoin': { qrCode: null, walletAddress: null } },
-            'BNB': { 'BEP20': { qrCode: null, walletAddress: null }, 'BEP2': { qrCode: null, walletAddress: null } },
-            'XRP': { 'XRP Ledger': { qrCode: null, walletAddress: null } },
-            'TRX': { 'TRC20': { qrCode: null, walletAddress: null } }
+        const SINGLE_CHAIN_RULES = {
+            USDT: { primary: 'TRC20', aliases: ['TRC20'] },
+            BTC: { primary: 'Bitcoin', aliases: ['Bitcoin', 'Bitcoin Mainnet'] },
+            ETH: { primary: 'ERC20', aliases: ['ERC20', 'ERC-20'] },
+            USDC: { primary: 'ERC20', aliases: ['ERC20', 'ERC-20'] },
+            SOL: { primary: 'SOL', aliases: ['SOL', 'Solana'] },
+            DOGE: { primary: 'Dogecoin Mainnet', aliases: ['Dogecoin Mainnet', 'Dogecoin'] },
+            BNB: { primary: 'BEP', aliases: ['BEP', 'BEP20', 'BEP2'] },
+            XRP: { primary: 'XRP Ledger', aliases: ['XRP Ledger'] },
+            TRX: { primary: 'TRC20', aliases: ['TRC20'] }
         };
-        window.adminDepositData = window.defaultDepositData;
+
+        function getSingleChainRule(coin) {
+            return SINGLE_CHAIN_RULES[String(coin || '').trim().toUpperCase()] || null;
+        }
+
+        function getPrimaryDepositChain(coin) {
+            const rule = getSingleChainRule(coin);
+            return rule ? rule.primary : '';
+        }
+
+        function getAllowedDepositChains(coin) {
+            const primary = getPrimaryDepositChain(coin);
+            return primary ? [primary] : [];
+        }
+
+        function getDepositChainAliases(coin) {
+            const rule = getSingleChainRule(coin);
+            if (!rule) return [];
+            return Array.from(new Set([rule.primary, ...(rule.aliases || [])]));
+        }
+
+        function createDefaultDepositData() {
+            const data = {};
+            Object.entries(SINGLE_CHAIN_RULES).forEach(([coin, rule]) => {
+                data[coin] = {
+                    [rule.primary]: { qrCode: null, walletAddress: null }
+                };
+            });
+            return data;
+        }
+
+        function resolveNetworkDataForCoin(coin, networks) {
+            const source = networks && typeof networks === 'object' ? networks : {};
+            const primary = getPrimaryDepositChain(coin);
+            const aliases = getDepositChainAliases(coin);
+
+            for (const alias of aliases) {
+                const entry = source[alias];
+                if (entry && typeof entry === 'object' && entry.status === 'Active') {
+                    return {
+                        chain: primary || alias,
+                        qrCode: entry.qrCode || null,
+                        walletAddress: entry.address || entry.walletAddress || null
+                    };
+                }
+            }
+
+            for (const alias of aliases) {
+                const entry = source[alias];
+                if (entry && typeof entry === 'object') {
+                    return {
+                        chain: primary || alias,
+                        qrCode: entry.qrCode || null,
+                        walletAddress: entry.address || entry.walletAddress || null
+                    };
+                }
+            }
+
+            return {
+                chain: primary,
+                qrCode: null,
+                walletAddress: null
+            };
+        }
+
+        let selectedDepositCoin = 'USDT';
+        let selectedDepositChain = getPrimaryDepositChain('USDT');
+        let depositVoucherImage = null;
+        window.defaultDepositData = createDefaultDepositData();
+        window.adminDepositData = JSON.parse(JSON.stringify(window.defaultDepositData));
 
 
 
         function selectDepositCoin(coin, color, icon) {
             selectedDepositCoin = coin;
-            const chains = Object.keys(window.adminDepositData[coin]); // Changed to adminDepositData
-            selectedDepositChain = chains[0]; // Set first chain as default
+            const chains = getAllowedDepositChains(coin);
+            selectedDepositChain = chains[0] || getPrimaryDepositChain(coin);
             toggleDepositDetail(true);
             updateDepositDetailUI();
         }
@@ -16064,7 +16130,7 @@ No transfer fees for account transfer / exchange</div>
 
             // Update chain buttons
             const btnContainer = document.getElementById('deposit-chain-buttons');
-            const chains = Object.keys(window.defaultDepositData[selectedDepositCoin]);
+            const chains = getAllowedDepositChains(selectedDepositCoin);
             let btnHtml = '';
             chains.forEach(c => {
                 btnHtml += `<button class="chain-btn ${c === selectedDepositChain ? 'active' : ''}" onclick="switchDepositChain('${c}')">${c}</button>`;
@@ -16097,7 +16163,7 @@ No transfer fees for account transfer / exchange</div>
 
         // WITHDRAWAL SYSTEM LOGIC
         let selectedWithdrawCoin = 'USDT';
-        let selectedWithdrawChain = 'ERC20';
+        let selectedWithdrawChain = getPrimaryDepositChain('USDT');
 
         function toggleWithdrawDropdown() {
             const menu = document.getElementById('withdraw-coin-dropdown');
@@ -16116,8 +16182,8 @@ No transfer fees for account transfer / exchange</div>
 
         function selectWithdrawCoin(coin) {
             selectedWithdrawCoin = coin;
-            const chains = Object.keys(window.defaultDepositData[coin]);
-            selectedWithdrawChain = chains[0];
+            const chains = getAllowedDepositChains(coin);
+            selectedWithdrawChain = chains[0] || getPrimaryDepositChain(coin);
 
             // Update UI
             document.getElementById('withdraw-selected-coin-text').innerText = coin;
@@ -16141,7 +16207,7 @@ No transfer fees for account transfer / exchange</div>
 
         function updateWithdrawChainUI() {
             const container = document.getElementById('withdraw-chain-container');
-            const chains = Object.keys(window.defaultDepositData[selectedWithdrawCoin]);
+            const chains = getAllowedDepositChains(selectedWithdrawCoin);
             let html = '';
             chains.forEach(chain => {
                 const activeClass = chain === selectedWithdrawChain ? 'active' : '';
@@ -16370,7 +16436,7 @@ No transfer fees for account transfer / exchange</div>
             const chainSelect = document.getElementById('admin-chain-select');
 
             // Re-populate chain select based on coin
-            const chains = Object.keys(defaultDepositData[coin]);
+            const chains = getAllowedDepositChains(coin);
             let chainHtml = '';
             chains.forEach(c => {
                 chainHtml += `<option value="${c}">${c}</option>`;
@@ -17248,11 +17314,14 @@ No transfer fees for account transfer / exchange</div>
                     console.log(`Mobile: Processing sync data for ${symbol}`, networks);
 
                     if (symbol && newData[symbol]) {
-                        Object.entries(networks).forEach(([netName, netData]) => {
-                            if (netData.status === 'Active') {
-                                newData[symbol][netName] = { qrCode: netData.qrCode, walletAddress: netData.address };
-                            }
-                        });
+                        const resolved = resolveNetworkDataForCoin(symbol, networks);
+                        const targetChain = resolved.chain || getPrimaryDepositChain(symbol);
+                        if (targetChain && newData[symbol][targetChain]) {
+                            newData[symbol][targetChain] = {
+                                qrCode: resolved.qrCode,
+                                walletAddress: resolved.walletAddress
+                            };
+                        }
                     }
                 });
                 window.adminDepositData = newData;
