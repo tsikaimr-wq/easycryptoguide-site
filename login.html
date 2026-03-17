@@ -425,6 +425,7 @@
         const mainSubmitBtn = document.getElementById('main-submit-btn');
 
         let currentTab = 'email';
+        let mainLoginSubmitting = false;
 
         function getReadableLoginError(error, fallbackMessage) {
             const code = String(error && error.code || '').toLowerCase();
@@ -465,6 +466,186 @@
             mainSubmitBtn.disabled = false;
             mainSubmitBtn.classList.remove('is-loading');
             mainSubmitBtn.innerHTML = mainSubmitBtn.dataset.defaultHtml;
+        }
+
+        function isCredentialLoginError(error) {
+            const code = String(error && error.code || '').toLowerCase();
+            return code === 'auth/invalid-credential'
+                || code === 'auth/wrong-password'
+                || code === 'auth/user-not-found'
+                || code === 'auth/invalid-email';
+        }
+
+        function looksLikeEmailLoginInput(value) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+        }
+
+        function looksLikePhoneLoginInput(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return false;
+            return /^[+\d][\d\s()\-]+$/.test(raw) || /^\d+$/.test(raw);
+        }
+
+        function normalizeDesktopCountryCode(rawPrefix) {
+            const digits = String(rawPrefix || '').replace(/\D/g, '');
+            return digits ? `+${digits}` : '+1';
+        }
+
+        function readDesktopSavedCountryCode() {
+            return normalizeDesktopCountryCode(localStorage.getItem('ec_phone_country_code') || '+1');
+        }
+
+        function detectDesktopCountryCode() {
+            const lang = (navigator.language || '').toLowerCase();
+            const tz = (() => {
+                try {
+                    return Intl.DateTimeFormat().resolvedOptions().timeZone.toLowerCase();
+                } catch (e) {
+                    return '';
+                }
+            })();
+            if (lang.includes('zh') || tz.includes('shanghai') || tz.includes('hong_kong')) return '+86';
+            if (lang.includes('de') || tz.includes('berlin')) return '+49';
+            if (lang.includes('ja') || tz.includes('tokyo')) return '+81';
+            if (lang.includes('ko') || tz.includes('seoul')) return '+82';
+            return '+1';
+        }
+
+        function buildDesktopInternationalPhone(rawValue, rawPrefix) {
+            const input = String(rawValue || '').trim();
+            if (!input) return '';
+            if (input.startsWith('+')) {
+                const fullDigits = input.replace(/\D/g, '');
+                return fullDigits ? `+${fullDigits}` : '';
+            }
+            const localDigits = input.replace(/\D/g, '');
+            if (!localDigits) return '';
+            const prefix = normalizeDesktopCountryCode(rawPrefix);
+            const prefixDigits = prefix.replace(/\D/g, '');
+            if (prefixDigits && localDigits.startsWith(prefixDigits) && localDigits.length > prefixDigits.length + 3) {
+                return `+${localDigits}`;
+            }
+            return `${prefix}${localDigits}`;
+        }
+
+        async function collectDesktopLoginCandidates(rawInput, currentMode, primaryIdentifier = '') {
+            const raw = String(rawInput || '').trim();
+            const normalizedEmail = raw.toLowerCase();
+            const normalizedAccount = raw.toLowerCase();
+            const normalizedAccountDisplay = raw.toUpperCase();
+            const candidates = [];
+            const seenCandidates = new Set();
+
+            const pushCandidate = (value) => {
+                const normalized = String(value || '').trim().toLowerCase();
+                if (!normalized || seenCandidates.has(normalized)) return;
+                seenCandidates.add(normalized);
+                candidates.push(normalized);
+            };
+
+            pushCandidate(primaryIdentifier);
+
+            if (looksLikeEmailLoginInput(raw)) {
+                pushCandidate(normalizedEmail);
+            }
+
+            const phoneCandidates = [];
+            if (currentMode === 'mobile' || looksLikePhoneLoginInput(raw)) {
+                const prefixes = ['+1', readDesktopSavedCountryCode(), detectDesktopCountryCode()];
+                prefixes.forEach((prefix) => {
+                    const phone = buildDesktopInternationalPhone(raw, prefix);
+                    if (!phone || phoneCandidates.includes(phone)) return;
+                    phoneCandidates.push(phone);
+                    pushCandidate(`${phone}@mobile.local`);
+                });
+            }
+
+            const shouldCheckAccount = currentMode === 'account'
+                || /^EC\d{6}$/i.test(normalizedAccountDisplay)
+                || /^[a-zA-Z0-9_]{4,24}$/.test(raw);
+
+            if (shouldCheckAccount) {
+                try {
+                    pushCandidate(await resolveAccountIdentifierByInput(raw));
+                } catch (e) {
+                    // Keep fallback query flow below.
+                }
+            }
+
+            const queryJobs = [];
+            const seenQueries = new Set();
+            const pushQuery = (field, candidate) => {
+                const val = String(candidate || '').trim();
+                if (!val) return;
+                const key = `${field}:${val}`;
+                if (seenQueries.has(key)) return;
+                seenQueries.add(key);
+                queryJobs.push(getDocs(query(collection(db, 'users'), where(field, '==', val))));
+            };
+
+            if (looksLikeEmailLoginInput(raw)) {
+                pushQuery('email', normalizedEmail);
+            }
+            phoneCandidates.forEach((phone) => pushQuery('phone', phone));
+            if (shouldCheckAccount) {
+                pushQuery('account_login', normalizedAccount);
+                pushQuery('account', normalizedAccountDisplay);
+                if (!normalizedAccountDisplay.startsWith('EC')) {
+                    pushQuery('account', `EC${normalizedAccountDisplay}`);
+                }
+            }
+
+            if (queryJobs.length > 0) {
+                try {
+                    const snapshots = await Promise.all(queryJobs);
+                    snapshots.forEach((snap) => {
+                        if (!snap || snap.empty) return;
+                        snap.docs.forEach((docSnap) => {
+                            const data = docSnap.data() || {};
+                            if (data.email) {
+                                pushCandidate(String(data.email).trim().toLowerCase());
+                            } else if (data.phone) {
+                                pushCandidate(`${String(data.phone).trim()}@mobile.local`);
+                            }
+                        });
+                    });
+                } catch (e) {
+                    console.warn('Desktop login fallback lookup failed:', e.message);
+                }
+            }
+
+            return candidates;
+        }
+
+        async function signInWithDesktopFallback(primaryIdentifier, password, rawInput, currentMode) {
+            let lastCredentialError = null;
+            const tried = new Set();
+
+            const tryIdentifier = async (identifier) => {
+                const normalized = String(identifier || '').trim().toLowerCase();
+                if (!normalized || tried.has(normalized)) return null;
+                tried.add(normalized);
+                try {
+                    return await signInWithEmailAndPassword(auth, normalized, password);
+                } catch (error) {
+                    if (isCredentialLoginError(error)) {
+                        lastCredentialError = error;
+                        return null;
+                    }
+                    throw error;
+                }
+            };
+
+            const directResult = await tryIdentifier(primaryIdentifier);
+            if (directResult) return directResult;
+
+            const candidates = await collectDesktopLoginCandidates(rawInput, currentMode, primaryIdentifier);
+            for (const candidate of candidates) {
+                const result = await tryIdentifier(candidate);
+                if (result) return result;
+            }
+
+            throw lastCredentialError || new Error('Login failed. Please try again.');
         }
 
         async function resolveAccountIdentifierByInput(rawAccountInput) {
@@ -517,6 +698,7 @@
 
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (mainLoginSubmitting) return;
 
             // Determine identifier based on active tab
             let identifier = '';
@@ -524,9 +706,9 @@
             if (currentTab === 'email') {
                 identifier = document.getElementById('email-login-input').value.trim().toLowerCase();
             } else if (currentTab === 'mobile') {
-                identifier = document.getElementById('mobile-login-input').value.trim();
-                if (!identifier.startsWith('+')) identifier = '+1' + identifier.replace(/\D/g, '');
-                identifier = identifier + "@mobile.local";
+                const mobileInput = document.getElementById('mobile-login-input').value.trim();
+                const mobileNumber = buildDesktopInternationalPhone(mobileInput, readDesktopSavedCountryCode() || detectDesktopCountryCode());
+                identifier = mobileNumber ? `${mobileNumber}@mobile.local` : '';
             } else if (currentTab === 'account') {
                 accountInput = document.getElementById('account-login-input').value.trim();
                 identifier = accountInput;
@@ -540,14 +722,24 @@
                 return;
             }
 
+            mainLoginSubmitting = true;
             setMainLoginLoading(true);
             try {
                 if (currentTab === 'account') {
-                    identifier = await resolveAccountIdentifierByInput(accountInput);
+                    try {
+                        identifier = await resolveAccountIdentifierByInput(accountInput);
+                    } catch (accountResolveError) {
+                        console.warn('Desktop account login direct resolution failed, using fallback candidates.');
+                        identifier = '';
+                    }
                 }
 
-                // Assuming standard Email login (or a fake email mapped from phone: +1123456789@mobile.local)
-                const userCredential = await signInWithEmailAndPassword(auth, identifier, password);
+                const rawLoginInput = currentTab === 'account'
+                    ? accountInput
+                    : (currentTab === 'mobile'
+                        ? document.getElementById('mobile-login-input').value.trim()
+                        : document.getElementById('email-login-input').value.trim());
+                const userCredential = await signInWithDesktopFallback(identifier, password, rawLoginInput, currentTab);
                 const user = userCredential.user;
 
                 // AUTO-SYNC Recovery Logic: 
@@ -606,6 +798,7 @@
             } catch (error) {
                 alert(getReadableLoginError(error, 'Login failed. Please try again.'));
             } finally {
+                mainLoginSubmitting = false;
                 setMainLoginLoading(false);
             }
         });

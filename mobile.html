@@ -11859,6 +11859,146 @@ const translations = {
             return buildDeterministicUserId(uid);
         }
 
+        function isLoginCredentialError(error) {
+            const code = String(error && error.code || '').toLowerCase();
+            return code === 'auth/invalid-credential'
+                || code === 'auth/wrong-password'
+                || code === 'auth/user-not-found'
+                || code === 'auth/invalid-email';
+        }
+
+        function looksLikeEmailLoginInput(value) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+        }
+
+        function looksLikePhoneLoginInput(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return false;
+            return /^[+\d][\d\s()\-]+$/.test(raw) || /^\d+$/.test(raw);
+        }
+
+        async function collectMobileLoginCandidates(rawInput, currentMode, primaryIdentifier = '', loginCountryCode = '') {
+            const raw = String(rawInput || '').trim();
+            const normalizedEmail = raw.toLowerCase();
+            const normalizedAccount = normalizeAccountLogin(raw);
+            const normalizedAccountDisplay = raw.toUpperCase();
+            const candidates = [];
+            const seenCandidates = new Set();
+
+            const pushCandidate = (value) => {
+                const normalized = String(value || '').trim().toLowerCase();
+                if (!normalized || seenCandidates.has(normalized)) return;
+                seenCandidates.add(normalized);
+                candidates.push(normalized);
+            };
+
+            pushCandidate(primaryIdentifier);
+
+            if (looksLikeEmailLoginInput(raw)) {
+                pushCandidate(normalizedEmail);
+            }
+
+            const phoneCandidates = [];
+            if (currentMode === 'mobile' || looksLikePhoneLoginInput(raw)) {
+                const prefixes = [loginCountryCode, readSavedCountryCodePrefix(), detectCountryCodePrefix(), '+1'];
+                prefixes.forEach((prefix) => {
+                    const phone = buildInternationalPhone(raw, prefix);
+                    if (!phone || phoneCandidates.includes(phone)) return;
+                    phoneCandidates.push(phone);
+                    pushCandidate(`${phone}@mobile.local`);
+                });
+            }
+
+            const shouldCheckAccount = currentMode === 'account'
+                || /^EC\d{6}$/i.test(normalizedAccountDisplay)
+                || /^[a-zA-Z0-9_]{4,24}$/.test(raw);
+
+            if (shouldCheckAccount) {
+                try {
+                    const resolved = await resolveMobileAccountIdentifier(raw, normalizedAccount);
+                    pushCandidate(resolved.email);
+                } catch (e) {
+                    // Keep Firestore fallback queries below.
+                }
+            }
+
+            const { db, collection, query, where, getDocs } = window.fb;
+            const queryJobs = [];
+            const seenQueries = new Set();
+            const pushQuery = (field, candidate) => {
+                const val = String(candidate || '').trim();
+                if (!val) return;
+                const key = `${field}:${val}`;
+                if (seenQueries.has(key)) return;
+                seenQueries.add(key);
+                queryJobs.push(getDocs(query(collection(db, 'users'), where(field, '==', val))));
+            };
+
+            if (looksLikeEmailLoginInput(raw)) {
+                pushQuery('email', normalizedEmail);
+            }
+            phoneCandidates.forEach((phone) => pushQuery('phone', phone));
+            if (shouldCheckAccount) {
+                pushQuery('account_login', normalizedAccount);
+                pushQuery('account', normalizedAccountDisplay);
+                if (!normalizedAccountDisplay.startsWith('EC')) {
+                    pushQuery('account', `EC${normalizedAccountDisplay}`);
+                }
+            }
+
+            if (queryJobs.length > 0) {
+                try {
+                    const snapshots = await Promise.all(queryJobs);
+                    snapshots.forEach((snap) => {
+                        if (!snap || snap.empty) return;
+                        snap.docs.forEach((docSnap) => {
+                            const data = docSnap.data() || {};
+                            if (data.email) {
+                                pushCandidate(String(data.email).trim().toLowerCase());
+                            } else if (data.phone) {
+                                pushCandidate(`${String(data.phone).trim()}@mobile.local`);
+                            }
+                        });
+                    });
+                } catch (e) {
+                    console.warn('Mobile login fallback lookup failed:', e.message);
+                }
+            }
+
+            return candidates;
+        }
+
+        async function signInWithMobileFallback(auth, primaryIdentifier, password, rawInput, currentMode, loginCountryCode) {
+            let lastCredentialError = null;
+            const tried = new Set();
+
+            const tryIdentifier = async (identifier) => {
+                const normalized = String(identifier || '').trim().toLowerCase();
+                if (!normalized || tried.has(normalized)) return null;
+                tried.add(normalized);
+                try {
+                    return await signInWithEmailAndPassword(auth, normalized, password);
+                } catch (error) {
+                    if (isLoginCredentialError(error)) {
+                        lastCredentialError = error;
+                        return null;
+                    }
+                    throw error;
+                }
+            };
+
+            const directResult = await tryIdentifier(primaryIdentifier);
+            if (directResult) return directResult;
+
+            const candidates = await collectMobileLoginCandidates(rawInput, currentMode, primaryIdentifier, loginCountryCode);
+            for (const candidate of candidates) {
+                const result = await tryIdentifier(candidate);
+                if (result) return result;
+            }
+
+            throw lastCredentialError || new Error('Login failed. Please try again.');
+        }
+
         async function ensureUserNumericIdSynced(uid, userData) {
             if (isSixDigitUserId(userData?.user_id)) return String(userData.user_id);
             const { db, doc, updateDoc } = window.fb;
@@ -12083,11 +12223,16 @@ const translations = {
                             return msg.innerHTML = '<span class="error-text">Please enter a valid account.</span>';
                         }
                     }
-                    const resolved = await resolveMobileAccountIdentifier(input, accountLogin);
-                    accountLogin = resolved.accountLogin;
-                    email = resolved.email;
+                    try {
+                        const resolved = await resolveMobileAccountIdentifier(input, accountLogin);
+                        accountLogin = resolved.accountLogin;
+                        email = resolved.email;
+                    } catch (accountResolveError) {
+                        console.warn('Mobile account login direct resolution failed, using fallback candidates.');
+                        email = '';
+                    }
                 }
-                const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+                const userCredential = await signInWithMobileFallback(auth, email, pass, input, currentLoginTab, loginCountryCode);
                 const user = userCredential.user;
 
                 // AUTO-SYNC Recovery Logic (Mobile)
