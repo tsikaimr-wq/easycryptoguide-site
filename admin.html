@@ -3591,21 +3591,160 @@
             return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
         }
 
-        function getUserPerpetualPriceMap(user) {
+        function parsePerpetualYieldValue(value) {
+            const parsed = parseFloat(value);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function normalizePerpetualControlEntry(value) {
+            if (value === null || value === undefined || value === '') return null;
+
+            if (typeof value === 'object' && !Array.isArray(value)) {
+                const closePrice = parsePerpetualPriceValue(
+                    value.closePrice ?? value.price ?? value.customClosePrice
+                );
+                const yieldRate = parsePerpetualYieldValue(
+                    value.yieldRate ?? value.targetYieldPct ?? value.customYieldPct ?? value.customRoePct
+                );
+                if (closePrice === null && yieldRate === null) return null;
+                return { closePrice, yieldRate };
+            }
+
+            const closePrice = parsePerpetualPriceValue(value);
+            if (closePrice === null) return null;
+            return { closePrice, yieldRate: null };
+        }
+
+        function getUserPerpetualControlMap(user) {
             const source = user && user.perpetual_custom_prices && typeof user.perpetual_custom_prices === 'object'
                 ? user.perpetual_custom_prices
                 : {};
             const normalized = {};
 
-            Object.entries(source).forEach(([coin, price]) => {
+            Object.entries(source).forEach(([coin, rawEntry]) => {
                 const symbol = normalizePerpetualCoinSymbol(coin);
-                const parsed = parsePerpetualPriceValue(price);
-                if (symbol && parsed !== null) {
-                    normalized[symbol] = parsed;
+                const control = normalizePerpetualControlEntry(rawEntry);
+                if (symbol && control) {
+                    normalized[symbol] = control;
                 }
             });
 
             return normalized;
+        }
+
+        function computePerpetualClosePriceFromYield(entryPrice, targetYieldPct, feeRate, isLong) {
+            const safeEntry = window.toSafeNumber(entryPrice);
+            const safeYield = parsePerpetualYieldValue(targetYieldPct);
+            const safeFeeRate = Number.isFinite(Number(feeRate)) ? Number(feeRate) : 0.005;
+            if (!(safeEntry > 0) || safeYield === null) return null;
+            const moveRatio = (safeYield / 100) + safeFeeRate;
+            const multiplier = isLong ? (1 + moveRatio) : (1 - moveRatio);
+            if (!Number.isFinite(multiplier) || multiplier <= 0) return null;
+            const closePrice = safeEntry * multiplier;
+            return Number.isFinite(closePrice) && closePrice > 0 ? closePrice : null;
+        }
+
+        function formatAdminPreviewPrice(value) {
+            const safeValue = window.toSafeNumber(value);
+            if (!(safeValue > 0)) return '--';
+            return safeValue.toLocaleString('en-US', {
+                minimumFractionDigits: safeValue >= 1000 ? 2 : 4,
+                maximumFractionDigits: safeValue >= 1000 ? 2 : 4
+            });
+        }
+
+        function getActivePerpetualTradesForCoin(uid, coin) {
+            return Object.values(window.tradeDataMap || {})
+                .filter((trade) =>
+                    (trade.user_uid === uid || trade.uid === uid)
+                    && trade.status === 'Open'
+                    && trade.type === 'Perpetual'
+                    && normalizePerpetualCoinSymbol(trade.coin || trade.pair) === coin
+                )
+                .sort((a, b) => {
+                    const aTime = (a.timestamp && a.timestamp.seconds) ? a.timestamp.seconds : 0;
+                    const bTime = (b.timestamp && b.timestamp.seconds) ? b.timestamp.seconds : 0;
+                    return bTime - aTime;
+                });
+        }
+
+        function getPerpetualReferencePrice(uid, coin) {
+            const activeTrade = getActivePerpetualTradesForCoin(uid, coin)[0];
+            if (activeTrade) {
+                const entryPrice = window.toSafeNumber(activeTrade.entry_price || activeTrade.price);
+                if (entryPrice > 0) {
+                    return {
+                        price: entryPrice,
+                        source: `Latest open entry ${coin}/USDT`,
+                        trade: activeTrade
+                    };
+                }
+            }
+
+            const livePrice = window.toSafeNumber(window.allCoinsData && window.allCoinsData[coin] ? window.allCoinsData[coin].price : 0);
+            if (livePrice > 0) {
+                return {
+                    price: livePrice,
+                    source: `Live market ${coin}/USDT`,
+                    trade: null
+                };
+            }
+
+            return {
+                price: 0,
+                source: 'No reference price yet',
+                trade: null
+            };
+        }
+
+        function buildPerpetualCoinPreviewHtml(uid, coin, control) {
+            const resolvedControl = normalizePerpetualControlEntry(control);
+            if (!resolvedControl) {
+                return '<div class="text-[11px] text-gray-400">No coin override configured yet.</div>';
+            }
+
+            const reference = getPerpetualReferencePrice(uid, coin);
+            const feeRate = 0.005;
+            const targetYield = resolvedControl.yieldRate;
+            const longPreview = targetYield !== null
+                ? computePerpetualClosePriceFromYield(reference.price, targetYield, feeRate, true)
+                : null;
+            const shortPreview = targetYield !== null
+                ? computePerpetualClosePriceFromYield(reference.price, targetYield, feeRate, false)
+                : null;
+
+            const fixedPriceNote = resolvedControl.closePrice !== null
+                ? `<div class="text-[11px] text-amber-600 font-semibold">Fixed close price override: ${formatAdminPreviewPrice(resolvedControl.closePrice)}</div>`
+                : '';
+
+            const yieldNote = targetYield !== null
+                ? `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div class="rounded-lg bg-purple-50 border border-purple-100 px-3 py-2">
+                            <div class="text-[10px] uppercase tracking-wide text-purple-500 font-semibold">Reference</div>
+                            <div class="text-sm font-bold text-purple-700">${formatAdminPreviewPrice(reference.price)}</div>
+                            <div class="text-[10px] text-purple-400 mt-1">${reference.source}</div>
+                        </div>
+                        <div class="rounded-lg bg-green-50 border border-green-100 px-3 py-2">
+                            <div class="text-[10px] uppercase tracking-wide text-green-500 font-semibold">Long Preview</div>
+                            <div class="text-sm font-bold text-green-700">${formatAdminPreviewPrice(longPreview)}</div>
+                            <div class="text-[10px] text-green-400 mt-1">Auto close price for longs at ${targetYield >= 0 ? '+' : ''}${Number(targetYield).toFixed(2)}%</div>
+                        </div>
+                        <div class="rounded-lg bg-red-50 border border-red-100 px-3 py-2">
+                            <div class="text-[10px] uppercase tracking-wide text-red-500 font-semibold">Short Preview</div>
+                            <div class="text-sm font-bold text-red-700">${formatAdminPreviewPrice(shortPreview)}</div>
+                            <div class="text-[10px] text-red-400 mt-1">Auto close price for shorts at ${targetYield >= 0 ? '+' : ''}${Number(targetYield).toFixed(2)}%</div>
+                        </div>
+                    </div>
+                `
+                : '<div class="text-[11px] text-gray-400">Set a target yield to auto-calculate close prices for long and short positions.</div>';
+
+            return `
+                <div class="space-y-2">
+                    ${fixedPriceNote}
+                    ${yieldNote}
+                </div>
+            `;
         }
 
         function getActivePerpetualCoins(uid) {
@@ -3618,16 +3757,18 @@
         }
 
         function collectPerpetualCoinPriceInputs() {
-            const priceMap = {};
+            const controlMap = {};
             document.querySelectorAll('.perpetual-coin-price-row').forEach((row) => {
                 const coin = normalizePerpetualCoinSymbol(row.getAttribute('data-coin'));
-                const input = row.querySelector('.perpetual-coin-price-input');
-                const parsed = parsePerpetualPriceValue(input ? input.value : '');
-                if (coin && parsed !== null) {
-                    priceMap[coin] = parsed;
+                const priceInput = row.querySelector('.perpetual-coin-price-input');
+                const yieldInput = row.querySelector('.perpetual-coin-yield-input');
+                const closePrice = parsePerpetualPriceValue(priceInput ? priceInput.value : '');
+                const yieldRate = parsePerpetualYieldValue(yieldInput ? yieldInput.value : '');
+                if (coin && (closePrice !== null || yieldRate !== null)) {
+                    controlMap[coin] = { closePrice, yieldRate };
                 }
             });
-            return priceMap;
+            return controlMap;
         }
 
         function getAvailablePerpetualCoins(uid) {
@@ -3645,6 +3786,34 @@
             window.editUserPerpetualPriceMap = collectPerpetualCoinPriceInputs();
         }
 
+        window.refreshPerpetualCoinPreview = function (rowOrCoin) {
+            const row = typeof rowOrCoin === 'string'
+                ? document.querySelector(`.perpetual-coin-price-row[data-coin="${rowOrCoin}"]`)
+                : rowOrCoin;
+            if (!row) return;
+            const coin = normalizePerpetualCoinSymbol(row.getAttribute('data-coin'));
+            const priceInput = row.querySelector('.perpetual-coin-price-input');
+            const yieldInput = row.querySelector('.perpetual-coin-yield-input');
+            const preview = row.querySelector('.perpetual-coin-preview');
+            const control = {
+                closePrice: parsePerpetualPriceValue(priceInput ? priceInput.value : ''),
+                yieldRate: parsePerpetualYieldValue(yieldInput ? yieldInput.value : '')
+            };
+
+            if (!window.editUserPerpetualPriceMap) {
+                window.editUserPerpetualPriceMap = {};
+            }
+            if (control.closePrice === null && control.yieldRate === null) {
+                delete window.editUserPerpetualPriceMap[coin];
+            } else {
+                window.editUserPerpetualPriceMap[coin] = control;
+            }
+
+            if (preview) {
+                preview.innerHTML = buildPerpetualCoinPreviewHtml(window.currentEditUid, coin, control);
+            }
+        };
+
         function renderPerpetualCoinPriceInputs(user, uid) {
             const container = document.getElementById('editUserPerpetualCoinPrices');
             const selector = document.getElementById('editUserPerpetualCoinSelect');
@@ -3660,7 +3829,7 @@
             }
 
             if (isFreshUser) {
-                const baseMap = getUserPerpetualPriceMap(safeUser);
+                const baseMap = getUserPerpetualControlMap(safeUser);
                 window.editUserPerpetualPriceMap = { ...baseMap };
                 window.editUserPerpetualCoins = Array.from(new Set([
                     ...Object.keys(baseMap),
@@ -3693,9 +3862,11 @@
                     const activeTag = getActivePerpetualCoins(safeUid).includes(coin)
                         ? '<span class="text-[10px] font-semibold text-green-700 bg-green-50 border border-green-100 px-2 py-1 rounded-full">ACTIVE</span>'
                         : '<span class="text-[10px] font-semibold text-gray-500 bg-gray-50 border border-gray-100 px-2 py-1 rounded-full">CONFIG</span>';
-                    const value = window.editUserPerpetualPriceMap && window.editUserPerpetualPriceMap[coin] !== undefined
-                        ? window.editUserPerpetualPriceMap[coin]
-                        : '';
+                    const control = normalizePerpetualControlEntry(
+                        window.editUserPerpetualPriceMap && window.editUserPerpetualPriceMap[coin] !== undefined
+                            ? window.editUserPerpetualPriceMap[coin]
+                            : null
+                    ) || { closePrice: null, yieldRate: null };
                     return `
                         <div class="perpetual-coin-price-row border border-gray-200 rounded-xl px-4 py-3 bg-white shadow-sm" data-coin="${coin}">
                             <div class="flex items-center justify-between gap-3 mb-3">
@@ -3708,14 +3879,34 @@
                                     Remove
                                 </button>
                             </div>
-                            <input type="number" step="0.0001" value="${value}"
-                                placeholder="Set close price for ${coin}"
-                                class="perpetual-coin-price-input w-full border rounded-lg p-2 focus:ring-2 focus:ring-purple-500 outline-none shadow-sm">
-                            <p class="text-[10px] text-gray-400 mt-2">Coin-specific price overrides the default fallback price for ${coin} perpetual positions.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-gray-600 mb-1">Target Yield (%)</label>
+                                    <input type="number" step="0.01" value="${control.yieldRate ?? ''}"
+                                        placeholder="Set target yield for ${coin}"
+                                        class="perpetual-coin-yield-input w-full border rounded-lg p-2 focus:ring-2 focus:ring-purple-500 outline-none shadow-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-gray-600 mb-1">Optional Fixed Close Price</label>
+                                    <input type="number" step="0.0001" value="${control.closePrice ?? ''}"
+                                        placeholder="Leave empty to use yield-based price"
+                                        class="perpetual-coin-price-input w-full border rounded-lg p-2 focus:ring-2 focus:ring-purple-500 outline-none shadow-sm">
+                                </div>
+                            </div>
+                            <div class="perpetual-coin-preview mt-3">
+                                ${buildPerpetualCoinPreviewHtml(safeUid, coin, control)}
+                            </div>
+                            <p class="text-[10px] text-gray-400 mt-2">If fixed close price is empty, the target yield will automatically calculate the correct close price for each long or short perpetual order.</p>
                         </div>
                     `;
                 }).join('');
             }
+
+            container.querySelectorAll('.perpetual-coin-price-row').forEach((row) => {
+                row.querySelectorAll('.perpetual-coin-price-input, .perpetual-coin-yield-input').forEach((input) => {
+                    input.addEventListener('input', () => window.refreshPerpetualCoinPreview(row));
+                });
+            });
 
             const availableCoins = getAvailablePerpetualCoins(safeUid).filter(coin => !visibleCoins.includes(coin));
             selector.innerHTML = availableCoins.length > 0
@@ -3768,7 +3959,7 @@
                 document.getElementById('editUserPerpetualPrice').value = user.perpetual_custom_price || '';
             }
             window.editUserPerpetualCoins = null;
-            window.editUserPerpetualPriceMap = getUserPerpetualPriceMap(user);
+            window.editUserPerpetualPriceMap = getUserPerpetualControlMap(user);
             window._lastRenderedPerpetualUid = null;
             renderPerpetualCoinPriceInputs(user, uid);
             if (document.getElementById('editUserDeliveryRule')) {
@@ -4283,6 +4474,19 @@
             return 0.005;
         }
 
+        function getAdminUserPerpetualControl(trade, overrides = {}) {
+            const directControl = normalizePerpetualControlEntry(overrides.userPerpetualControl);
+            if (directControl) return directControl;
+
+            const uid = trade && (trade.user_uid || trade.uid);
+            const coin = normalizePerpetualCoinSymbol(trade && (trade.coin || trade.pair));
+            if (!uid || !coin) return null;
+
+            const user = window.allUsersData && window.allUsersData[uid];
+            const controlMap = getUserPerpetualControlMap(user);
+            return controlMap[coin] || null;
+        }
+
         function buildAdminPerpetualSettlementMetrics(trade, overrides = {}) {
             if (!trade) return null;
 
@@ -4293,14 +4497,27 @@
             const sideText = String(overrides.direction !== undefined ? overrides.direction : (trade.direction || trade.side || '')).toLowerCase();
             const isLong = sideText.includes('long') || sideText === 'buy';
             const customClosePrice = Number(overrides.customClosePrice !== undefined ? overrides.customClosePrice : trade.customClosePrice);
+            const isOpenTrade = String((trade && trade.status) || '').toLowerCase() === 'open';
+            const customYieldPct = parsePerpetualYieldValue(
+                overrides.customYieldPct !== undefined
+                    ? overrides.customYieldPct
+                    : (trade.customYieldPct !== undefined ? trade.customYieldPct : trade.customRoePct)
+            );
             const feeRate = getAdminTradeFeeRate(trade);
             const feeOpen = Math.max(0, window.toSafeNumber(trade.fee_open || 0));
+            const userControl = getAdminUserPerpetualControl(trade, overrides);
 
             if (!(entryPrice > 0) || !(notional > 0) || !(margin > 0)) return null;
 
             let finalClosePrice = null;
             if (Number.isFinite(customClosePrice) && customClosePrice > 0) {
                 finalClosePrice = customClosePrice;
+            } else if (customYieldPct !== null) {
+                finalClosePrice = computePerpetualClosePriceFromYield(entryPrice, customYieldPct, feeRate, isLong);
+            } else if (isOpenTrade && userControl && userControl.closePrice !== null) {
+                finalClosePrice = userControl.closePrice;
+            } else if (isOpenTrade && userControl && userControl.yieldRate !== null) {
+                finalClosePrice = computePerpetualClosePriceFromYield(entryPrice, userControl.yieldRate, feeRate, isLong);
             } else {
                 const storedClosePrice = window.toSafeNumber(trade.close_price);
                 if (storedClosePrice > 0) finalClosePrice = storedClosePrice;
@@ -5135,7 +5352,7 @@
                     <div id="sectionPerpetualRule" class="space-y-4">
                         <div class="bg-purple-50 p-3 rounded-lg border border-purple-100 mb-3">
                             <p class="text-xs text-purple-700 font-medium"><i class="ri-information-line mr-1"></i>
-                                Perpetual outcome control supports a fallback price plus coin-specific overrides.</p>
+                                Perpetual outcome control now supports target yield rates plus legacy fallback prices.</p>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Default Custom Close Price
@@ -5149,8 +5366,8 @@
                         <div class="border border-purple-100 rounded-xl bg-white p-4 space-y-3">
                             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                                 <div>
-                                    <label class="block text-sm font-bold text-gray-700">Coin-Specific Close Prices</label>
-                                    <p class="text-[10px] text-gray-400 mt-1">Use this to control ETH, SOL, XRP and other perpetual symbols independently instead of a single BTC-style price.</p>
+                                    <label class="block text-sm font-bold text-gray-700">Coin-Specific Yield Controls</label>
+                                    <p class="text-[10px] text-gray-400 mt-1">Set a target yield for ETH, SOL, XRP and other perpetual symbols. The system will auto-calculate the matching long and short close price from each trade entry.</p>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <select id="editUserPerpetualCoinSelect"

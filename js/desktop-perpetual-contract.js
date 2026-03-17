@@ -312,19 +312,56 @@ function computeSmoothWave(seed, seconds) {
     return clampNumber(wave / 1.78, -1, 1);
 }
 
-function getUserPerpetualCustomPrice(userData, coin) {
+function parsePerpetualYieldValue(value) {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : null;
+}
+
+function normalizePerpetualControlEntry(value) {
+    if (value === null || value === undefined || value === '') return null;
+
+    if (typeof value === 'object' && !Array.isArray(value)) {
+        const closePrice = toNumber(value.closePrice ?? value.price ?? value.customClosePrice, NaN);
+        const yieldRate = parsePerpetualYieldValue(value.yieldRate ?? value.targetYieldPct ?? value.customYieldPct ?? value.customRoePct);
+        return {
+            closePrice: Number.isFinite(closePrice) && closePrice > 0 ? closePrice : null,
+            yieldRate
+        };
+    }
+
+    const legacyPrice = toNumber(value, NaN);
+    return Number.isFinite(legacyPrice) && legacyPrice > 0
+        ? { closePrice: legacyPrice, yieldRate: null }
+        : null;
+}
+
+function getUserPerpetualCustomControl(userData, coin) {
     const normalizedCoin = String(coin || '').trim().toUpperCase();
     const priceMap = userData && userData.perpetual_custom_prices && typeof userData.perpetual_custom_prices === 'object'
         ? userData.perpetual_custom_prices
         : null;
 
     if (priceMap && normalizedCoin) {
-        const directPrice = toNumber(priceMap[normalizedCoin], NaN);
-        if (Number.isFinite(directPrice) && directPrice > 0) return directPrice;
+        const directEntry = normalizePerpetualControlEntry(priceMap[normalizedCoin]);
+        if (directEntry) return directEntry;
     }
 
     const legacyPrice = toNumber(userData && userData.perpetual_custom_price, NaN);
-    return Number.isFinite(legacyPrice) && legacyPrice > 0 ? legacyPrice : null;
+    return Number.isFinite(legacyPrice) && legacyPrice > 0
+        ? { closePrice: legacyPrice, yieldRate: null }
+        : null;
+}
+
+function computePerpetualClosePriceFromYield(entryPrice, targetYieldPct, feeRate, isLong) {
+    const safeEntry = toNumber(entryPrice, 0);
+    const safeYield = parsePerpetualYieldValue(targetYieldPct);
+    const safeFeeRate = toNumber(feeRate, TRADE_FEE_RATE);
+    if (!(safeEntry > 0) || safeYield === null) return null;
+    const moveRatio = (safeYield / 100) + safeFeeRate;
+    const multiplier = isLong ? (1 + moveRatio) : (1 - moveRatio);
+    if (!Number.isFinite(multiplier) || multiplier <= 0) return null;
+    const closePrice = safeEntry * multiplier;
+    return Number.isFinite(closePrice) && closePrice > 0 ? closePrice : null;
 }
 
 function getDesktopTradeLivePrice(trade, fallbackPrice) {
@@ -360,16 +397,39 @@ function getTradeTargetSettlementMetrics(trade, overrides = {}) {
         overrides.margin !== undefined ? overrides.margin : (trade.margin || marginFallback),
         0
     );
+    const feeRate = toNumber(trade.fee_rate !== undefined ? trade.fee_rate : TRADE_FEE_RATE, TRADE_FEE_RATE);
+    const isLong = overrides.isLongPosition !== undefined ? Boolean(overrides.isLongPosition) : isLongTrade(trade);
+    const isOpenTrade = String((trade && trade.status) || '').toLowerCase() === 'open';
+    const customYieldPct = parsePerpetualYieldValue(
+        overrides.targetYieldPct !== undefined
+            ? overrides.targetYieldPct
+            : (trade.customYieldPct !== undefined ? trade.customYieldPct : trade.customRoePct)
+    );
+    const userControl = overrides.userPerpetualControl !== undefined
+        ? normalizePerpetualControlEntry(overrides.userPerpetualControl)
+        : getUserPerpetualCustomControl(state.userData, getTradeCoin(trade));
     const targetClosePrice = toNumber(
         overrides.targetClosePrice !== undefined
             ? overrides.targetClosePrice
-            : (trade.customClosePrice !== undefined && trade.customClosePrice !== null
-                ? trade.customClosePrice
-                : trade.close_price),
+            : (
+                (trade.customClosePrice !== undefined && trade.customClosePrice !== null)
+                    ? trade.customClosePrice
+                    : (
+                        customYieldPct !== null
+                            ? computePerpetualClosePriceFromYield(entryPrice, customYieldPct, feeRate, isLong)
+                            : (
+                                isOpenTrade && userControl && userControl.closePrice !== null
+                                    ? userControl.closePrice
+                                    : (
+                                        isOpenTrade && userControl && userControl.yieldRate !== null
+                                            ? computePerpetualClosePriceFromYield(entryPrice, userControl.yieldRate, feeRate, isLong)
+                                            : trade.close_price
+                                    )
+                            )
+                    )
+            ),
         0
     );
-    const feeRate = toNumber(trade.fee_rate !== undefined ? trade.fee_rate : TRADE_FEE_RATE, TRADE_FEE_RATE);
-    const isLong = overrides.isLongPosition !== undefined ? Boolean(overrides.isLongPosition) : isLongTrade(trade);
 
     if (!(entryPrice > 0) || !(amount > 0) || !(margin > 0) || !(targetClosePrice > 0)) return null;
 
@@ -1193,7 +1253,7 @@ async function settleDesktopTrade(tradeId) {
         state.userData = userData;
 
         const coin = getTradeCoin(tradeData);
-        const userPerpetualCustomPrice = getUserPerpetualCustomPrice(userData, coin);
+        const userPerpetualControl = getUserPerpetualCustomControl(userData, coin);
         const entryPrice = toNumber(tradeData.entry_price || tradeData.price, 0);
         const amount = toNumber(tradeData.notional || tradeData.amount, 0);
         const leverage = toNumber(tradeData.leverage, LEVERAGE) || LEVERAGE;
@@ -1203,12 +1263,19 @@ async function settleDesktopTrade(tradeId) {
         const feeOpen = toNumber(tradeData.fee_open, 0);
         const activeOutcome = String(tradeData.admin_outcome || '').trim().toLowerCase();
         const currentMarketPrice = getDesktopTradeLivePrice({ id: tradeId, ...tradeData }, tradeData.price);
+        const tradeCustomYieldPct = parsePerpetualYieldValue(
+            tradeData.customYieldPct !== undefined ? tradeData.customYieldPct : tradeData.customRoePct
+        );
 
         let finalClosePrice = currentMarketPrice;
         if (toNumber(tradeData.customClosePrice, 0) > 0) {
             finalClosePrice = toNumber(tradeData.customClosePrice, entryPrice);
-        } else if (toNumber(userPerpetualCustomPrice, 0) > 0) {
-            finalClosePrice = toNumber(userPerpetualCustomPrice, entryPrice);
+        } else if (tradeCustomYieldPct !== null) {
+            finalClosePrice = toNumber(computePerpetualClosePriceFromYield(entryPrice, tradeCustomYieldPct, feeRate, isLongTrade(tradeData)), entryPrice);
+        } else if (userPerpetualControl && userPerpetualControl.closePrice !== null) {
+            finalClosePrice = toNumber(userPerpetualControl.closePrice, entryPrice);
+        } else if (userPerpetualControl && userPerpetualControl.yieldRate !== null) {
+            finalClosePrice = toNumber(computePerpetualClosePriceFromYield(entryPrice, userPerpetualControl.yieldRate, feeRate, isLongTrade(tradeData)), entryPrice);
         } else if (activeOutcome === 'win') {
             const move = 0.05 + (Math.random() * 0.05);
             finalClosePrice = isLongTrade(tradeData) ? (entryPrice * (1 + move)) : (entryPrice * (1 - move));

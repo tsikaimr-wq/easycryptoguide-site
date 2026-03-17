@@ -275,6 +275,11 @@
                         }
 
                         const userData = docSnap.data();
+                        window.currentUserPerpetualControlMap = getNormalizedPerpetualControlMap(userData && userData.perpetual_custom_prices);
+                        const fallbackPerpetualPrice = parseFloat(userData && userData.perpetual_custom_price);
+                        window.currentUserPerpetualFallbackPrice = Number.isFinite(fallbackPerpetualPrice) && fallbackPerpetualPrice > 0
+                            ? fallbackPerpetualPrice
+                            : null;
                         const kycStatus = userData.kyc_status || 'Not Verified';
                         window.currentKycStatus = kycStatus;
                         window.kycGateActive = !isKycCompleted(kycStatus);
@@ -358,6 +363,8 @@
                 }
                 window.currentKycStatus = 'Not Verified';
                 window.kycGateActive = false;
+                window.currentUserPerpetualControlMap = {};
+                window.currentUserPerpetualFallbackPrice = null;
                 window.toggleKycGateBanner(false);
             }
         });
@@ -14565,13 +14572,6 @@ const translations = {
             const leverage = Number(overrides.leverage !== undefined ? overrides.leverage : (trade.leverage || 0));
             const marginFallback = leverage > 0 ? (amount / leverage) : amount;
             const margin = Number(overrides.margin !== undefined ? overrides.margin : (trade.margin || marginFallback || 0));
-            const targetClosePrice = Number(
-                overrides.targetClosePrice !== undefined
-                    ? overrides.targetClosePrice
-                    : (trade.customClosePrice !== undefined && trade.customClosePrice !== null
-                        ? trade.customClosePrice
-                        : trade.close_price)
-            );
             const feeRateRaw = Number(trade.fee_rate !== undefined ? trade.fee_rate : (window.TRADE_FEE_RATE || 0.005));
             const feeRate = Number.isFinite(feeRateRaw) && feeRateRaw >= 0 ? feeRateRaw : 0.005;
             const directionRaw = String(overrides.direction !== undefined ? overrides.direction : (trade.direction || trade.side || ''));
@@ -14579,6 +14579,36 @@ const translations = {
             const isLong = overrides.isLongPosition !== undefined
                 ? Boolean(overrides.isLongPosition)
                 : (direction.includes('long') || direction === 'buy');
+            const isOpenTrade = String((trade && trade.status) || '').toLowerCase() === 'open';
+            const customYieldPct = parsePerpetualYieldValue(
+                overrides.targetYieldPct !== undefined
+                    ? overrides.targetYieldPct
+                    : (trade.customYieldPct !== undefined ? trade.customYieldPct : trade.customRoePct)
+            );
+            const userControl = overrides.userPerpetualControl !== undefined
+                ? normalizePerpetualControlEntry(overrides.userPerpetualControl)
+                : getCurrentUserPerpetualControl(trade && (trade.coin || (trade.pair ? String(trade.pair).split('/')[0] : '')));
+            const targetClosePrice = Number(
+                overrides.targetClosePrice !== undefined
+                    ? overrides.targetClosePrice
+                    : (
+                        (trade.customClosePrice !== undefined && trade.customClosePrice !== null)
+                            ? trade.customClosePrice
+                            : (
+                                customYieldPct !== null
+                                    ? computePerpetualClosePriceFromYield(entryPrice, customYieldPct, feeRate, isLong)
+                                    : (
+                                        isOpenTrade && userControl && userControl.closePrice !== null
+                                            ? userControl.closePrice
+                                            : (
+                                                isOpenTrade && userControl && userControl.yieldRate !== null
+                                                    ? computePerpetualClosePriceFromYield(entryPrice, userControl.yieldRate, feeRate, isLong)
+                                                    : trade.close_price
+                                            )
+                                    )
+                            )
+                    )
+            );
 
             if (!(entryPrice > 0) || !(amount > 0) || !(margin > 0) || !(targetClosePrice > 0)) return null;
 
@@ -17258,29 +17288,78 @@ No transfer fees for account transfer / exchange</div>
             }
         };
 
-        function getUserPerpetualCustomPrice(userData, coin) {
-            const normalizedCoin = String(coin || '').trim().toUpperCase();
-            const priceMap = userData && userData.perpetual_custom_prices && typeof userData.perpetual_custom_prices === 'object'
-                ? userData.perpetual_custom_prices
+        function parsePerpetualYieldValue(value) {
+            const parsed = parseFloat(value);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function normalizePerpetualControlEntry(value) {
+            if (value === null || value === undefined || value === '') return null;
+
+            if (typeof value === 'object' && !Array.isArray(value)) {
+                const closePrice = parseFloat(value.closePrice ?? value.price ?? value.customClosePrice);
+                const yieldRate = parsePerpetualYieldValue(value.yieldRate ?? value.targetYieldPct ?? value.customYieldPct ?? value.customRoePct);
+                return {
+                    closePrice: Number.isFinite(closePrice) && closePrice > 0 ? closePrice : null,
+                    yieldRate
+                };
+            }
+
+            const legacyPrice = parseFloat(value);
+            return Number.isFinite(legacyPrice) && legacyPrice > 0
+                ? { closePrice: legacyPrice, yieldRate: null }
                 : null;
+        }
 
-            if (priceMap && normalizedCoin) {
-                const directPrice = parseFloat(priceMap[normalizedCoin]);
-                if (Number.isFinite(directPrice) && directPrice > 0) {
-                    return directPrice;
+        function getNormalizedPerpetualControlMap(source) {
+            const priceMap = source && typeof source === 'object' ? source : {};
+            const normalized = {};
+            Object.entries(priceMap).forEach(([coin, rawValue]) => {
+                const symbol = String(coin || '').trim().toUpperCase();
+                const entry = normalizePerpetualControlEntry(rawValue);
+                if (symbol && entry) {
+                    normalized[symbol] = entry;
                 }
+            });
+            return normalized;
+        }
 
-                const matchedEntry = Object.entries(priceMap).find(([symbol]) => String(symbol || '').trim().toUpperCase() === normalizedCoin);
-                if (matchedEntry) {
-                    const matchedPrice = parseFloat(matchedEntry[1]);
-                    if (Number.isFinite(matchedPrice) && matchedPrice > 0) {
-                        return matchedPrice;
-                    }
-                }
+        function getCurrentUserPerpetualControl(coin) {
+            const normalizedCoin = String(coin || '').trim().toUpperCase();
+            const controlMap = getNormalizedPerpetualControlMap(window.currentUserPerpetualControlMap);
+            if (normalizedCoin && controlMap[normalizedCoin]) {
+                return controlMap[normalizedCoin];
+            }
+            const fallbackPrice = parseFloat(window.currentUserPerpetualFallbackPrice);
+            return Number.isFinite(fallbackPrice) && fallbackPrice > 0
+                ? { closePrice: fallbackPrice, yieldRate: null }
+                : null;
+        }
+
+        function getUserPerpetualCustomControl(userData, coin) {
+            const normalizedCoin = String(coin || '').trim().toUpperCase();
+            const controlMap = getNormalizedPerpetualControlMap(userData && userData.perpetual_custom_prices);
+            if (normalizedCoin && controlMap[normalizedCoin]) {
+                return controlMap[normalizedCoin];
             }
 
             const legacyPrice = parseFloat(userData && userData.perpetual_custom_price);
-            return Number.isFinite(legacyPrice) && legacyPrice > 0 ? legacyPrice : null;
+            if (Number.isFinite(legacyPrice) && legacyPrice > 0) {
+                return { closePrice: legacyPrice, yieldRate: null };
+            }
+            return null;
+        }
+
+        function computePerpetualClosePriceFromYield(entryPrice, targetYieldPct, feeRate, isLong) {
+            const safeEntry = parseFloat(entryPrice);
+            const safeYield = parsePerpetualYieldValue(targetYieldPct);
+            const safeFeeRate = Number.isFinite(Number(feeRate)) ? Number(feeRate) : getTradeFeeRate();
+            if (!(safeEntry > 0) || safeYield === null) return null;
+            const moveRatio = (safeYield / 100) + safeFeeRate;
+            const multiplier = isLong ? (1 + moveRatio) : (1 - moveRatio);
+            if (!Number.isFinite(multiplier) || multiplier <= 0) return null;
+            const closePrice = safeEntry * multiplier;
+            return Number.isFinite(closePrice) && closePrice > 0 ? closePrice : null;
         }
 
         window.fire_closePosition = async (tradeId) => {
@@ -17305,7 +17384,7 @@ No transfer fees for account transfer / exchange</div>
 
             // 3. Calculate Final Close Price
             const coin = tradeData.coin || (tradeData.pair ? tradeData.pair.split('/')[0] : 'BTC');
-            const userPerpetualCustomPrice = getUserPerpetualCustomPrice(userData, coin);
+            const userPerpetualControl = getUserPerpetualCustomControl(userData, coin);
             const currentMarketPrice = getTradeLivePrice(tradeData, tradeData.price);
             const entryPrice = parseFloat(tradeData.price);
             const direction = (tradeData.direction || tradeData.side || 'Long').toString();
@@ -17315,6 +17394,9 @@ No transfer fees for account transfer / exchange</div>
             const leverage = parseFloat(tradeData.leverage || 1);
             const margin = parseFloat(tradeData.margin || (notional / leverage) || 0);
             const totalFee = notional * getTradeFeeRate();
+            const tradeCustomYieldPct = parsePerpetualYieldValue(
+                tradeData.customYieldPct !== undefined ? tradeData.customYieldPct : tradeData.customRoePct
+            );
 
             let finalClosePrice = currentMarketPrice;
 
@@ -17322,9 +17404,17 @@ No transfer fees for account transfer / exchange</div>
             if (tradeData.customClosePrice) {
                 finalClosePrice = parseFloat(tradeData.customClosePrice);
             }
+            // Priority 1.5: Trade-specific yield override
+            else if (tradeCustomYieldPct !== null) {
+                finalClosePrice = computePerpetualClosePriceFromYield(entryPrice, tradeCustomYieldPct, getTradeFeeRate(), isLong);
+            }
             // Priority 2: Global User Custom Price Fallback
-            else if (tradeData.type === 'Perpetual' && userPerpetualCustomPrice) {
-                finalClosePrice = userPerpetualCustomPrice;
+            else if (tradeData.type === 'Perpetual' && userPerpetualControl && userPerpetualControl.closePrice !== null) {
+                finalClosePrice = userPerpetualControl.closePrice;
+            }
+            // Priority 2.5: Global User Yield Fallback
+            else if (tradeData.type === 'Perpetual' && userPerpetualControl && userPerpetualControl.yieldRate !== null) {
+                finalClosePrice = computePerpetualClosePriceFromYield(entryPrice, userPerpetualControl.yieldRate, getTradeFeeRate(), isLong);
             }
             // Priority 3: Force Win/Loss Rule (Delivery specific or Trade specific)
             // Note: Per user request, Perpetual trades bypass this win/loss logic in favor of price control.
@@ -17679,6 +17769,11 @@ No transfer fees for account transfer / exchange</div>
                     const data = docSnap.data();
                     const balance = data.balance || 0;
                     const formattedBalance = parseFloat(balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    window.currentUserPerpetualControlMap = getNormalizedPerpetualControlMap(data && data.perpetual_custom_prices);
+                    const fallbackPerpetualPrice = parseFloat(data && data.perpetual_custom_price);
+                    window.currentUserPerpetualFallbackPrice = Number.isFinite(fallbackPerpetualPrice) && fallbackPerpetualPrice > 0
+                        ? fallbackPerpetualPrice
+                        : null;
                     window.currentAssetBalances = normalizeAssetBalances(data.asset_balances, balance);
 
                     // Update various balance displays in the UI
@@ -17732,6 +17827,15 @@ No transfer fees for account transfer / exchange</div>
 
                     if (typeof updateContractCalculations === 'function') {
                         updateContractCalculations();
+                    }
+                    if (typeof renderHoldPositions === 'function' && window.currentTradeFooterTab === 'positions') {
+                        renderHoldPositions();
+                    }
+                    if (typeof renderTradeOrdersPanel === 'function' && window.currentTradeFooterTab === 'orders') {
+                        renderTradeOrdersPanel();
+                    }
+                    if (typeof renderHistoryContractList === 'function') {
+                        renderHistoryContractList();
                     }
                     if (typeof updateDeliveryFeeEstimate === 'function') {
                         updateDeliveryFeeEstimate();
