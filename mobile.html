@@ -719,7 +719,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 16px;
+            padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
             background: #fff;
             z-index: 100;
             flex-shrink: 0;
@@ -736,13 +736,20 @@
 
         .header-icons {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             color: #6a35ff;
         }
 
         .header-icons span {
             font-size: 20px;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            touch-action: manipulation;
         }
 
         .banner-section {
@@ -1298,9 +1305,19 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 16px;
+            padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
             font-size: 20px;
             color: #fff;
+        }
+
+        .profile-top-bar>span[onclick] {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 44px;
+            min-height: 44px;
+            border-radius: 14px;
+            touch-action: manipulation;
         }
 
         .user-header-section {
@@ -1972,6 +1989,23 @@
             box-shadow: 0 24px 60px rgba(8, 11, 26, 0.28);
             overflow: hidden;
             border: 1px solid rgba(17, 24, 39, 0.08);
+        }
+
+        .order-detail-actions {
+            padding: 0 20px 20px;
+        }
+
+        .order-detail-close-btn {
+            width: 100%;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #ff5b6a 0%, #ff4757 100%);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 16px 28px rgba(255, 71, 87, 0.22);
         }
 
         .order-detail-header {
@@ -3920,7 +3954,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 24px 20px;
+            padding: calc(24px + env(safe-area-inset-top, 0px)) 20px 24px;
         }
 
         .support-logo {
@@ -3963,6 +3997,13 @@
         .support-close {
             font-size: 24px;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            touch-action: manipulation;
         }
 
         .support-main {
@@ -4061,9 +4102,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 16px;
+            padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
             border-bottom: 1px solid #f0f0f0;
-            height: 56px;
+            min-height: calc(56px + env(safe-area-inset-top, 0px));
         }
 
         .chat-header-left {
@@ -4076,6 +4117,13 @@
             font-size: 20px;
             cursor: pointer;
             color: #333;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            touch-action: manipulation;
         }
 
         .chat-avatars-group {
@@ -4107,6 +4155,13 @@
             font-size: 20px;
             cursor: pointer;
             color: #333;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            touch-action: manipulation;
         }
 
         .chat-main {
@@ -5977,7 +6032,7 @@
                     </div>
                 </div>
                 <div class="header-icons">
-                    <span onclick="showScreen('supportScreen')" style="cursor:pointer; position: relative;">
+                    <span class="header-action-btn" onclick="showScreen('supportScreen')" style="cursor:pointer; position: relative;" aria-label="Open support">
                         <span id="headset-dot" class="notification-dot"></span>
                         <svg class="fintech-icon" viewBox="0 0 24 24">
                             <path
@@ -5985,7 +6040,7 @@
                                 fill="url(#icon-gradient)" />
                         </svg>
                     </span>
-                    <span onclick="showScreen('profile')">
+                    <span class="header-action-btn" onclick="showScreen('profile')" aria-label="Open profile">
                         <svg class="fintech-icon" viewBox="0 0 24 24">
                             <path
                                 d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.33 4 18V20H20V18C20 15.33 14.67 14 12 14Z"
@@ -6108,7 +6163,7 @@
                                 <span>↗</span> Withdraw
                             </div>
                             <div class="funds-action-btn"
-                                onclick="tradeEntrySource='profile-exchange'; showScreen('trade');"
+                                onclick="tradeEntrySource='exchange-nav'; showScreen('trade');"
                                 data-t-key="funds_exchange"><span>⇄</span>
                                 Exchange
                             </div>
@@ -6442,7 +6497,7 @@
                         <span class="p-menu-label" data-t-key="prof_withdraw">Withdraw</span>
                         <span class="p-menu-arrow">&gt;</span>
                     </div>
-                    <div class="profile-menu-item" onclick="tradeEntrySource='profile-exchange'; showScreen('trade');">
+                    <div class="profile-menu-item" onclick="tradeEntrySource='exchange-nav'; showScreen('trade');">
                         <span class="p-menu-icon">⇄</span>
                         <span class="p-menu-label" data-t-key="prof_exchange">Exchange</span>
                         <span class="p-menu-arrow">&gt;</span>
@@ -9664,28 +9719,31 @@
             </div>
         </div>
 
-        <div id="order-detail-screen" class="screen hidden" style="height: 100%; display: flex; flex-direction: column;">
-            <div class="profile-top-bar" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); color: #fff;">
-                <span onclick="goBack()" style="cursor:pointer; color: #fff;">&lt;</span>
-                <span style="font-size: 18px; font-weight: 600; color: #ffffff;">Order Details</span>
-                <span style="visibility: hidden;">&lt;</span>
-            </div>
-            <div class="scroll-area">
-                <div class="order-detail-shell">
-                    <div class="order-detail-card">
-                        <div class="order-detail-header">
-                            <div class="order-detail-title">Order Details</div>
-                            <div class="order-detail-pair" id="order-detail-pair">BTC/USDT</div>
+            <div id="order-detail-screen" class="screen hidden" style="height: 100%; display: flex; flex-direction: column;">
+                <div class="profile-top-bar" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); color: #fff;">
+                    <span onclick="goBack()" style="cursor:pointer; color: #fff;">&lt;</span>
+                    <span style="font-size: 18px; font-weight: 600; color: #ffffff;">Order Details</span>
+                    <span style="visibility: hidden;">&lt;</span>
+                </div>
+                <div class="scroll-area">
+                    <div class="order-detail-shell">
+                        <div class="order-detail-card">
+                            <div class="order-detail-header">
+                                <div class="order-detail-title">Order Details</div>
+                                <div class="order-detail-pair" id="order-detail-pair">BTC/USDT</div>
+                            </div>
+                            <div class="order-detail-profit-wrap">
+                                <div class="order-detail-profit-label">Net Profit and Loss Amount</div>
+                                <div class="order-detail-profit-value" id="order-detail-profit">+0.00 (0.00%)</div>
+                            </div>
+                            <div class="order-detail-grid" id="order-detail-grid"></div>
+                            <div id="order-detail-actions" class="order-detail-actions hidden">
+                                <button type="button" class="order-detail-close-btn" onclick="closeCurrentOrderDetailPosition()">Close Position</button>
+                            </div>
                         </div>
-                        <div class="order-detail-profit-wrap">
-                            <div class="order-detail-profit-label">Net Profit and Loss Amount</div>
-                            <div class="order-detail-profit-value" id="order-detail-profit">+0.00 (0.00%)</div>
-                        </div>
-                        <div class="order-detail-grid" id="order-detail-grid"></div>
                     </div>
                 </div>
             </div>
-        </div>
 
         <!-- TRADE SECTION -->
         <div id="trade-screen" class="screen hidden">
@@ -10640,7 +10698,7 @@
                 </svg>
                 Contract
             </div>
-            <div class="nav-item" id="nav-exchange" onclick="tradeEntrySource='bottom-nav'; showScreen('trade')"
+            <div class="nav-item" id="nav-exchange" onclick="tradeEntrySource='exchange-nav'; showScreen('trade')"
                 data-t-key="nav_trade">
                 <svg class="fintech-icon" viewBox="0 0 24 24">
                     <path d="M6.99 11L3 15L6.99 19V16H14V14H6.99V11ZM21 9L17.01 5V8H10V10H17.01V13L21 9Z"
@@ -11604,6 +11662,7 @@ const translations = {
         window.currentContractHistoryView = 'history';
         let navigationStack = [];
         let tradeEntrySource = '';
+        let currentTradeTab = 'spot';
         window.withdrawHistoryAll = [];
         window.currentTradingCoin = 'BTC';
         let verificationMethod = 'mobile';
@@ -13481,6 +13540,47 @@ const translations = {
             return target;
         }
 
+        function isExchangeTradeEntrySource() {
+            return tradeEntrySource === 'exchange-nav';
+        }
+
+        function applyTradeHeaderMode(tab) {
+            const normalizedTab = tab || currentTradeTab || 'spot';
+            const tradeTabsContainer = document.querySelector('#trade-screen .trade-tabs');
+            const historyIcon = document.querySelector('#trade-screen .profile-top-bar > span:last-child');
+            const exchangeBtn = document.getElementById('trade-tab-exc');
+            const spotBtn = document.getElementById('trade-tab-spot');
+            const contractBtn = document.getElementById('trade-tab-contract');
+            const isContractTab = normalizedTab === 'contract';
+            const exchangeOnlyRoute = isExchangeTradeEntrySource() && normalizedTab === 'exchange';
+
+            if (tradeTabsContainer) {
+                tradeTabsContainer.style.display = isContractTab ? 'none' : 'flex';
+            }
+            if (exchangeBtn) exchangeBtn.style.display = isContractTab ? 'none' : 'flex';
+            if (spotBtn) spotBtn.style.display = (exchangeOnlyRoute || isContractTab) ? 'none' : 'flex';
+            if (contractBtn) contractBtn.style.display = (exchangeOnlyRoute || isContractTab) ? 'none' : 'flex';
+            if (historyIcon) {
+                historyIcon.style.display = isContractTab ? 'none' : 'inline-flex';
+            }
+        }
+
+        function updateTradeNavState(target) {
+            const navHome = document.getElementById('nav-home');
+            const navMarket = document.getElementById('nav-market');
+            const navContract = document.getElementById('nav-contract');
+            const navExchange = document.getElementById('nav-exchange');
+            const navFunds = document.getElementById('nav-funds');
+            const normalizedTarget = normalizeScreenTarget(target || currentScreen);
+            const isTradeScreen = normalizedTarget === 'trade';
+
+            if (navHome) navHome.classList.toggle('active', normalizedTarget === 'homeScreen');
+            if (navMarket) navMarket.classList.toggle('active', normalizedTarget === 'market');
+            if (navContract) navContract.classList.toggle('active', isTradeScreen && currentTradeTab === 'contract');
+            if (navExchange) navExchange.classList.toggle('active', isTradeScreen && currentTradeTab === 'exchange');
+            if (navFunds) navFunds.classList.toggle('active', normalizedTarget === 'funds');
+        }
+
         function isNavigableScreenTarget(target) {
             const normalized = normalizeScreenTarget(target);
             if (!normalized) return false;
@@ -13587,11 +13687,10 @@ const translations = {
             }
 
             if (target === 'trade') {
-                const isProfileExchange = (tradeEntrySource === 'profile-exchange');
+                const isExchangeRoute = isExchangeTradeEntrySource();
                 const isContract = (tradeEntrySource === 'contract-nav');
-                document.getElementById('trade-tab-spot').style.display = isProfileExchange ? 'none' : 'block';
 
-                if (isProfileExchange) switchTradeTab('exchange');
+                if (isExchangeRoute) switchTradeTab('exchange', true);
                 else if (isContract) switchTradeTab('contract');
                 else switchTradeTab('spot');
             }
@@ -13630,16 +13729,7 @@ const translations = {
                 }
             }
 
-            const navHome = document.getElementById('nav-home');
-            const navMarket = document.getElementById('nav-market');
-            const navContract = document.getElementById('nav-contract');
-            const navExchange = document.getElementById('nav-exchange');
-            const navFunds = document.getElementById('nav-funds');
-            if (navHome) navHome.classList.toggle('active', target === 'homeScreen');
-            if (navMarket) navMarket.classList.toggle('active', target === 'market');
-            if (navContract) navContract.classList.toggle('active', target === 'trade' && tradeEntrySource === 'contract-nav');
-            if (navExchange) navExchange.classList.toggle('active', target === 'trade' && (tradeEntrySource === 'bottom-nav' || tradeEntrySource === 'profile-exchange'));
-            if (navFunds) navFunds.classList.toggle('active', target === 'funds');
+            updateTradeNavState(target);
 
             if (target === 'market') {
                 const marketSearch = document.getElementById('market-search');
@@ -13662,7 +13752,13 @@ const translations = {
             }
         }
 
-        function switchTradeTab(tab) {
+        function switchTradeTab(tab, preserveRoute = false) {
+            currentTradeTab = tab;
+            if (!preserveRoute) {
+                if (tab === 'contract') tradeEntrySource = 'contract-nav';
+                else tradeEntrySource = '';
+            }
+
             document.getElementById('trade-tab-exc').classList.toggle('active', tab === 'exchange');
             document.getElementById('trade-tab-spot').classList.toggle('active', tab === 'spot');
             document.getElementById('trade-tab-contract').classList.toggle('active', tab === 'contract');
@@ -13677,14 +13773,8 @@ const translations = {
             document.getElementById('trade-footer-content').classList.toggle('hidden', isExc);
             document.getElementById('trade-bottom-tabs-area').classList.toggle('hidden', isExc);
 
-            // Hide trade tabs and history icon when in contract mode
-            const tradeTabsContainer = document.querySelector('#trade-screen .trade-tabs');
-            const historyIcon = document.querySelector('#trade-screen .profile-top-bar > span:last-child');
-            if (tradeTabsContainer && historyIcon) {
-                const isContract = (tab === 'contract');
-                tradeTabsContainer.style.display = isContract ? 'none' : 'flex';
-                historyIcon.style.display = isContract ? 'none' : 'inline-block';
-            }
+            applyTradeHeaderMode(tab);
+            updateTradeNavState('trade');
 
             if (isExc && typeof updateExchangeUI === 'function') {
                 updateExchangeUI();
@@ -14981,6 +15071,7 @@ const translations = {
             const pairEl = document.getElementById('order-detail-pair');
             const profitEl = document.getElementById('order-detail-profit');
             const gridEl = document.getElementById('order-detail-grid');
+            const actionsEl = document.getElementById('order-detail-actions');
             if (!pairEl || !profitEl || !gridEl) return;
 
             const amount = Number(trade.amount || trade.notional || 0);
@@ -15093,6 +15184,13 @@ const translations = {
                 </div>
             `).join('');
 
+            if (actionsEl) {
+                const canClosePosition = statusTone === 'open'
+                    && String(trade.type || '').toLowerCase() === 'perpetual'
+                    && !!trade.id;
+                actionsEl.classList.toggle('hidden', !canClosePosition);
+            }
+
             // Keep back behavior deterministic for this details page.
             showScreen('order-detail', false);
             if (window.ecSetSiteLanguage) {
@@ -15114,6 +15212,17 @@ const translations = {
             renderTradeDetail(trade);
         }
         window.openTradeDetailById = openTradeDetailById;
+
+        window.closeCurrentOrderDetailPosition = async function () {
+            const trade = window.currentOrderDetailTrade;
+            if (!trade || !trade.id) {
+                if (typeof window.showMobileToast === 'function') {
+                    window.showMobileToast('Position detail is unavailable.');
+                }
+                return;
+            }
+            await window.closePosition(trade.id);
+        };
 
         function renderTradeOrdersPanel() {
             const container = document.getElementById('trade-footer-content');
@@ -15348,7 +15457,7 @@ const translations = {
                             </div>
                             <div style="display:flex; gap:8px;">
                                 <button onclick="event.stopPropagation();" style="background:#3a2a5a; color:#fff; border:none; border-radius:4px; padding:6px 12px; font-size:12px; cursor:default;">${trade.order_type || 'Market'}</button>
-                                <button onclick="event.stopPropagation(); closePosition('${trade.id}')" style="background:#FF4757; color:#fff; border:none; border-radius:4px; padding:6px 12px; font-size:12px; cursor:pointer;">Close</button>
+                                <button onclick="event.stopPropagation(); closePosition('${trade.id}')" style="background:#FF4757; color:#fff; border:none; border-radius:10px; padding:8px 14px; font-size:13px; font-weight:600; cursor:pointer;">Close</button>
                             </div>
                         </div>
                     </div>
