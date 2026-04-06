@@ -40,7 +40,7 @@
     </script>
     <script>
         (function () {
-            const mobileBuildId = '20260318b';
+            const mobileBuildId = '20260406a';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -466,6 +466,7 @@
         :root {
             --ec-bottom-nav-height: 84px;
             --ec-keyboard-offset: 0px;
+            --ec-viewport-bottom-offset: 0px;
         }
 
         .screen {
@@ -492,6 +493,13 @@
             visibility: visible !important;
             opacity: 1 !important;
             pointer-events: auto !important;
+        }
+
+        body.support-footer-only .bottom-nav {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
         }
 
         /* --- AUTH SCREEN --- */
@@ -1142,7 +1150,7 @@
             position: fixed;
             left: 50%;
             right: auto;
-            bottom: 0;
+            bottom: var(--ec-viewport-bottom-offset, 0px);
             transform: translateX(-50%);
             width: min(100vw, 420px);
             max-width: 420px;
@@ -4091,7 +4099,7 @@
             backdrop-filter: blur(10px);
             display: flex;
             justify-content: space-around;
-            padding: 16px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+            padding: 16px 0 calc(16px + env(safe-area-inset-bottom, 0px) + var(--ec-viewport-bottom-offset, 0px));
             border-top: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 -8px 24px rgba(10, 0, 24, 0.22);
             flex-shrink: 0;
@@ -4528,7 +4536,7 @@
             backdrop-filter: blur(10px);
             display: flex;
             justify-content: space-around;
-            padding: 16px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+            padding: 16px 0 calc(16px + env(safe-area-inset-bottom, 0px) + var(--ec-viewport-bottom-offset, 0px));
             border-top: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 -8px 24px rgba(10, 0, 24, 0.22);
             flex-shrink: 0;
@@ -13662,6 +13670,11 @@ const translations = {
         function updateViewportInsets() {
             const keyboardOffset = Math.max(0, computeKeyboardOffsetPx());
             document.documentElement.style.setProperty('--ec-keyboard-offset', `${keyboardOffset}px`);
+            const vv = window.visualViewport;
+            const viewportBottomOffset = vv
+                ? Math.max(0, Math.round((window.innerHeight || 0) - (vv.height + vv.offsetTop)))
+                : 0;
+            document.documentElement.style.setProperty('--ec-viewport-bottom-offset', `${viewportBottomOffset}px`);
             if (keyboardOffset === 0) {
                 mobileViewportBaseHeight = Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
             }
@@ -13681,7 +13694,7 @@ const translations = {
                 bottomNav.style.position = 'fixed';
                 bottomNav.style.left = '50%';
                 bottomNav.style.right = 'auto';
-                bottomNav.style.bottom = '0';
+                bottomNav.style.bottom = 'var(--ec-viewport-bottom-offset, 0px)';
                 bottomNav.style.transform = 'translateX(-50%)';
                 bottomNav.style.width = vw <= 420 ? '100vw' : '420px';
                 bottomNav.style.maxWidth = vw <= 420 ? '100vw' : '420px';
@@ -13701,7 +13714,11 @@ const translations = {
             if (!bottomNav || !authScreen || !appScreen) return;
             const authVisible = !authScreen.classList.contains('hidden');
             const appVisible = !appScreen.classList.contains('hidden');
-            if (appVisible && !authVisible) {
+            const current = normalizeScreenTarget(currentScreen);
+            const shouldUseSupportFooterOnly = current === 'supportScreen';
+            appScreen.classList.toggle('bottom-nav-hidden', shouldUseSupportFooterOnly);
+            document.body.classList.toggle('support-footer-only', shouldUseSupportFooterOnly);
+            if (appVisible && !authVisible && !shouldUseSupportFooterOnly) {
                 ensureBottomNavVisible(true);
             } else {
                 bottomNav.classList.add('hidden');
