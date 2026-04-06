@@ -40,7 +40,7 @@
     </script>
     <script>
         (function () {
-            const mobileBuildId = '20260406a';
+            const mobileBuildId = '20260406b';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -15860,29 +15860,115 @@ const translations = {
         }
 
         // SUPPORT CHAT LOGIC
+        const CHAT_IMAGE_MAX_EDGE = 1600;
+        const CHAT_IMAGE_MAX_STORAGE_CHARS = 350000;
+        const CHAT_IMAGE_MIN_QUALITY = 0.45;
+        const CHAT_IMAGE_QUALITY_STEP = 0.08;
+        const CHAT_IMAGE_SCALE_STEP = 0.85;
+        const CHAT_IMAGE_MIN_EDGE = 480;
+
         function triggerChatUpload() {
             document.getElementById('chat-file-input').click();
         }
 
-        function handleChatImage(input) {
-            if (input.files && input.files[0]) {
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = function (e) {
-                    // Call the globally exposed Firebase send function
-                    if (window.fire_sendChatMessage) {
-                        window.fire_sendChatMessage(null, e.target.result);
-                    } else {
-                        // Fallback logic for when Firebase not loaded
-                        const container = document.getElementById('chat-main-area');
-                        const row = document.createElement('div');
-                        row.className = 'chat-row';
-                        row.innerHTML = `<div class="chat-bubble-img"><img src="${e.target.result}"></div>`;
-                        container.appendChild(row);
-                        container.scrollTop = container.scrollHeight;
-                    }
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error || new Error('Failed to read image.'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function loadImageElement(src) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error('Unsupported image format.'));
+                img.src = src;
+            });
+        }
+
+        async function normalizeChatImage(file) {
+            if (!file || !String(file.type || '').startsWith('image/')) {
+                throw new Error('Please choose a valid image file.');
+            }
+
+            const sourceDataUrl = await readFileAsDataURL(file);
+            const image = await loadImageElement(sourceDataUrl);
+            const naturalWidth = image.naturalWidth || image.width || 0;
+            const naturalHeight = image.naturalHeight || image.height || 0;
+
+            if (!naturalWidth || !naturalHeight) {
+                throw new Error('Unable to read image size.');
+            }
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                throw new Error('This device does not support image processing.');
+            }
+
+            let scale = Math.min(1, CHAT_IMAGE_MAX_EDGE / Math.max(naturalWidth, naturalHeight));
+            let targetWidth = Math.max(1, Math.round(naturalWidth * scale));
+            let targetHeight = Math.max(1, Math.round(naturalHeight * scale));
+            let quality = 0.86;
+            let output = '';
+
+            while (true) {
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+                ctx.clearRect(0, 0, targetWidth, targetHeight);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, targetWidth, targetHeight);
+                ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+                output = canvas.toDataURL('image/jpeg', quality);
+                if (output.length <= CHAT_IMAGE_MAX_STORAGE_CHARS) {
+                    return output;
                 }
-                reader.readAsDataURL(input.files[0]);
-                input.value = ''; // clear for next time
+
+                if (quality > CHAT_IMAGE_MIN_QUALITY) {
+                    quality = Math.max(CHAT_IMAGE_MIN_QUALITY, quality - CHAT_IMAGE_QUALITY_STEP);
+                    continue;
+                }
+
+                if (Math.max(targetWidth, targetHeight) <= CHAT_IMAGE_MIN_EDGE) {
+                    break;
+                }
+
+                targetWidth = Math.max(1, Math.round(targetWidth * CHAT_IMAGE_SCALE_STEP));
+                targetHeight = Math.max(1, Math.round(targetHeight * CHAT_IMAGE_SCALE_STEP));
+                quality = 0.82;
+            }
+
+            throw new Error('Image is too large. Please choose a smaller or clearer photo.');
+        }
+
+        async function handleChatImage(input) {
+            if (!(input.files && input.files[0])) return;
+
+            const file = input.files[0];
+            input.value = ''; // clear for next time
+
+            try {
+                const normalizedImage = await normalizeChatImage(file);
+
+                // Call the globally exposed Firebase send function
+                if (window.fire_sendChatMessage) {
+                    await window.fire_sendChatMessage(null, normalizedImage);
+                } else {
+                    // Fallback logic for when Firebase not loaded
+                    const container = document.getElementById('chat-main-area');
+                    const row = document.createElement('div');
+                    row.className = 'chat-row';
+                    row.innerHTML = `<div class="chat-bubble-img"><img src="${normalizedImage}"></div>`;
+                    container.appendChild(row);
+                    container.scrollTop = container.scrollHeight;
+                }
+            } catch (error) {
+                console.error('Chat image upload error:', error);
+                alert(error.message || 'Failed to process image.');
             }
         }
 
@@ -17874,7 +17960,8 @@ No transfer fees for account transfer / exchange</div>
                     if (isAdmin) {
                         row.innerHTML = `<div class="chat-bubble-text admin-msg">${data.text}</div>`;
                     } else if (data.type === 'image') {
-                        row.innerHTML = `<div class="chat-bubble-img"><img src="${data.text}"></div>`;
+                        const imageSrc = data.image_url || data.text;
+                        row.innerHTML = `<div class="chat-bubble-img"><img src="${imageSrc}"></div>`;
                     } else {
                         row.innerHTML = `<div class="chat-bubble-text">${data.text}</div>`;
                     }
@@ -17905,7 +17992,8 @@ No transfer fees for account transfer / exchange</div>
             const chatRef = doc(db, 'support_chats', uid);
 
             const msgData = {
-                text: text || imageData,
+                text: imageData ? '[Image]' : text,
+                image_url: imageData || '',
                 sender: 'user',
                 timestamp: serverTimestamp(),
                 type: imageData ? 'image' : 'text'

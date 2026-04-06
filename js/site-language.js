@@ -207,7 +207,7 @@
       || host === "easycryptoguide.pages.dev";
   }
 
-  var MOBILE_BUILD_ID = "20260318b";
+  var MOBILE_BUILD_ID = "20260406b";
 
   function buildMobileEntryUrl(query, hash) {
     var params = new URLSearchParams(query || "");

@@ -3540,9 +3540,10 @@
                     msgRow.className = `chat-message ${isUser ? 'user' : 'admin'}`;
 
                     if (msg.type === 'image') {
+                        const imageSrc = msg.image_url || msg.text;
                         msgRow.innerHTML = `
                             <div class="chat-bubble-img p-2 bg-white rounded-lg border">
-                                <img src="${msg.text}" class="max-w-xs rounded shadow-sm">
+                                <img src="${imageSrc}" class="max-w-xs rounded shadow-sm">
                                 <div class="text-[10px] text-gray-400 mt-1">${time}</div>
                             </div>
                         `;
