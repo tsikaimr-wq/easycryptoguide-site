@@ -40,7 +40,7 @@
     </script>
     <script>
         (function () {
-            const mobileBuildId = '20260407f';
+            const mobileBuildId = '20260407g';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -78,23 +78,62 @@
         window.__mobileSignupInProgress = false;
         window.__mobileLoginInProgress = false;
         window.__mobileClearingStaleAuth = false;
+        window.__mobileSessionConflict = false;
+        const MOBILE_SESSION_ID_KEY = 'ec_mobile_session_id';
+        const MOBILE_DEVICE_ID_KEY = 'ec_mobile_device_id';
         const MOBILE_SESSION_GRACE_MS = 15 * 60 * 1000;
+        function createMobileSessionToken(prefix = 'ms') {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return `${prefix}_${window.crypto.randomUUID()}`;
+            }
+            return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+        }
+        function getMobileDeviceId() {
+            let deviceId = localStorage.getItem(MOBILE_DEVICE_ID_KEY);
+            if (!deviceId) {
+                deviceId = createMobileSessionToken('md');
+                localStorage.setItem(MOBILE_DEVICE_ID_KEY, deviceId);
+            }
+            return deviceId;
+        }
+        function ensureMobileSessionId() {
+            let sessionId = sessionStorage.getItem(MOBILE_SESSION_ID_KEY);
+            if (!sessionId) {
+                sessionId = createMobileSessionToken('ms');
+                sessionStorage.setItem(MOBILE_SESSION_ID_KEY, sessionId);
+            }
+            return sessionId;
+        }
+        function clearMobileSessionState() {
+            sessionStorage.removeItem('mobile_session_active');
+            sessionStorage.removeItem(MOBILE_SESSION_ID_KEY);
+            localStorage.removeItem('ec_mobile_session_grant_ts');
+        }
+        window.getMobileDeviceId = getMobileDeviceId;
+        window.ensureMobileSessionId = ensureMobileSessionId;
+        window.getMobileSessionId = function () {
+            return sessionStorage.getItem(MOBILE_SESSION_ID_KEY) || '';
+        };
+        window.clearMobileSessionState = clearMobileSessionState;
         function hasFreshMobileSessionGrant() {
             const tsRaw = Number(localStorage.getItem('ec_mobile_session_grant_ts') || 0);
             return Number.isFinite(tsRaw) && tsRaw > 0 && (Date.now() - tsRaw) <= MOBILE_SESSION_GRACE_MS;
         }
         function markMobileSessionGrantNow() {
+            ensureMobileSessionId();
+            getMobileDeviceId();
             localStorage.setItem('ec_mobile_session_grant_ts', String(Date.now()));
         }
         window.markMobileSessionGrantNow = markMobileSessionGrantNow;
         window.hasActiveMobileAppSession = function () {
-            return sessionStorage.getItem('mobile_session_active') === 'true'
+            return (sessionStorage.getItem('mobile_session_active') === 'true'
+                && !!sessionStorage.getItem(MOBILE_SESSION_ID_KEY))
                 || window.__mobileSignupInProgress === true
                 || window.__mobileLoginInProgress === true;
         };
         if (sessionStorage.getItem('mobile_session_active') === 'true' && !hasFreshMobileSessionGrant()) {
             // Prevent stale sessions from auto-entering app after long idle or browser restore.
-            sessionStorage.removeItem('mobile_session_active');
+            clearMobileSessionState();
         }
         const KYC_ALLOWED_SCREENS = new Set([
             'certification-center',
@@ -253,6 +292,43 @@
             }
             return true;
         };
+        window.recordActiveMobileSession = async function (user) {
+            if (!user || !user.uid) return '';
+            const sessionId = ensureMobileSessionId();
+            const deviceId = getMobileDeviceId();
+            await updateDoc(doc(db, 'users', user.uid), {
+                mobile_active_session_id: sessionId,
+                mobile_active_device_id: deviceId,
+                mobile_session_updated_at: serverTimestamp()
+            });
+            return sessionId;
+        };
+        function isCurrentMobileSessionOwner(userData) {
+            const remoteSessionId = String((userData && userData.mobile_active_session_id) || '').trim();
+            const localSessionId = String(window.getMobileSessionId ? window.getMobileSessionId() : '').trim();
+            return !remoteSessionId || !localSessionId || remoteSessionId === localSessionId;
+        }
+        function handleMobileSessionConflict(appScreen, authScreen) {
+            if (window.__mobileSessionConflict) return;
+            window.__mobileSessionConflict = true;
+            console.warn('Mobile: Another browser session is active for this account. Signing out this session.');
+            clearMobileSessionState();
+            if (typeof window.cleanupMobileDataListeners === 'function') {
+                window.cleanupMobileDataListeners();
+            }
+            if (appScreen) appScreen.classList.add('hidden');
+            if (authScreen) authScreen.classList.remove('hidden');
+            document.body.classList.remove('app-open');
+            if (typeof window.syncBottomNavState === 'function') window.syncBottomNavState();
+            if (typeof window.showMobileToast === 'function') {
+                window.showMobileToast('This account was opened in another browser. Please log in again here if needed.');
+            }
+            signOut(auth)
+                .catch((err) => console.warn('Mobile: Failed to sign out inactive browser session.', err))
+                .finally(() => {
+                    window.__mobileSessionConflict = false;
+                });
+        }
 
         // Initialize reCAPTCHA (Required for Phone Auth)
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
@@ -261,6 +337,7 @@
         });
 
         // Real-time Profile Sync & Screen Management
+        let mobileProfileUnsubscribe = null;
         onAuthStateChanged(auth, (user) => {
             const appScreen = document.getElementById('app-screen');
             const authScreen = document.getElementById('auth-screen');
@@ -270,8 +347,21 @@
 
                 // Sync from Firestore
                 const userRef = doc(db, 'users', user.uid);
-                onSnapshot(userRef, (docSnap) => {
+                if (mobileProfileUnsubscribe) {
+                    mobileProfileUnsubscribe();
+                    mobileProfileUnsubscribe = null;
+                }
+                mobileProfileUnsubscribe = onSnapshot(userRef, (docSnap) => {
                     if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                        if (window.hasActiveMobileAppSession()
+                            && !window.__mobileSignupInProgress
+                            && !window.__mobileLoginInProgress
+                            && !isCurrentMobileSessionOwner(userData)) {
+                            handleMobileSessionConflict(appScreen, authScreen);
+                            return;
+                        }
+
                         // Signup/login creates the auth session before profile sync finishes, so keep those flows active.
                         if (window.hasActiveMobileAppSession()) {
                             if (appScreen) appScreen.classList.remove('hidden');
@@ -306,7 +396,6 @@
                             }
                         }
 
-                        const userData = docSnap.data();
                         window.currentUserPerpetualControlMap = getNormalizedPerpetualControlMap(userData && userData.perpetual_custom_prices);
                         const fallbackPerpetualPrice = parseFloat(userData && userData.perpetual_custom_price);
                         window.currentUserPerpetualFallbackPrice = Number.isFinite(fallbackPerpetualPrice) && fallbackPerpetualPrice > 0
@@ -385,6 +474,10 @@
                     }
                 });
             } else {
+                if (mobileProfileUnsubscribe) {
+                    mobileProfileUnsubscribe();
+                    mobileProfileUnsubscribe = null;
+                }
                 console.log("Mobile: No user authenticated, showing login.");
                 if (appScreen) appScreen.classList.add('hidden');
                 if (authScreen) authScreen.classList.remove('hidden');
@@ -12438,7 +12531,10 @@ const translations = {
                     kyc_status: 'Not Verified',
                     status: 'Active',
                     role: 'user',
-                    joined: new Date().toISOString()
+                    joined: new Date().toISOString(),
+                    mobile_active_session_id: window.getMobileSessionId ? window.getMobileSessionId() : '',
+                    mobile_active_device_id: window.getMobileDeviceId ? window.getMobileDeviceId() : '',
+                    mobile_session_updated_at: serverTimestamp()
                 });
 
                 const successText = currentSignupTab === 'account'
@@ -12464,7 +12560,12 @@ const translations = {
                 }
             } catch (error) {
                 console.error("Signup/Sync error:", error);
-                sessionStorage.removeItem('mobile_session_active');
+                if (typeof window.clearMobileSessionState === 'function') {
+                    window.clearMobileSessionState();
+                } else {
+                    sessionStorage.removeItem('mobile_session_active');
+                    localStorage.removeItem('ec_mobile_session_grant_ts');
+                }
                 if (error.code === 'auth/email-already-in-use') {
                     msg.innerHTML = '<span class="error-text">This account is already registered. Please login directly.</span>';
                 } else if (error.code === 'auth/network-request-failed') {
@@ -12689,7 +12790,10 @@ const translations = {
                         kyc_status: 'Not Verified',
                         status: 'Active',
                         role: 'user',
-                        joined: new Date().toISOString()
+                        joined: new Date().toISOString(),
+                        mobile_active_session_id: window.getMobileSessionId ? window.getMobileSessionId() : '',
+                        mobile_active_device_id: window.getMobileDeviceId ? window.getMobileDeviceId() : '',
+                        mobile_session_updated_at: serverTimestamp()
                     });
                     console.log("Mobile recovery sync complete.");
                 }
@@ -12700,6 +12804,9 @@ const translations = {
                     window.markMobileSessionGrantNow();
                 } else {
                     localStorage.setItem('ec_mobile_session_grant_ts', String(Date.now()));
+                }
+                if (typeof window.recordActiveMobileSession === 'function') {
+                    await window.recordActiveMobileSession(user);
                 }
 
                 // If onAuthStateChanged hasn't fired yet or didn't show the app screen due to the flag, manually trigger the view switch
@@ -12715,7 +12822,12 @@ const translations = {
                 }
             } catch (error) {
                 console.error("Login error:", error);
-                sessionStorage.removeItem('mobile_session_active');
+                if (typeof window.clearMobileSessionState === 'function') {
+                    window.clearMobileSessionState();
+                } else {
+                    sessionStorage.removeItem('mobile_session_active');
+                    localStorage.removeItem('ec_mobile_session_grant_ts');
+                }
                 const code = String(error && error.code || '').toLowerCase();
                 if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
                     if (isAccountMode) {
@@ -12992,8 +13104,12 @@ const translations = {
         async function handleLogout() {
             try {
                 const { auth } = window.fb;
-                sessionStorage.removeItem('mobile_session_active');
-                localStorage.removeItem('ec_mobile_session_grant_ts');
+                if (typeof window.clearMobileSessionState === 'function') {
+                    window.clearMobileSessionState();
+                } else {
+                    sessionStorage.removeItem('mobile_session_active');
+                    localStorage.removeItem('ec_mobile_session_grant_ts');
+                }
                 document.body.classList.remove('app-open');
                 syncBottomNavState();
                 await auth.signOut();
@@ -19034,6 +19150,7 @@ No transfer fees for account transfer / exchange</div>
             }
             if (typeof updateExchangeUI === 'function') updateExchangeUI();
         }
+        window.cleanupMobileDataListeners = cleanupMobileDataListeners;
 
         // Initialize all listeners when the auth state changes
         onAuthStateChanged(auth, (user) => {
