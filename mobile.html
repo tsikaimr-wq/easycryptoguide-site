@@ -40,7 +40,7 @@
     </script>
     <script>
         (function () {
-            const mobileBuildId = '20260407d';
+            const mobileBuildId = '20260407e';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -1478,6 +1478,15 @@
         .p-menu-arrow {
             color: rgba(255, 255, 255, 0.3);
             font-size: 14px;
+        }
+
+        .p-menu-value {
+            color: rgba(255, 255, 255, 0.56);
+            font-size: 13px;
+            margin-right: 10px;
+            min-width: 40px;
+            text-align: right;
+            font-weight: 600;
         }
 
         .p-section-title {
@@ -6699,6 +6708,7 @@
                         </span>
                         <span class="p-menu-label" data-t-key="prof_price_method"
                             style="color: #ffffff; font-weight: 500;">Price Method</span>
+                        <span class="p-menu-value" id="profile-price-method-value">USD</span>
                         <span class="p-menu-arrow">&gt;</span>
                     </div>
 
@@ -7588,9 +7598,12 @@
                 <div class="profile-top-bar"
                     style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); justify-content: flex-start; gap: 20px;">
                     <span onclick="goBack()" style="cursor:pointer; color: #ffffff;">&lt;</span>
-                    <span style="font-size: 18px; font-weight: 500; color: #ffffff;">Crypto</span>
+                    <span style="font-size: 18px; font-weight: 500; color: #ffffff;">Price Method</span>
                 </div>
                 <div class="scroll-area" style="background: transparent;">
+                    <div style="padding: 16px; color: rgba(255,255,255,0.62); font-size: 13px; line-height: 1.6; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                        Choose the display currency used for price conversion.
+                    </div>
                     <div class="language-item" onclick="selectCrypto('HKD', this)">
                         <div style="display: flex; align-items: center;">
                             <div
@@ -13996,6 +14009,9 @@ const translations = {
             if (target === 'profile-edit') {
                 hydrateProfileEditor();
             }
+            if (target === 'profile' || target === 'crypto') {
+                hydratePriceMethodSelection();
+            }
             if (target !== 'funds' && target !== 'profile' && target !== 'profile-edit' && target !== 'deposit' && target !== 'history' && target !== 'order-detail' && target !== 'flash-history' && target !== 'trade') {
                 renderList(currentActiveTab, target === 'homeScreen' ? 'home-list-box' : 'market-list-box');
             }
@@ -15909,10 +15925,48 @@ const translations = {
             setTimeout(goBack, 300);
         }
 
-        function selectCrypto(currency, element) {
+        const PRICE_METHOD_STORAGE_KEY = 'ec_price_method_currency';
+        const PRICE_METHOD_FALLBACK = 'USD';
+
+        function normalizePriceMethodCurrency(currency) {
+            const value = String(currency || '').trim().toUpperCase();
+            return value || PRICE_METHOD_FALLBACK;
+        }
+
+        function getSelectedPriceMethodCurrency() {
+            return normalizePriceMethodCurrency(localStorage.getItem(PRICE_METHOD_STORAGE_KEY) || PRICE_METHOD_FALLBACK);
+        }
+
+        function hydratePriceMethodSelection() {
+            const selected = getSelectedPriceMethodCurrency();
+            const valueEl = document.getElementById('profile-price-method-value');
+            if (valueEl) valueEl.innerText = selected;
+
             const items = document.querySelectorAll('#crypto-screen .language-item');
-            items.forEach(item => item.classList.remove('active'));
+            items.forEach(item => {
+                const onclick = item.getAttribute('onclick') || '';
+                const match = onclick.match(/selectCrypto\('([^']+)'/);
+                const currency = normalizePriceMethodCurrency((match && match[1]) || item.dataset.currency || item.innerText);
+                item.dataset.currency = currency;
+                if (!item.querySelector('.check-icon')) {
+                    const check = document.createElement('span');
+                    check.className = 'check-icon';
+                    check.innerHTML = '&#10003;';
+                    item.appendChild(check);
+                }
+                item.classList.toggle('active', currency === selected);
+            });
+        }
+        window.hydratePriceMethodSelection = hydratePriceMethodSelection;
+
+        function selectCrypto(currency, element) {
+            const selected = normalizePriceMethodCurrency(currency);
+            localStorage.setItem(PRICE_METHOD_STORAGE_KEY, selected);
+            hydratePriceMethodSelection();
             if (element) element.classList.add('active');
+            if (window.showMobileToast) {
+                window.showMobileToast(`Price method set to ${selected}.`);
+            }
             setTimeout(goBack, 300);
         }
 
@@ -16219,6 +16273,7 @@ No transfer fees for account transfer / exchange</div>
         const topCryptoCoins = ["BTC", "ETH", "BNB", "SOL", "XRP", "ADA", "DOGE", "DOT", "LTC", "BCH", "LINK", "AVAX", "MATIC", "UNI", "ATOM", "ETC", "HBAR", "IP", "WBT", "XMR", "ALGO", "NEO", "IOTA", "XTZ", "AXS", "SAND", "MANA", "USDC", "CHZ", "HYPE", "SUI", "TON", "TRX", "XLM", "USDE", "ICP", "DAI", "VET", "YFI", "OKB"];
         const symbolsForWS = topCryptoCoins.map(c => c + "/USD").join(",");
         let mobileCoinGeckoProxyUnavailable = false;
+        let mobileMarketDataInitialized = false;
 
         function getMobileCoinGeckoHeaders() {
             const headers = { 'accept': 'application/json' };
@@ -16267,6 +16322,7 @@ No transfer fees for account transfer / exchange</div>
 
         async function fetchCoinGeckoQuotesMobile() {
             if (!ENABLE_COINGECKO) return 0;
+            if (document.visibilityState === 'hidden') return 0;
             const tracked = Array.from(new Set(topCryptoCoins.map((sym) => String(sym || '').toUpperCase())));
             const idToSymbol = {};
             tracked.forEach((sym) => {
@@ -16429,6 +16485,7 @@ No transfer fees for account transfer / exchange</div>
             updateDeliveryRequirementsUI();
             updateDeliveryFeeEstimate();
             updateExchangeUI();
+            hydratePriceMethodSelection();
         });
 
         function formatCompactNumber(value) {
@@ -16647,10 +16704,31 @@ No transfer fees for account transfer / exchange</div>
         }
 
         function initTwelveData() {
+            if (mobileMarketDataInitialized) return;
+            mobileMarketDataInitialized = true;
             let useMock = false;
             let failureCount = 0;
 
+            function isHighActivityMarketScreen() {
+                const normalized = normalizeScreenTarget(currentScreen || 'homeScreen');
+                return normalized === 'homeScreen' || normalized === 'market' || normalized === 'trade' || normalized === 'kline';
+            }
+
+            function shouldRefreshMarketData() {
+                return document.visibilityState !== 'hidden';
+            }
+
+            function scheduleMarketRefresh(callback, activeDelay, quietDelay) {
+                const run = () => {
+                    if (shouldRefreshMarketData()) callback();
+                    const nextDelay = isHighActivityMarketScreen() ? activeDelay : quietDelay;
+                    setTimeout(run, nextDelay);
+                };
+                setTimeout(run, isHighActivityMarketScreen() ? activeDelay : quietDelay);
+            }
+
             function applyMockData() {
+                if (!shouldRefreshMarketData()) return;
                 Object.keys(fallbackMockData).forEach(sym => {
                     const mock = fallbackMockData[sym];
                     // If we have local data, jitter from that, else use mock baseline
@@ -16678,6 +16756,7 @@ No transfer fees for account transfer / exchange</div>
             }
 
             function fetchQuotes() {
+                if (!shouldRefreshMarketData()) return;
                 if (useMock) {
                     applyMockData();
                     return;
@@ -16727,21 +16806,20 @@ No transfer fees for account transfer / exchange</div>
 
             if (ENABLE_COINGECKO) {
                 // CoinGecko refresh to supplement small-cap symbols unsupported by TwelveData.
-                setInterval(() => {
+                scheduleMarketRefresh(() => {
                     fetchCoinGeckoQuotesMobile().catch(() => { });
-                }, 10000);
+                }, 30000, 90000);
             }
 
-            // Continuous Simulation: Jitter ALL coins every 2 seconds to make the site look alive
-            setInterval(() => {
+            // Keep prices alive without hammering profile/settings/support pages.
+            scheduleMarketRefresh(() => {
                 applyMockData();
-            }, 2000);
+            }, 3000, 12000);
 
-            // Poll for quotes every 8 seconds to update the base prices from API
-            setInterval(() => {
+            // Poll for quotes to update base prices from API.
+            scheduleMarketRefresh(() => {
                 if (!useMock) fetchQuotes();
-                console.log("API Sync: Refreshing base prices");
-            }, 8000);
+            }, 15000, 45000);
 
             let socket;
             function connectWS() {
@@ -16762,6 +16840,7 @@ No transfer fees for account transfer / exchange</div>
                         return;
                     }
                     if (data.event === 'price' && data.symbol) {
+                        if (!shouldRefreshMarketData() || !isHighActivityMarketScreen()) return;
                         const sym = data.symbol.replace('/USD', '');
                         const pVal = parseFloat(data.price);
                         const prev = window.localData[sym] || {};
