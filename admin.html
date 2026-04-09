@@ -3479,12 +3479,28 @@
 
                 if (html === '') {
                     messagesList.innerHTML = '<div class="text-center py-12 text-gray-400"><p>No messages yet</p></div>';
+                    window.currentChatUserId = null;
                 } else {
                     messagesList.innerHTML = html;
                 }
                 document.getElementById('unreadBadge').innerText = `${totalUnread} Unread`;
                 const sideMsgBadge = document.getElementById('badge-messages');
                 if (sideMsgBadge) sideMsgBadge.innerText = totalUnread;
+
+                const activeChat = window.currentChatUserId
+                    ? rows.find((row) => row.id === window.currentChatUserId)
+                    : null;
+
+                if (activeChat && (activeChat.data.unread_count_admin || 0) > 0) {
+                    updateDoc(doc(db, 'support_chats', activeChat.id), { unread_count_admin: 0 }).catch(() => { });
+                }
+
+                if (!window.currentChatUserId || !activeChat) {
+                    const preferredChat = rows.find((row) => Number(row.data.unread_count_admin || 0) > 0) || rows[0] || null;
+                    if (preferredChat) {
+                        setTimeout(() => window.selectMessage(preferredChat.id), 0);
+                    }
+                }
             }, (err) => {
                 console.error("Support Chats Sync Error:", err);
                 if (err.code === 'permission-denied') {
@@ -3543,7 +3559,7 @@
                         const imageSrc = msg.image_url || msg.text;
                         msgRow.innerHTML = `
                             <div class="chat-bubble-img p-2 bg-white rounded-lg border">
-                                <img src="${imageSrc}" class="max-w-xs rounded shadow-sm">
+                                <img src="${imageSrc}" loading="lazy" decoding="async" class="max-w-xs rounded shadow-sm">
                                 <div class="text-[10px] text-gray-400 mt-1">${time}</div>
                             </div>
                         `;
@@ -3563,6 +3579,7 @@
 
                     chatMessages.appendChild(msgRow);
                 });
+                updateDoc(doc(db, 'support_chats', userId), { unread_count_admin: 0 }).catch(() => { });
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             });
         };

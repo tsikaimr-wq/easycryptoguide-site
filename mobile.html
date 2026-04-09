@@ -40,7 +40,7 @@
     </script>
     <script>
         (function () {
-            const mobileBuildId = '20260407g';
+            const mobileBuildId = '20260409a';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -320,6 +320,7 @@
             if (authScreen) authScreen.classList.remove('hidden');
             document.body.classList.remove('app-open');
             if (typeof window.syncBottomNavState === 'function') window.syncBottomNavState();
+            if (typeof window.syncSupportFabState === 'function') window.syncSupportFabState();
             if (typeof window.showMobileToast === 'function') {
                 window.showMobileToast('This account was opened in another browser. Please log in again here if needed.');
             }
@@ -369,6 +370,7 @@
                             document.body.classList.add('app-open');
                             if (typeof window.syncBottomNavState === 'function') {
                                 window.syncBottomNavState();
+                                if (typeof window.syncSupportFabState === 'function') window.syncSupportFabState();
                             } else {
                                 const bottomNav = document.querySelector('.bottom-nav');
                                 if (bottomNav) bottomNav.classList.remove('hidden');
@@ -390,6 +392,7 @@
                             }
                             if (typeof window.syncBottomNavState === 'function') {
                                 window.syncBottomNavState();
+                                if (typeof window.syncSupportFabState === 'function') window.syncSupportFabState();
                             } else {
                                 const bottomNav = document.querySelector('.bottom-nav');
                                 if (bottomNav) bottomNav.classList.add('hidden');
@@ -484,6 +487,7 @@
                 document.body.classList.remove('app-open');
                 if (typeof window.syncBottomNavState === 'function') {
                     window.syncBottomNavState();
+                    if (typeof window.syncSupportFabState === 'function') window.syncSupportFabState();
                 } else {
                     const bottomNav = document.querySelector('.bottom-nav');
                     if (bottomNav) bottomNav.classList.add('hidden');
@@ -4501,6 +4505,53 @@
             z-index: 100;
         }
 
+        .mobile-support-fab {
+            position: fixed;
+            right: 18px;
+            bottom: calc(var(--ec-bottom-nav-height, 72px) + 18px + env(safe-area-inset-bottom, 0px) + var(--ec-viewport-bottom-offset, 0px));
+            width: 58px;
+            height: 58px;
+            border: none;
+            border-radius: 18px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+            color: #fff;
+            box-shadow: 0 16px 30px rgba(76, 29, 149, 0.34);
+            z-index: 5100;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+            touch-action: manipulation;
+        }
+
+        .mobile-support-fab:active {
+            transform: scale(0.96);
+            box-shadow: 0 10px 20px rgba(76, 29, 149, 0.26);
+        }
+
+        .mobile-support-fab.hidden {
+            display: none !important;
+        }
+
+        .mobile-support-fab-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border-radius: 999px;
+            background: #ff4d4f;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+        }
+
 
 
         /* FAIS SCREEN STYLES */
@@ -7891,6 +7942,16 @@
                 </div>
             </div>
         </div>
+
+        <button type="button" id="mobile-support-fab" class="mobile-support-fab hidden"
+            onclick="openSupportShortcut()" aria-label="Open support chat">
+            <span id="mobile-support-fab-badge" class="mobile-support-fab-badge"></span>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                    d="M12 3C7.582 3 4 6.582 4 11V17C4 18.657 5.343 20 7 20H8V14H6V11C6 7.686 8.686 5 12 5C15.314 5 18 7.686 18 11V14H16V20H17C18.657 20 20 18.657 20 17V11C20 6.582 16.418 3 12 3Z"
+                    fill="currentColor" />
+            </svg>
+        </button>
 
         <div id="fais-screen" class="screen hidden">
             <div class="profile-top-bar"
@@ -13081,6 +13142,7 @@ const translations = {
             document.getElementById('app-screen').classList.remove('hidden');
             document.body.classList.add('app-open');
             syncBottomNavState();
+            syncSupportFabState();
             // Profile Sync is now handled by Firebase in the head section
 
             // Load persistent language
@@ -13112,6 +13174,7 @@ const translations = {
                 }
                 document.body.classList.remove('app-open');
                 syncBottomNavState();
+                syncSupportFabState();
                 await auth.signOut();
                 // View switching handled by onAuthStateChanged in the head
             } catch (error) {
@@ -13913,6 +13976,30 @@ const translations = {
         }
         window.syncBottomNavState = syncBottomNavState;
 
+        function syncSupportFabState() {
+            const fab = document.getElementById('mobile-support-fab');
+            const authScreen = document.getElementById('auth-screen');
+            if (!fab || !authScreen) return;
+            const current = normalizeScreenTarget(currentScreen || '');
+            const authVisible = !authScreen.classList.contains('hidden');
+            const hideFab = authVisible
+                || current === 'supportScreen'
+                || current === 'supportChatScreen'
+                || !window.hasActiveMobileAppSession();
+            fab.classList.toggle('hidden', hideFab);
+            fab.style.display = hideFab ? 'none' : 'inline-flex';
+        }
+        window.syncSupportFabState = syncSupportFabState;
+
+        function openSupportShortcut() {
+            if (!window.hasActiveMobileAppSession()) {
+                window.showMobileToast('Please log in to contact support.');
+                return;
+            }
+            showScreen('supportChatScreen');
+        }
+        window.openSupportShortcut = openSupportShortcut;
+
         function normalizeScreenTarget(target) {
             if (target === 'support' || target === 'support-screen') {
                 return 'supportScreen';
@@ -14100,6 +14187,7 @@ const translations = {
             if (bottomNav) bottomNav.classList.remove('hidden');
             ensureBottomNavVisible(true);
             syncBottomNavState();
+            syncSupportFabState();
 
             const appScreen = document.getElementById('app-screen');
             const isInsideApp = !!(targetEl && appScreen && appScreen.contains(targetEl));
@@ -16555,21 +16643,27 @@ No transfer fees for account transfer / exchange</div>
             document.head.appendChild(style);
             updateViewportInsets();
             syncBottomNavState();
+            syncSupportFabState();
 
             const authScreen = document.getElementById('auth-screen');
             const appScreen = document.getElementById('app-screen');
             if (authScreen && appScreen && window.MutationObserver) {
-                const obs = new MutationObserver(() => syncBottomNavState());
+                const obs = new MutationObserver(() => {
+                    syncBottomNavState();
+                    syncSupportFabState();
+                });
                 obs.observe(authScreen, { attributes: true, attributeFilter: ['class'] });
                 obs.observe(appScreen, { attributes: true, attributeFilter: ['class'] });
             }
             window.addEventListener('resize', () => {
                 updateViewportInsets();
                 syncBottomNavState();
+                syncSupportFabState();
             });
             document.addEventListener('visibilitychange', () => {
                 updateViewportInsets();
                 syncBottomNavState();
+                syncSupportFabState();
             });
             if (window.visualViewport) {
                 window.visualViewport.addEventListener('resize', updateViewportInsets);
@@ -18145,6 +18239,7 @@ No transfer fees for account transfer / exchange</div>
                 const navBadge = document.getElementById('support-nav-badge');
                 const footerBadge = document.getElementById('support-footer-badge');
                 const chatFooterBadge = document.getElementById('support-chat-footer-badge');
+                const fabBadge = document.getElementById('mobile-support-fab-badge');
 
                 if (unreadCount > 0) {
                     if (dot) dot.style.display = 'block';
@@ -18160,11 +18255,16 @@ No transfer fees for account transfer / exchange</div>
                         chatFooterBadge.style.display = 'block';
                         chatFooterBadge.textContent = unreadCount;
                     }
+                    if (fabBadge) {
+                        fabBadge.style.display = 'flex';
+                        fabBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                    }
                 } else {
                     if (dot) dot.style.display = 'none';
                     if (navBadge) navBadge.style.display = 'none';
                     if (footerBadge) footerBadge.style.display = 'none';
                     if (chatFooterBadge) chatFooterBadge.style.display = 'none';
+                    if (fabBadge) fabBadge.style.display = 'none';
                 }
             });
         }
