@@ -5,13 +5,9 @@
     const TWELVE_DATA_API_KEY = 'f5a558c730a64406839742e38b78af5e';
     const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
     const COINGECKO_DEMO_KEY = String(window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || '').trim();
-    const COINGECKO_PROXY_URL = (() => {
-        const manual = String(window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || '').trim();
-        if (manual) return manual;
-        const host = String(window.location.hostname || '').toLowerCase();
-        const frontendHosts = new Set(['easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com']);
-        return frontendHosts.has(host) ? '/api/coingecko/simple-price' : '';
-    })();
+    const COINGECKO_PROXY_URL = String(
+        window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || ''
+    ).trim();
 
     const FIAT_OPTIONS = [
         { code: 'AUD', name: 'Australian dollar', icon: 'https://flagcdn.com/w80/au.png' },
@@ -92,7 +88,6 @@
         }
 
         urls.push(`https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/32/color/${lower}.png`);
-        urls.push(`https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/${lower}.png`);
         urls.push(makeCryptoSvgFallback(normalized));
         return urls;
     }
@@ -567,6 +562,7 @@
     const widgets = widgetEls.map(createWidget);
 
     async function refreshRates() {
+        if (document.visibilityState === 'hidden') return;
         try {
             await fetchTwelveDataRates();
         } catch (err) {
@@ -589,8 +585,17 @@
         }
     }
 
-    refreshRates();
-    refreshTimer = window.setInterval(refreshRates, 15000);
+    function startRateRefresh() {
+        if (refreshTimer) return;
+        refreshRates();
+        refreshTimer = window.setInterval(refreshRates, 20000);
+    }
+
+    if (document.readyState === 'complete') {
+        window.setTimeout(startRateRefresh, 500);
+    } else {
+        window.addEventListener('load', () => window.setTimeout(startRateRefresh, 500), { once: true });
+    }
 
     document.addEventListener('click', (event) => {
         if (!activeMenu) return;

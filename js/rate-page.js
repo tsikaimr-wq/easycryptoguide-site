@@ -45,13 +45,9 @@
     const COINGECKO_DEMO_KEY = String(
         window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || ''
     ).trim();
-    const COINGECKO_PROXY_URL = (() => {
-        const manual = String(window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || '').trim();
-        if (manual) return manual;
-        const host = String(window.location.hostname || '').toLowerCase();
-        const frontendHosts = new Set(['easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com']);
-        return frontendHosts.has(host) ? '/api/coingecko/simple-price' : '';
-    })();
+    const COINGECKO_PROXY_URL = String(
+        window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || ''
+    ).trim();
 
     const COPY = {
         en: {

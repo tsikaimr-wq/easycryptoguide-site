@@ -22,13 +22,9 @@
     const META_REFRESH_MS = 180000;
     const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
     const COINGECKO_DEMO_KEY = String(window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || '').trim();
-    const COINGECKO_PROXY_URL = (() => {
-        const manual = String(window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || '').trim();
-        if (manual) return manual;
-        const host = String(window.location.hostname || '').toLowerCase();
-        const frontendHosts = new Set(['easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com']);
-        return frontendHosts.has(host) ? '/api/coingecko/simple-price' : '';
-    })();
+    const COINGECKO_PROXY_URL = String(
+        window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || ''
+    ).trim();
 
     const DONUT_COLORS = ['#6c39ec', '#3f87ff', '#f59b1f', '#1cb16a', '#de4f88', '#16a5b8'];
 

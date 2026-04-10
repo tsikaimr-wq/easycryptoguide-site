@@ -40,7 +40,7 @@
     </script>
     <script>
         (function () {
-            const mobileBuildId = '20260409a';
+            const mobileBuildId = '20260410a';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -5149,7 +5149,7 @@
             min-height: 100vh;
             background:
                 linear-gradient(rgba(10, 5, 25, 0.75), rgba(10, 5, 25, 0.85)),
-                url("assets/images/purple-tech-bg.jpg") center center / cover no-repeat fixed;
+                url("assets/images/purple-tech-bg.jpg") center center / cover no-repeat;
         }
 
         body::after {
@@ -11035,7 +11035,7 @@
         function getCoinLogoUrl(symbol) {
             const sym = (symbol || '').toUpperCase();
             if (coinIconOverrides[sym]) return coinIconOverrides[sym];
-            return `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/${sym.toLowerCase()}.png`;
+            return `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/32/color/${sym.toLowerCase()}.png`;
         }
         function getCoinIconHtml(symbol, fallback = '') {
             const sym = (symbol || '').toUpperCase();
@@ -16425,13 +16425,9 @@ No transfer fees for account transfer / exchange</div>
         const twelveDataApiKey = "f5a558c730a64406839742e38b78af5e";
         const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
         const COINGECKO_DEMO_KEY = String(window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || '').trim();
-        const COINGECKO_PROXY_URL = (() => {
-            const manual = String(window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || '').trim();
-            if (manual) return manual;
-            const host = String(window.location.hostname || '').toLowerCase();
-            const frontendHosts = new Set(['easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com']);
-            return frontendHosts.has(host) ? '/api/coingecko/simple-price' : '';
-        })();
+        const COINGECKO_PROXY_URL = String(
+            window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || ''
+        ).trim();
         const ENABLE_COINGECKO = !!COINGECKO_PROXY_URL || !!COINGECKO_DEMO_KEY;
         const COINGECKO_SYMBOL_TO_ID = {
             BTC: 'bitcoin',
@@ -16479,6 +16475,11 @@ No transfer fees for account transfer / exchange</div>
         let mobileCoinGeckoProxyUnavailable = false;
         let mobileMarketDataInitialized = false;
 
+        function isAuthOverlayActive() {
+            const authScreen = document.getElementById('auth-screen');
+            return !!(authScreen && !authScreen.classList.contains('hidden'));
+        }
+
         function getMobileCoinGeckoHeaders() {
             const headers = { 'accept': 'application/json' };
             if (COINGECKO_DEMO_KEY) headers['x-cg-demo-api-key'] = COINGECKO_DEMO_KEY;
@@ -16512,21 +16513,19 @@ No transfer fees for account transfer / exchange</div>
                 return await res.json();
             }
 
-            if (!COINGECKO_PROXY_URL) {
-                const res = await fetch(`${COINGECKO_BASE_URL}/simple/price?${params.toString()}`, {
-                    headers: getMobileCoinGeckoHeaders()
-                });
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status} from CoinGecko`);
-                }
-                return await res.json();
+            const res = await fetch(`${COINGECKO_BASE_URL}/simple/price?${params.toString()}`, {
+                headers: getMobileCoinGeckoHeaders()
+            });
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status} from CoinGecko`);
             }
-            throw new Error('CoinGecko proxy unavailable');
+            return await res.json();
         }
 
         async function fetchCoinGeckoQuotesMobile() {
             if (!ENABLE_COINGECKO) return 0;
             if (document.visibilityState === 'hidden') return 0;
+            if (isAuthOverlayActive()) return 0;
             const tracked = Array.from(new Set(topCryptoCoins.map((sym) => String(sym || '').toUpperCase())));
             const idToSymbol = {};
             tracked.forEach((sym) => {
@@ -16925,7 +16924,7 @@ No transfer fees for account transfer / exchange</div>
             }
 
             function shouldRefreshMarketData() {
-                return document.visibilityState !== 'hidden';
+                return document.visibilityState !== 'hidden' && !isAuthOverlayActive();
             }
 
             function scheduleMarketRefresh(callback, activeDelay, quietDelay) {

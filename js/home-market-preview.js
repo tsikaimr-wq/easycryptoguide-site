@@ -7,13 +7,9 @@
     const TWELVE_DATA_API_KEY = 'f5a558c730a64406839742e38b78af5e';
     const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
     const COINGECKO_DEMO_KEY = String(window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || '').trim();
-    const COINGECKO_PROXY_URL = (() => {
-        const manual = String(window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || '').trim();
-        if (manual) return manual;
-        const host = String(window.location.hostname || '').toLowerCase();
-        const frontendHosts = new Set(['easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com']);
-        return frontendHosts.has(host) ? '/api/coingecko/simple-price' : '';
-    })();
+    const COINGECKO_PROXY_URL = String(
+        window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || ''
+    ).trim();
 
     const HOME_MARKET_UNIVERSE = [
         { symbol: 'BTC/USDT', accent: '#f59e0b', icon: 'B' },
@@ -271,6 +267,7 @@
 
     async function refreshMarketData() {
         if (isRefreshing) return;
+        if (document.visibilityState === 'hidden') return;
         isRefreshing = true;
         setStatus('Updating market data...', '#8a879d');
 
@@ -305,9 +302,18 @@
         });
     });
 
+    function startPreviewRefresh() {
+        if (refreshTimer) return;
+        refreshMarketData();
+        refreshTimer = window.setInterval(refreshMarketData, 15000);
+    }
+
     renderTable();
-    refreshMarketData();
-    refreshTimer = window.setInterval(refreshMarketData, 10000);
+    if (document.readyState === 'complete') {
+        window.setTimeout(startPreviewRefresh, 400);
+    } else {
+        window.addEventListener('load', () => window.setTimeout(startPreviewRefresh, 400), { once: true });
+    }
 
     window.addEventListener('beforeunload', () => {
         if (refreshTimer) window.clearInterval(refreshTimer);
