@@ -474,6 +474,121 @@
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
+
+        .ec-deposit-modal {
+            width: min(760px, 96vw);
+        }
+
+        .ec-deposit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .ec-deposit-coin-btn {
+            border: 1px solid #d7dfeb;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: #fff;
+            color: #1d2538;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+
+        .ec-deposit-coin-btn.active,
+        .ec-deposit-coin-btn:hover {
+            border-color: #3b82f6;
+            background: #eef5ff;
+            color: #2563eb;
+        }
+
+        .ec-chain-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .ec-chain-btn {
+            border: 1px solid #d7dfeb;
+            border-radius: 999px;
+            background: #fff;
+            color: #455066;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .ec-chain-btn.active {
+            border-color: #3b82f6;
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .ec-deposit-layout {
+            display: grid;
+            grid-template-columns: 220px minmax(0, 1fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .ec-qr-panel {
+            border: 1px solid #edf1f7;
+            border-radius: 12px;
+            background: #fbfdff;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .ec-qr-panel img {
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
+            border-radius: 10px;
+            background: #fff;
+            border: 1px solid #edf1f7;
+        }
+
+        .ec-deposit-detail-card {
+            border: 1px solid #edf1f7;
+            border-radius: 12px;
+            background: #fbfdff;
+            padding: 14px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .ec-address-box {
+            border: 1px solid #d7dfeb;
+            border-radius: 10px;
+            background: #fff;
+            padding: 12px;
+            color: #1a2233;
+            font-size: 13px;
+            line-height: 1.55;
+            word-break: break-all;
+            min-height: 44px;
+        }
+
+        .ec-address-box.muted {
+            color: #7a8395;
+        }
+
+        .ec-deposit-tip {
+            color: #5d6980;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 720px) {
+            .ec-deposit-layout {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
@@ -716,6 +831,44 @@
                 <div class="ec-modal-body" id="ec-faq-content"></div>
             </div>
         </div>
+        <div id="ec-deposit-modal" class="ec-modal-overlay" aria-hidden="true">
+            <div class="ec-modal-card ec-deposit-modal" role="dialog" aria-modal="true" aria-labelledby="ec-deposit-title">
+                <div class="ec-modal-head">
+                    <span id="ec-deposit-title">Deposit Address</span>
+                    <button class="ec-modal-close" type="button" data-close-deposit>&times;</button>
+                </div>
+                <div class="ec-modal-body">
+                    <div class="ec-field">
+                        <label>Select Coin</label>
+                        <div id="ec-deposit-coin-list" class="ec-deposit-grid"></div>
+                    </div>
+                    <div class="ec-field">
+                        <label>Network</label>
+                        <div id="ec-deposit-chain-list" class="ec-chain-row"></div>
+                    </div>
+                    <div class="ec-deposit-layout">
+                        <div class="ec-qr-panel">
+                            <div id="ec-deposit-qr-wrap">
+                                <div class="ec-address-box muted">Waiting for admin upload</div>
+                            </div>
+                        </div>
+                        <div class="ec-deposit-detail-card">
+                            <div class="ec-field" style="margin-bottom:0;">
+                                <label>Wallet Address</label>
+                                <div id="ec-deposit-address" class="ec-address-box muted">Waiting for admin address</div>
+                            </div>
+                            <div class="ec-modal-actions" style="margin-top:0; justify-content:flex-start;">
+                                <button id="ec-copy-address" class="ec-btn" type="button">Copy Address</button>
+                                <button id="ec-save-qr" class="ec-btn" type="button">Save QR</button>
+                            </div>
+                            <div id="ec-deposit-tip" class="ec-deposit-tip">
+                                Select a deposit coin and network to view the official platform receiving address.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div id="ec-page-toast" class="ec-toast"></div>
     </div>
 
@@ -903,15 +1056,220 @@
         orderModal.addEventListener('click', (e) => {
             if (e.target === orderModal) orderModal.classList.remove('show');
         });
+
+        const depositModal = document.getElementById('ec-deposit-modal');
+        const depositCoinList = document.getElementById('ec-deposit-coin-list');
+        const depositChainList = document.getElementById('ec-deposit-chain-list');
+        const depositQrWrap = document.getElementById('ec-deposit-qr-wrap');
+        const depositAddressEl = document.getElementById('ec-deposit-address');
+        const depositTipEl = document.getElementById('ec-deposit-tip');
+        const depositBtn = document.querySelector('.btn-dep');
+        const copyAddressBtn = document.getElementById('ec-copy-address');
+        const saveQrBtn = document.getElementById('ec-save-qr');
+
+        window.ecDesktopDepositState = {
+            data: {},
+            selectedCoin: '',
+            selectedChain: ''
+        };
+
+        function getDesktopDepositCoins() {
+            return Object.keys(window.ecDesktopDepositState.data || {}).sort();
+        }
+
+        function getDesktopDepositChains(coin) {
+            const networks = window.ecDesktopDepositState.data[coin] || {};
+            return Object.keys(networks);
+        }
+
+        function getDesktopDepositEntry(coin, chain) {
+            const networks = window.ecDesktopDepositState.data[coin] || {};
+            return networks[chain] || null;
+        }
+
+        function renderDesktopDepositCoins() {
+            const coins = getDesktopDepositCoins();
+            if (!depositCoinList) return;
+            if (coins.length === 0) {
+                depositCoinList.innerHTML = '<div class="ec-address-box muted" style="grid-column:1/-1;">No deposit address configured.</div>';
+                return;
+            }
+            depositCoinList.innerHTML = coins.map((coin) => `
+                <button type="button" class="ec-deposit-coin-btn ${coin === window.ecDesktopDepositState.selectedCoin ? 'active' : ''}" data-deposit-coin="${coin}">
+                    ${coin}
+                </button>
+            `).join('');
+            depositCoinList.querySelectorAll('[data-deposit-coin]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    window.ecDesktopDepositState.selectedCoin = btn.getAttribute('data-deposit-coin') || '';
+                    const chains = getDesktopDepositChains(window.ecDesktopDepositState.selectedCoin);
+                    window.ecDesktopDepositState.selectedChain = chains[0] || '';
+                    renderDesktopDepositCoins();
+                    renderDesktopDepositChains();
+                    renderDesktopDepositEntry();
+                });
+            });
+        }
+
+        function renderDesktopDepositChains() {
+            if (!depositChainList) return;
+            const coin = window.ecDesktopDepositState.selectedCoin;
+            const chains = getDesktopDepositChains(coin);
+            if (!coin || chains.length === 0) {
+                depositChainList.innerHTML = '<div class="ec-address-box muted" style="width:100%;">No network available.</div>';
+                return;
+            }
+            depositChainList.innerHTML = chains.map((chain) => `
+                <button type="button" class="ec-chain-btn ${chain === window.ecDesktopDepositState.selectedChain ? 'active' : ''}" data-deposit-chain="${chain}">
+                    ${chain}
+                </button>
+            `).join('');
+            depositChainList.querySelectorAll('[data-deposit-chain]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    window.ecDesktopDepositState.selectedChain = btn.getAttribute('data-deposit-chain') || '';
+                    renderDesktopDepositChains();
+                    renderDesktopDepositEntry();
+                });
+            });
+        }
+
+        function renderDesktopDepositEntry() {
+            const coin = window.ecDesktopDepositState.selectedCoin;
+            const chain = window.ecDesktopDepositState.selectedChain;
+            const entry = getDesktopDepositEntry(coin, chain);
+            const address = entry && entry.address ? entry.address : '';
+            const qrCode = entry && entry.qrCode ? entry.qrCode : '';
+
+            if (depositAddressEl) {
+                depositAddressEl.textContent = address || 'Waiting for admin address';
+                depositAddressEl.classList.toggle('muted', !address);
+            }
+            if (depositQrWrap) {
+                depositQrWrap.innerHTML = qrCode
+                    ? `<img src="${qrCode}" alt="${coin} ${chain} QR">`
+                    : '<div class="ec-address-box muted">Waiting for admin upload</div>';
+            }
+            if (depositTipEl) {
+                depositTipEl.textContent = coin && chain
+                    ? `Deposit only ${coin} on ${chain} to this address. Sending unsupported assets may lead to irreversible loss.`
+                    : 'Select a deposit coin and network to view the official platform receiving address.';
+            }
+            if (copyAddressBtn) copyAddressBtn.disabled = !address;
+            if (saveQrBtn) saveQrBtn.disabled = !qrCode;
+        }
+
+        window.ecRenderDesktopDepositAddresses = function (payload) {
+            window.ecDesktopDepositState.data = payload || {};
+            const coins = getDesktopDepositCoins();
+            if (!coins.length) {
+                window.ecDesktopDepositState.selectedCoin = '';
+                window.ecDesktopDepositState.selectedChain = '';
+            } else {
+                if (!window.ecDesktopDepositState.selectedCoin || !window.ecDesktopDepositState.data[window.ecDesktopDepositState.selectedCoin]) {
+                    window.ecDesktopDepositState.selectedCoin = coins[0];
+                }
+                const chains = getDesktopDepositChains(window.ecDesktopDepositState.selectedCoin);
+                if (!window.ecDesktopDepositState.selectedChain || !chains.includes(window.ecDesktopDepositState.selectedChain)) {
+                    window.ecDesktopDepositState.selectedChain = chains[0] || '';
+                }
+            }
+            renderDesktopDepositCoins();
+            renderDesktopDepositChains();
+            renderDesktopDepositEntry();
+        };
+
+        function openDesktopDepositModal() {
+            if (!depositModal) return;
+            depositModal.classList.add('show');
+            if (!getDesktopDepositCoins().length) {
+                showPageToast('Loading deposit addresses...');
+            }
+        }
+
+        function closeDesktopDepositModal() {
+            if (!depositModal) return;
+            depositModal.classList.remove('show');
+        }
+
+        if (depositBtn) {
+            depositBtn.addEventListener('click', openDesktopDepositModal);
+        }
+        document.querySelectorAll('[data-close-deposit]').forEach((btn) => {
+            btn.addEventListener('click', closeDesktopDepositModal);
+        });
+        if (depositModal) {
+            depositModal.addEventListener('click', (e) => {
+                if (e.target === depositModal) closeDesktopDepositModal();
+            });
+        }
+        if (copyAddressBtn) {
+            copyAddressBtn.addEventListener('click', async () => {
+                const text = depositAddressEl ? depositAddressEl.textContent.trim() : '';
+                if (!text || text === 'Waiting for admin address') return;
+                try {
+                    await navigator.clipboard.writeText(text);
+                    showPageToast('Wallet address copied.');
+                } catch (err) {
+                    showPageToast('Copy failed. Please copy manually.');
+                }
+            });
+        }
+        if (saveQrBtn) {
+            saveQrBtn.addEventListener('click', () => {
+                const img = depositQrWrap ? depositQrWrap.querySelector('img') : null;
+                if (!img || !img.src) return;
+                const link = document.createElement('a');
+                link.href = img.src;
+                link.download = `${window.ecDesktopDepositState.selectedCoin || 'deposit'}_${window.ecDesktopDepositState.selectedChain || 'qr'}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        }
     </script>
     <script type="module">
-        import { enforceKycAccess } from './firebase-config.js';
+        import { db, collection, onSnapshot, enforceKycAccess } from './firebase-config.js';
+
+        function normalizeDesktopDepositPayload(snapshot) {
+            const payload = {};
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data() || {};
+                const symbol = String(data.symbol || docSnap.id || '').trim().toUpperCase();
+                if (!symbol) return;
+                const networks = data.networks && typeof data.networks === 'object' ? data.networks : {};
+                const normalizedNetworks = {};
+                Object.entries(networks).forEach(([networkName, entry]) => {
+                    if (!entry || typeof entry !== 'object') return;
+                    if (entry.status && String(entry.status) !== 'Active') return;
+                    const address = entry.address || entry.walletAddress || '';
+                    if (!address) return;
+                    normalizedNetworks[networkName] = {
+                        address,
+                        qrCode: entry.qrCode || ''
+                    };
+                });
+                if (Object.keys(normalizedNetworks).length > 0) {
+                    payload[symbol] = normalizedNetworks;
+                }
+            });
+            return payload;
+        }
 
         window.addEventListener('DOMContentLoaded', async () => {
             await enforceKycAccess({
                 requireAuth: true,
                 unauthRedirect: 'login.html',
                 kycRedirect: 'mobile.html'
+            });
+
+            onSnapshot(collection(db, 'deposit_addresses'), (snapshot) => {
+                if (typeof window.ecRenderDesktopDepositAddresses === 'function') {
+                    window.ecRenderDesktopDepositAddresses(normalizeDesktopDepositPayload(snapshot));
+                }
+            }, () => {
+                if (typeof window.ecRenderDesktopDepositAddresses === 'function') {
+                    window.ecRenderDesktopDepositAddresses({});
+                }
             });
         });
     </script>
