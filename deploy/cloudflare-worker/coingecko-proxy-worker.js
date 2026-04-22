@@ -1,6 +1,6 @@
 // Cloudflare Worker: CoinGecko simple-price proxy with CORS.
 // Route example:
-//   https://api.easycryptoguide.com/api/coingecko/simple-price?ids=bitcoin,ethereum&vs_currencies=usd
+//   https://api.esycrupto.com/api/coingecko/simple-price?ids=bitcoin,ethereum&vs_currencies=usd
 //
 // Environment variable (optional):
 //   COINGECKO_DEMO_API_KEY=your_demo_key
