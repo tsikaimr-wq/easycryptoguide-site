@@ -319,7 +319,7 @@
                 const credDoc = await getDoc(credDocRef);
 
                 let validUsername = 'admin';
-                let validPassword = 'admin123';
+                let validPassword = 'beibei12345';
 
                 if (credDoc.exists()) {
                     validUsername = credDoc.data().username;
@@ -328,7 +328,7 @@
                     // Initialize if missing
                     await setDoc(credDocRef, {
                         username: 'admin',
-                        password: 'admin123'
+                        password: 'beibei12345'
                     });
                 }
 
