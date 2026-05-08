@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyCrypto Maintenance Notice</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/brand/favicon-16x16.png">
+    <link rel="shortcut icon" href="/assets/brand/favicon.ico">
+    <style>
+        :root {
+            --bg-main: #07070b;
+            --bg-card: rgba(20, 16, 34, 0.9);
+            --line: rgba(162, 89, 255, 0.2);
+            --text-main: #f5f2ff;
+            --text-soft: rgba(236, 228, 255, 0.82);
+            --accent: #8f46ff;
+            --accent-soft: rgba(143, 70, 255, 0.18);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+            color: var(--text-main);
+            background:
+                radial-gradient(circle at top left, rgba(143, 70, 255, 0.32), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(90, 31, 182, 0.34), transparent 30%),
+                linear-gradient(180deg, #0b0814 0%, #060609 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 18px;
+        }
+
+        .shell {
+            width: min(920px, 100%);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            background: var(--bg-card);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+            overflow: hidden;
+            backdrop-filter: blur(16px);
+        }
+
+        .hero {
+            padding: 42px 32px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(135deg, rgba(143, 70, 255, 0.22), rgba(143, 70, 255, 0.04));
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: #dac5ff;
+            font-size: 13px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .badge::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ad78ff;
+            box-shadow: 0 0 18px rgba(173, 120, 255, 0.9);
+        }
+
+        h1 {
+            margin: 20px 0 12px;
+            font-size: clamp(30px, 5vw, 48px);
+            line-height: 1.08;
+            letter-spacing: -0.04em;
+        }
+
+        .subcopy {
+            margin: 0;
+            max-width: 720px;
+            color: var(--text-soft);
+            font-size: 17px;
+            line-height: 1.7;
+        }
+
+        .content {
+            padding: 28px 32px 36px;
+        }
+
+        .message {
+            margin: 0;
+            color: var(--text-soft);
+            font-size: 17px;
+            line-height: 1.9;
+            white-space: pre-line;
+        }
+
+        .focus-box {
+            margin: 28px 0;
+            padding: 22px 22px 18px;
+            border-radius: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .focus-title {
+            margin: 0 0 14px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        ul {
+            margin: 0;
+            padding-left: 20px;
+            color: var(--text-soft);
+            line-height: 1.9;
+            font-size: 16px;
+        }
+
+        .footer {
+            margin-top: 28px;
+            padding-top: 22px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            color: #d8c7ff;
+            font-weight: 600;
+            line-height: 1.8;
+        }
+
+        .countdown {
+            margin-top: 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 16px;
+            background: rgba(143, 70, 255, 0.12);
+            color: #efe5ff;
+            font-weight: 600;
+        }
+
+        @media (max-width: 640px) {
+            .hero,
+            .content {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .message,
+            ul,
+            .subcopy {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="shell">
+        <section class="hero">
+            <div class="badge">Temporary Maintenance</div>
+            <h1>EasyCrypto Short-term Trading is temporarily unavailable</h1>
+            <p class="subcopy">We are currently completing infrastructure hardening and risk-control upgrades to protect trading stability, on-chain settlements, and user asset security.</p>
+        </section>
+
+        <section class="content">
+            <p class="message">Dear Users:
+
+Due to recent upgrades in multi-chain liquidity protocols and ongoing optimization of our short-term trading risk-control system, EasyCrypto Short-term Trading will undergo temporary system maintenance and security upgrades.
+
+During the maintenance period, short-term trading functions will be temporarily suspended. User assets and on-chain wallet funds remain fully secure.</p>
+
+            <div class="focus-box">
+                <p class="focus-title">This maintenance will mainly focus on:</p>
+                <ul>
+                    <li>On-chain asset security verification systems</li>
+                    <li>AI-powered abnormal trading detection modules</li>
+                    <li>Multi-chain asset settlement and synchronization mechanisms</li>
+                    <li>High-frequency short-term trading risk-control engines</li>
+                </ul>
+            </div>
+
+            <div class="countdown">Expected recovery window: within 48 hours after the upgrade process is completed.</div>
+
+            <p class="footer">Thank you for your understanding and support.<br>EasyCrypto Global Compliance &amp; Support Team</p>
+        </section>
+    </main>
+</body>
+
+</html>
