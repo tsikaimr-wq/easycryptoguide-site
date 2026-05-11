@@ -601,7 +601,7 @@
             display: none !important;
         }
 
-        #auth-screen:not(.hidden)~.bottom-nav {
+        body.auth-only-view #auth-screen:not(.hidden)~.bottom-nav {
             display: none !important;
         }
 
@@ -14061,6 +14061,7 @@ const translations = {
                     authVisible,
                 })
                 : (!authVisible && !shouldUseSupportFooterOnly);
+            document.body.classList.toggle('auth-only-view', authVisible && !shouldShowBottomNav);
             if (shouldShowBottomNav) {
                 ensureBottomNavVisible(true);
             } else {

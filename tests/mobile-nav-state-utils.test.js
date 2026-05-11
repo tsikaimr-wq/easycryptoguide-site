@@ -16,6 +16,17 @@ test('shows bottom nav for authenticated root-level front screens', () => {
   );
 });
 
+test('shows bottom nav for mobile preview screens even when auth overlay is still visible', () => {
+  assert.equal(
+    shouldShowMobileBottomNav({
+      currentScreen: 'homeScreen',
+      appOpen: false,
+      authVisible: true,
+    }),
+    true,
+  );
+});
+
 test('hides bottom nav for support footer screens', () => {
   assert.equal(
     shouldShowMobileBottomNav({
@@ -38,7 +49,7 @@ test('hides bottom nav for support footer screens', () => {
 test('hides bottom nav on auth view when app is not open', () => {
   assert.equal(
     shouldShowMobileBottomNav({
-      currentScreen: 'homeScreen',
+      currentScreen: '',
       appOpen: false,
       authVisible: true,
     }),
