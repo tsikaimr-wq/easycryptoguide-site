@@ -35,6 +35,7 @@
 <script src="./js/infoway-site-data.js?v=20260512a"></script>
 <script src="./js/mobile-market-data-guards.js?v=20260512a"></script>
 <script src="./js/mobile-nav-state-utils.js?v=20260512a"></script>
+<script src="./js/mobile-session-utils.js?v=20260512d"></script>
 <script src="./js/mobile-contract-utils.js?v=20260512c"></script>
 <script src="./js/mobile-performance-utils.js?v=20260510a"></script>
     <script>
@@ -46,7 +47,7 @@
     </script>
     <script>
         (function () {
-        const mobileBuildId = '20260512c';
+        const mobileBuildId = '20260512d';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -314,6 +315,33 @@
             const localSessionId = String(window.getMobileSessionId ? window.getMobileSessionId() : '').trim();
             return !remoteSessionId || !localSessionId || remoteSessionId === localSessionId;
         }
+        function isCurrentMobileDeviceOwner(userData) {
+            const remoteDeviceId = String((userData && userData.mobile_active_device_id) || '').trim();
+            const localDeviceId = String(window.getMobileDeviceId ? window.getMobileDeviceId() : '').trim();
+            return !!remoteDeviceId && !!localDeviceId && remoteDeviceId === localDeviceId;
+        }
+        function canRestoreMobileSessionFromProfile(userData) {
+            const sessionUtils = window.mobileSessionUtils || {};
+            if (typeof sessionUtils.shouldRestoreMobileAppSession !== 'function') return false;
+            const remoteSessionId = String((userData && userData.mobile_active_session_id) || '').trim();
+            const localSessionId = String(window.getMobileSessionId ? window.getMobileSessionId() : '').trim();
+            return sessionUtils.shouldRestoreMobileAppSession({
+                hasActiveSession: !!(window.hasActiveMobileAppSession && window.hasActiveMobileAppSession()),
+                hasFreshGrant: typeof hasFreshMobileSessionGrant === 'function' ? hasFreshMobileSessionGrant() : false,
+                sameDeviceOwner: isCurrentMobileDeviceOwner(userData),
+                sameSessionOwner: !!remoteSessionId && !!localSessionId && remoteSessionId === localSessionId,
+            });
+        }
+        function restoreMobileSessionFromProfile(userData) {
+            sessionStorage.setItem('mobile_session_active', 'true');
+            const remoteSessionId = String((userData && userData.mobile_active_session_id) || '').trim();
+            if (remoteSessionId) {
+                sessionStorage.setItem(MOBILE_SESSION_ID_KEY, remoteSessionId);
+            } else if (typeof ensureMobileSessionId === 'function') {
+                ensureMobileSessionId();
+            }
+            localStorage.setItem('ec_mobile_session_grant_ts', String(Date.now()));
+        }
         function handleMobileSessionConflict(appScreen, authScreen) {
             if (window.__mobileSessionConflict) return;
             window.__mobileSessionConflict = true;
@@ -367,6 +395,11 @@
                             && !isCurrentMobileSessionOwner(userData)) {
                             handleMobileSessionConflict(appScreen, authScreen);
                             return;
+                        }
+
+                        if (!window.hasActiveMobileAppSession() && canRestoreMobileSessionFromProfile(userData)) {
+                            console.log("Mobile: Restoring mobile app session from trusted profile state.");
+                            restoreMobileSessionFromProfile(userData);
                         }
 
                         // Signup/login creates the auth session before profile sync finishes, so keep those flows active.
@@ -19579,9 +19612,7 @@ No transfer fees for account transfer / exchange</div>
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 if (typeof window.hasActiveMobileAppSession === 'function' && !window.hasActiveMobileAppSession()) {
-                    console.log("Mobile: Auth user present, but no explicit mobile session; listener startup deferred.");
-                    cleanupMobileDataListeners();
-                    return;
+                    console.log("Mobile: Auth user present before mobile session restoration; keeping listeners ready.");
                 }
                 console.log("Mobile: User authenticated, initializing listeners...", user.uid);
                 initUnreadListener();
