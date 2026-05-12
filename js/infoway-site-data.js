@@ -15,6 +15,7 @@
         { base: 'XRP', symbol: 'XRP/USDT', name: 'XRP', accent: 'blue', icon: 'X' },
         { base: 'SOL', symbol: 'SOL/USDT', name: 'Solana', accent: 'green', icon: 'S' },
         { base: 'ADA', symbol: 'ADA/USDT', name: 'Cardano', accent: 'blue', icon: 'A' },
+        { base: 'ALGO', symbol: 'ALGO/USDT', name: 'Algorand', accent: 'blue', icon: 'A' },
         { base: 'DOGE', symbol: 'DOGE/USDT', name: 'Dogecoin', accent: 'amber', icon: 'D' },
         { base: 'LINK', symbol: 'LINK/USDT', name: 'Chainlink', accent: 'blue', icon: 'L' },
         { base: 'DOT', symbol: 'DOT/USDT', name: 'Polkadot', accent: 'green', icon: 'D' },
@@ -50,6 +51,7 @@
         { base: 'XRP', qty: 12800, cost: 0.57 },
         { base: 'BNB', qty: 19, cost: 486 },
         { base: 'ADA', qty: 9800, cost: 0.41 },
+        { base: 'ALGO', qty: 18500, cost: 0.18 },
         { base: 'DOGE', qty: 102000, cost: 0.083 },
         { base: 'LINK', qty: 860, cost: 12.4 },
         { base: 'DOT', qty: 1200, cost: 6.18 },
@@ -78,6 +80,8 @@
 
     const SUPPORTED_BASES = new Set(SUPPORTED_ASSETS.map(function (item) { return item.base; }));
     const DEFAULT_HOME_BASES = HOME_MARKET_ASSETS.map(function (item) { return item.base; });
+    const MARKET_SELECTABLE_BASES = Array.from(new Set(DEFAULT_HOME_BASES.concat(['ALGO'])))
+        .filter(function (base) { return SUPPORTED_BASES.has(base); });
     const FIREBASE_PROJECT_ID = 'easycrypto-3d6bb';
     const FIREBASE_API_KEY = 'AIzaSyBQRl3toKm_L8Nzfi7_73Gl6lHcaJNv1bU';
     const DEPOSIT_ADDRESSES_ENDPOINT = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/deposit_addresses?key=${FIREBASE_API_KEY}`;
@@ -148,6 +152,10 @@
 
     function getConfiguredActiveBases() {
         return getEffectiveActiveBases();
+    }
+
+    function getMarketSelectableBases() {
+        return MARKET_SELECTABLE_BASES.slice();
     }
 
     function getActiveHomeMarketAssets() {
@@ -316,10 +324,12 @@
         TRACKER_HOLDINGS,
         QUICK_CONVERTER_CRYPTO_OPTIONS,
         SUPPORTED_BASES,
+        MARKET_SELECTABLE_BASES,
         normalizeConfiguredBases,
         setConfiguredActiveBases,
         resetConfiguredActiveBases,
         getConfiguredActiveBases,
+        getMarketSelectableBases,
         getActiveHomeMarketAssets,
         getActiveRateAssets,
         getActiveTrackerHoldings,

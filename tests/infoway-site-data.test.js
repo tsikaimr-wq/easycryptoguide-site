@@ -6,6 +6,7 @@ const {
     RATE_ASSETS,
     TRACKER_HOLDINGS,
     QUICK_CONVERTER_CRYPTO_OPTIONS,
+    getMarketSelectableBases,
     getActiveHomeMarketAssets,
     getActiveRateAssets,
     getActiveTrackerHoldings,
@@ -92,5 +93,17 @@ test('falls back to default frontend assets when backend-configured bases are em
         getActiveHomeMarketAssets().map((item) => item.base),
         HOME_MARKET_ASSETS.map((item) => item.base)
     );
+    resetConfiguredActiveBases();
+});
+
+test('keeps ALGO in the selectable market universe even when deposit-configured bases are narrower', () => {
+    assert.equal(isSupportedBase('ALGO'), true);
+    assert.ok(getMarketSelectableBases().includes('ALGO'));
+
+    setConfiguredActiveBases(['BTC', 'ETH', 'BNB', 'SOL', 'USDC']);
+    assert.deepEqual(getActiveHomeMarketAssets().map((item) => item.base), [
+        'BTC', 'ETH', 'BNB', 'SOL', 'USDC'
+    ]);
+    assert.ok(getMarketSelectableBases().includes('ALGO'));
     resetConfiguredActiveBases();
 });

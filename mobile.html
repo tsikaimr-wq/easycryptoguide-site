@@ -32,7 +32,7 @@
         SECURITY BLOCKED: Registration will NOT work.
         <br>Run <code>server.bat</code> then use <code>http://localhost:8000/mobile.html</code>
     </div>
-<script src="./js/infoway-site-data.js?v=20260512a"></script>
+<script src="./js/infoway-site-data.js?v=20260513a"></script>
 <script src="./js/mobile-market-data-guards.js?v=20260512a"></script>
 <script src="./js/mobile-nav-state-utils.js?v=20260512a"></script>
 <script src="./js/mobile-session-utils.js?v=20260512e"></script>
@@ -47,7 +47,7 @@
     </script>
     <script>
         (function () {
-        const mobileBuildId = '20260512e';
+        const mobileBuildId = '20260513a';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -11058,7 +11058,7 @@
 
     <script>
         const infowaySiteData = window.ECInfowaySiteData || {};
-        const fallbackMobileAssetBases = ["BTC", "ETH", "BNB", "XRP", "SOL", "ADA", "DOGE", "LINK", "DOT", "AVAX", "LTC", "BCH", "TRX", "XLM", "SUI", "ICP", "MANA", "ETC", "SAND", "CHZ", "USDC", "AXS"];
+        const fallbackMobileAssetBases = ["BTC", "ETH", "BNB", "XRP", "SOL", "ADA", "ALGO", "DOGE", "LINK", "DOT", "AVAX", "LTC", "BCH", "TRX", "XLM", "SUI", "ICP", "MANA", "ETC", "SAND", "CHZ", "USDC", "AXS"];
         function getConfiguredMobileAssetBases() {
             if (typeof infowaySiteData.getConfiguredActiveBases === 'function') {
                 const configuredBases = infowaySiteData.getConfiguredActiveBases()
