@@ -11060,11 +11060,16 @@
         const infowaySiteData = window.ECInfowaySiteData || {};
         const fallbackMobileAssetBases = ["BTC", "ETH", "BNB", "XRP", "SOL", "ADA", "ALGO", "DOGE", "LINK", "DOT", "AVAX", "LTC", "BCH", "TRX", "XLM", "SUI", "ICP", "MANA", "ETC", "SAND", "CHZ", "USDC", "AXS"];
         function getConfiguredMobileAssetBases() {
-            if (typeof infowaySiteData.getConfiguredActiveBases === 'function') {
-                const configuredBases = infowaySiteData.getConfiguredActiveBases()
+            if (typeof infowaySiteData.getMarketSelectableBases === 'function') {
+                const marketSelectableBases = infowaySiteData.getMarketSelectableBases()
                     .map(symbol => String(symbol || '').toUpperCase())
                     .filter(Boolean);
-                if (configuredBases.length) return configuredBases;
+                if (marketSelectableBases.length) return marketSelectableBases;
+            }
+            if (Array.isArray(infowaySiteData.MARKET_SELECTABLE_BASES) && infowaySiteData.MARKET_SELECTABLE_BASES.length) {
+                return infowaySiteData.MARKET_SELECTABLE_BASES
+                    .map(symbol => String(symbol || '').toUpperCase())
+                    .filter(Boolean);
             }
             if (Array.isArray(infowaySiteData.HOME_MARKET_ASSETS) && infowaySiteData.HOME_MARKET_ASSETS.length) {
                 return infowaySiteData.HOME_MARKET_ASSETS
