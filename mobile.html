@@ -35,6 +35,7 @@
 <script src="./js/infoway-site-data.js?v=20260512a"></script>
 <script src="./js/mobile-market-data-guards.js?v=20260512a"></script>
 <script src="./js/mobile-nav-state-utils.js?v=20260512a"></script>
+<script src="./js/mobile-contract-utils.js?v=20260512b"></script>
 <script src="./js/mobile-performance-utils.js?v=20260510a"></script>
     <script>
         if (window.location.protocol === 'file:') {
@@ -45,7 +46,7 @@
     </script>
     <script>
         (function () {
-        const mobileBuildId = '20260512a';
+        const mobileBuildId = '20260512b';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -10335,9 +10336,9 @@
                                     style="background: #1a0b2e; border: 1px solid rgba(106, 53, 255, 0.3); margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center; padding: 10px;">
                                     <span onclick="adjustContractTotal(-1)"
                                         style="color:#999; font-size:24px; font-weight:normal; line-height:1; cursor:pointer;">$</span>
-                                    <input type="number" id="contract-total-input" placeholder="Lots" min="0" step="1"
+                                    <input type="number" id="contract-total-input" placeholder="Whole lots" min="0" step="1" inputmode="numeric"
                                         oninput="updateContractCalculations()"
-                                        style="background:transparent; border: none; text-align:center; width: 60px; outline:none; font-size: 14px; color: #fff; font-weight:500;">
+                                        style="background:transparent; border: none; text-align:center; width: 84px; outline:none; font-size: 14px; color: #fff; font-weight:500;">
                                     <span style="color:#9ca3af; font-size: 12px; font-weight:600;">Lot</span>
                                     <span onclick="adjustContractTotal(1)"
                                         style="color:#999; font-size:22px; font-weight:normal; line-height:1; cursor:pointer;">+</span>
@@ -14604,17 +14605,16 @@ const translations = {
             const contractUnit = getContractUnitValue();
             const available = getAvailableUsdtBalance();
             const maxLots = getContractMaxLots();
+            const contractUtils = window.mobileContractUtils || {};
+            const previewLots = typeof contractUtils.getContractPreviewLots === 'function'
+                ? contractUtils.getContractPreviewLots(totalInput.value, maxLots)
+                : Math.min(Math.max(0, Math.floor(parseFloat(totalInput.value) || 0)), maxLots);
 
-            const lotsRaw = parseFloat(totalInput.value);
-            let lots = Number.isFinite(lotsRaw) ? Math.max(0, Math.floor(lotsRaw)) : 0;
-            lots = Math.min(lots, maxLots);
-
-            const orderAmount = lots * contractUnit;
+            const orderAmount = previewLots * contractUnit;
             const handlingFee = orderAmount * getTradeFeeRate();
 
-            totalInput.value = lots > 0 ? String(lots) : '';
             if (unitEl) unitEl.innerText = `${contractUnit} USDT/Lot`;
-            if (lotSizeEl) lotSizeEl.innerText = `${lots} Lot`;
+            if (lotSizeEl) lotSizeEl.innerText = `${previewLots} Lot`;
             if (availableEl) availableEl.innerText = `${available.toFixed(2)} USDT`;
             if (maxLotsEl) maxLotsEl.innerText = `${maxLots} Lot`;
             futuresAmountEl.innerText = (orderAmount % 1 === 0 ? orderAmount.toFixed(0) : orderAmount.toFixed(2)) + ' USDT';
@@ -14622,7 +14622,7 @@ const translations = {
             feeEl.innerText = handlingFee.toFixed(2) + ' USDT';
 
             if (syncSlider) {
-                setContractSliderByLots(lots);
+                setContractSliderByLots(previewLots);
             }
         }
 
@@ -19017,19 +19017,30 @@ No transfer fees for account transfer / exchange</div>
             const orderType = document.getElementById('order-type-text').innerText;
             const contractUnit = getContractUnitValue();
             const entryPrice = parseFloat(String(price).replace(/,/g, ''));
-            const lots = Math.max(0, Math.floor(parseFloat(lotsInput) || 0));
             const maxLots = getContractMaxLots();
+            const contractUtils = window.mobileContractUtils || {};
+            const validation = typeof contractUtils.validateContractTradeInput === 'function'
+                ? contractUtils.validateContractTradeInput(lotsInput, maxLots)
+                : null;
+            const lots = validation && validation.ok
+                ? validation.lots
+                : Math.max(0, Math.floor(parseFloat(lotsInput) || 0));
             const notional = lots * contractUnit;
             const takeProfit = tpRaw ? parseFloat(tpRaw) : null;
             const stopLoss = slRaw ? parseFloat(slRaw) : null;
             const margin = notional;
             const openFee = 0;
 
-            if (!lotsInput || isNaN(lots) || lots <= 0) {
-                return alert("Please enter a valid lot size.");
+            if (validation && !validation.ok) {
+                return alert(validation.message);
             }
-            if (lots > maxLots) {
-                return alert(`Insufficient available balance. Max open size is ${maxLots} Lot.`);
+            if (!validation) {
+                if (!lotsInput || isNaN(lots) || lots <= 0) {
+                    return alert("Please enter a valid lot size.");
+                }
+                if (lots > maxLots) {
+                    return alert(`Insufficient available balance. Max open size is ${maxLots} Lot.`);
+                }
             }
             if (!entryPrice || isNaN(entryPrice) || entryPrice <= 0) {
                 return alert("Invalid entry price.");
