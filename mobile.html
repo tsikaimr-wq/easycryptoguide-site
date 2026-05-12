@@ -32,8 +32,8 @@
         SECURITY BLOCKED: Registration will NOT work.
         <br>Run <code>server.bat</code> then use <code>http://localhost:8000/mobile.html</code>
     </div>
-<script src="./js/infoway-site-data.js?v=20260513a"></script>
-<script src="./js/mobile-market-data-guards.js?v=20260512a"></script>
+<script src="./js/infoway-site-data.js?v=20260513b"></script>
+<script src="./js/mobile-market-data-guards.js?v=20260513b"></script>
 <script src="./js/mobile-nav-state-utils.js?v=20260512a"></script>
 <script src="./js/mobile-session-utils.js?v=20260512e"></script>
 <script src="./js/mobile-contract-utils.js?v=20260512e"></script>
@@ -47,7 +47,7 @@
     </script>
     <script>
         (function () {
-        const mobileBuildId = '20260513a';
+        const mobileBuildId = '20260513b';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -16725,6 +16725,16 @@ No transfer fees for account transfer / exchange</div>
             return !!(authScreen && !authScreen.classList.contains('hidden'));
         }
 
+        function shouldAllowPublicMarketPreview(target) {
+            if (typeof mobileMarketDataGuards.shouldAllowPublicMarketDataPreview === 'function') {
+                return mobileMarketDataGuards.shouldAllowPublicMarketDataPreview({
+                    target,
+                    authOverlayActive: isAuthOverlayActive()
+                });
+            }
+            return !isAuthOverlayActive();
+        }
+
         function getMobileCoinGeckoHeaders() {
             const headers = { 'accept': 'application/json' };
             if (COINGECKO_DEMO_KEY) headers['x-cg-demo-api-key'] = COINGECKO_DEMO_KEY;
@@ -16780,7 +16790,7 @@ No transfer fees for account transfer / exchange</div>
         async function fetchCoinGeckoQuotesMobile() {
             if (!ENABLE_COINGECKO) return 0;
             if (document.visibilityState === 'hidden') return 0;
-            if (isAuthOverlayActive()) return 0;
+            if (!shouldAllowPublicMarketPreview(window.currentScreen || '')) return 0;
             const tracked = Array.from(new Set(
                 topCryptoCoins
                     .map((sym) => String(sym || '').toUpperCase())
@@ -17191,7 +17201,7 @@ No transfer fees for account transfer / exchange</div>
             }
 
             function shouldRefreshMarketData() {
-                return document.visibilityState !== 'hidden' && !isAuthOverlayActive();
+                return document.visibilityState !== 'hidden' && shouldAllowPublicMarketPreview(window.currentScreen || '');
             }
 
             function scheduleMarketRefresh(callback, activeDelay, quietDelay) {
@@ -19651,6 +19661,13 @@ No transfer fees for account transfer / exchange</div>
             if (target === 'trade') {
                 if (activeUser) initTradeHistoryListener(activeUser);
                 switchTradeFooterTab(window.currentTradeFooterTab || 'positions');
+            }
+            if (['homeScreen', 'market', 'trade', 'kline'].includes(target)
+                && typeof window.refreshMobileMarketDataNow === 'function'
+                && shouldAllowPublicMarketPreview(target)) {
+                setTimeout(() => {
+                    window.refreshMobileMarketDataNow().catch(() => 0);
+                }, 50);
             }
         };
 

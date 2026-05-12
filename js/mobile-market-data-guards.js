@@ -22,8 +22,16 @@
         return Boolean(allowMockFallback) && Number(failureCount) >= limit;
     }
 
+    function shouldAllowPublicMarketDataPreview(options) {
+        const target = String(options && options.target || '').trim();
+        const authOverlayActive = Boolean(options && options.authOverlayActive);
+        if (!authOverlayActive) return true;
+        return ['homeScreen', 'market', 'trade', 'kline'].includes(target);
+    }
+
     return {
         shouldEnableMockMarketData,
-        shouldPromoteToMock
+        shouldPromoteToMock,
+        shouldAllowPublicMarketDataPreview
     };
 });
