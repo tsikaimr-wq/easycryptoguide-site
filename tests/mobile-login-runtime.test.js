@@ -155,6 +155,60 @@ test('mobile login page wires login handlers without runtime boot errors', async
       assert.ok(depositState.rect && depositState.rect.width > 0, 'expected deposit screen width to be positive');
       assert.ok(depositState.rect && depositState.rect.height > 0, 'expected deposit screen height to be positive');
 
+      await page.evaluate(() => {
+        if (typeof window.showScreen === 'function') {
+          window.showScreen('supportScreen');
+        }
+      });
+      await page.waitForTimeout(300);
+
+      const supportState = await page.evaluate(() => {
+        const support = document.getElementById('supportScreen');
+        const rect = support ? support.getBoundingClientRect() : null;
+        return {
+          parentId: support?.parentElement?.id || support?.parentElement?.className || null,
+          display: support ? getComputedStyle(support).display : null,
+          rect: rect
+            ? {
+                width: rect.width,
+                height: rect.height,
+              }
+            : null,
+        };
+      });
+
+      assert.equal(supportState.parentId, 'app-screen');
+      assert.equal(supportState.display, 'flex');
+      assert.ok(supportState.rect && supportState.rect.width > 0, 'expected support screen width to be positive');
+      assert.ok(supportState.rect && supportState.rect.height > 0, 'expected support screen height to be positive');
+
+      await page.evaluate(() => {
+        if (typeof window.showScreen === 'function') {
+          window.showScreen('supportChatScreen');
+        }
+      });
+      await page.waitForTimeout(300);
+
+      const supportChatState = await page.evaluate(() => {
+        const supportChat = document.getElementById('supportChatScreen');
+        const rect = supportChat ? supportChat.getBoundingClientRect() : null;
+        return {
+          parentId: supportChat?.parentElement?.id || supportChat?.parentElement?.className || null,
+          display: supportChat ? getComputedStyle(supportChat).display : null,
+          rect: rect
+            ? {
+                width: rect.width,
+                height: rect.height,
+              }
+            : null,
+        };
+      });
+
+      assert.equal(supportChatState.parentId, 'app-screen');
+      assert.equal(supportChatState.display, 'flex');
+      assert.ok(supportChatState.rect && supportChatState.rect.width > 0, 'expected support chat screen width to be positive');
+      assert.ok(supportChatState.rect && supportChatState.rect.height > 0, 'expected support chat screen height to be positive');
+
     } finally {
       await browser.close();
     }
