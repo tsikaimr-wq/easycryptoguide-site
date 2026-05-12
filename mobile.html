@@ -32,9 +32,9 @@
         SECURITY BLOCKED: Registration will NOT work.
         <br>Run <code>server.bat</code> then use <code>http://localhost:8000/mobile.html</code>
     </div>
-<script src="./js/infoway-site-data.js?v=20260511g"></script>
-<script src="./js/mobile-market-data-guards.js?v=20260511g"></script>
-<script src="./js/mobile-nav-state-utils.js?v=20260511g"></script>
+<script src="./js/infoway-site-data.js?v=20260512a"></script>
+<script src="./js/mobile-market-data-guards.js?v=20260512a"></script>
+<script src="./js/mobile-nav-state-utils.js?v=20260512a"></script>
 <script src="./js/mobile-performance-utils.js?v=20260510a"></script>
     <script>
         if (window.location.protocol === 'file:') {
@@ -45,7 +45,7 @@
     </script>
     <script>
         (function () {
-        const mobileBuildId = '20260511g';
+        const mobileBuildId = '20260512a';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -560,7 +560,9 @@
             max-width: 420px;
             height: 100vh;
             height: 100dvh;
+            height: var(--ec-mobile-frame-height, 100dvh);
             min-height: 100vh;
+            min-height: var(--ec-mobile-frame-height, 100dvh);
             background: #fff;
             position: relative;
             display: flex;
@@ -584,6 +586,7 @@
             --ec-bottom-nav-height: 84px;
             --ec-keyboard-offset: 0px;
             --ec-viewport-bottom-offset: 0px;
+            --ec-mobile-frame-height: 100dvh;
         }
 
         .screen {
@@ -14014,6 +14017,10 @@ const translations = {
                 ? Math.max(0, Math.round((window.innerHeight || 0) - (vv.height + vv.offsetTop)))
                 : 0;
             document.documentElement.style.setProperty('--ec-viewport-bottom-offset', `${viewportBottomOffset}px`);
+            const frameHeight = vv
+                ? Math.max(0, Math.round(vv.height + (vv.offsetTop || 0)))
+                : Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
+            document.documentElement.style.setProperty('--ec-mobile-frame-height', `${frameHeight}px`);
             if (keyboardOffset === 0) {
                 mobileViewportBaseHeight = Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
             }
@@ -14041,6 +14048,25 @@ const translations = {
             }
         }
         window.normalizeBottomNavPlacement = normalizeBottomNavPlacement;
+
+        function refreshMobileChromeLayout(forceShowBottomNav = false) {
+            updateViewportInsets();
+            normalizePrimaryScreenPlacement();
+            normalizeBottomNavPlacement();
+            if (typeof syncBottomNavState === 'function') {
+                syncBottomNavState();
+            } else if (forceShowBottomNav) {
+                const bottomNav = document.querySelector('.bottom-nav');
+                if (bottomNav) {
+                    bottomNav.classList.remove('hidden');
+                    bottomNav.style.display = 'flex';
+                }
+            }
+            if (typeof syncSupportFabState === 'function') {
+                syncSupportFabState();
+            }
+        }
+        window.refreshMobileChromeLayout = refreshMobileChromeLayout;
 
         function ensureBottomNavVisible(forceShow = false) {
             normalizePrimaryScreenPlacement();
@@ -16577,7 +16603,7 @@ No transfer fees for account transfer / exchange</div>
         }
     </script>
 
-<script src="./js/infoway-market-data.js?v=20260511g"></script>
+<script src="./js/infoway-market-data.js?v=20260512a"></script>
     <!-- INFOWAY API INTEGRATION -->
     <script>
         const INFOWAY_API_KEY = "217ed0f158d74b57b4d374b2373269a4-infoway";
@@ -16864,9 +16890,13 @@ No transfer fees for account transfer / exchange</div>
                 syncSupportFabState();
             });
             if (window.visualViewport) {
-                window.visualViewport.addEventListener('resize', updateViewportInsets);
-                window.visualViewport.addEventListener('scroll', updateViewportInsets);
+                window.visualViewport.addEventListener('resize', () => refreshMobileChromeLayout());
+                window.visualViewport.addEventListener('scroll', () => refreshMobileChromeLayout());
             }
+            window.addEventListener('pageshow', () => refreshMobileChromeLayout(true));
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) refreshMobileChromeLayout();
+            });
             document.addEventListener('focusin', (evt) => {
                 const t = evt && evt.target;
                 if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
@@ -19606,7 +19636,7 @@ No transfer fees for account transfer / exchange</div>
     </div>
     <script src="./js/mobile-deposit-utils.js?v=20260510a"></script>
     <script src="./js/mobile-deposit-fixes.js?v=20260510a"></script>
-<script src="/js/site-language.js?v=20260511g"></script>
+<script src="/js/site-language.js?v=20260512a"></script>
 </body>
 
 </html>

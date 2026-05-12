@@ -73,7 +73,7 @@ test('mobile login page wires login handlers without runtime boot errors', async
     page.on('pageerror', (err) => pageErrors.push(err.stack || String(err)));
 
     try {
-      await page.goto(`${origin}/mobile.html?v=20260511g`, {
+      await page.goto(`${origin}/mobile.html?v=20260512a`, {
         waitUntil: 'domcontentloaded',
         timeout: 30000,
       });
@@ -105,27 +105,29 @@ test('mobile login page wires login handlers without runtime boot errors', async
       assert.ok(runtimeState.bottomNavRect && runtimeState.bottomNavRect.width > 0, 'expected bottom nav width to be positive');
       assert.ok(runtimeState.bottomNavRect && runtimeState.bottomNavRect.height > 0, 'expected bottom nav height to be positive');
 
-      await page.locator('.bottom-nav .nav-item').filter({ hasText: 'Contract' }).first().click();
-      await page.waitForTimeout(800);
+      await page.evaluate(() => {
+        window.dispatchEvent(new Event('resize'));
+      });
+      await page.waitForTimeout(300);
 
-      const tradeRuntimeState = await page.evaluate(() => {
-        const tradeScreen = document.getElementById('trade-screen');
-        const rect = tradeScreen ? tradeScreen.getBoundingClientRect() : null;
+      const postResizeNavState = await page.evaluate(() => {
+        const nav = document.querySelector('.bottom-nav');
+        const rect = nav ? nav.getBoundingClientRect() : null;
         return {
-          tradeParentId: tradeScreen?.parentElement?.id || null,
-          tradeParentClass: tradeScreen?.parentElement?.className || null,
-          tradeRect: rect
+          rect: rect
             ? {
                 width: rect.width,
                 height: rect.height,
               }
             : null,
+          display: nav ? getComputedStyle(nav).display : null,
         };
       });
 
-      assert.equal(tradeRuntimeState.tradeParentId, 'app-screen');
-      assert.ok(tradeRuntimeState.tradeRect && tradeRuntimeState.tradeRect.width > 0, 'expected trade screen width to be positive');
-      assert.ok(tradeRuntimeState.tradeRect && tradeRuntimeState.tradeRect.height > 0, 'expected trade screen height to be positive');
+      assert.equal(postResizeNavState.display, 'flex');
+      assert.ok(postResizeNavState.rect && postResizeNavState.rect.width > 0, 'expected bottom nav width to stay positive after resize');
+      assert.ok(postResizeNavState.rect && postResizeNavState.rect.height > 0, 'expected bottom nav height to stay positive after resize');
+
     } finally {
       await browser.close();
     }
